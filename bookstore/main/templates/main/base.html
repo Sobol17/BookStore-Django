@@ -1,0 +1,454 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    Libra Antiqua —
+    {% if object %}
+      {{ object.name }}
+    {% elif is_catalog_page %}
+      Каталог редких книг
+    {% else %}
+      Атмосфера букинистики
+    {% endif %}
+  </title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            paper: '#F5F7FA',
+            ink: '#1F2937',
+            'ink-muted': '#6B7280',
+            accent: '#3B82F6',
+            'accent-soft': '#DBEAFE',
+            coffee: '#111827'
+          },
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+            serif: ['Playfair Display', 'ui-serif', 'Georgia', 'serif']
+          },
+          boxShadow: {
+            lamplight: '0 25px 50px -12px rgba(15, 23, 42, 0.25)'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    [x-cloak] {
+      display: none !important;
+    }
+    body {
+      background-color: #F5F7FA;
+      color: #1F2937;
+      background-image: none;
+    }
+  </style>
+  {% block head_extra %}{% endblock %}
+</head>
+<body class="min-h-screen font-sans text-ink antialiased">
+  <div class="min-h-screen bg-paper">
+    {% include 'main/partials/_header.html' %}
+
+    <main id="page" class="mx-auto flex w-full max-w-7xl flex-1 flex-col px-6 py-12">
+      <div class="h-0.5 w-full bg-gradient-to-r from-transparent via-accent-soft to-transparent opacity-70"></div>
+      
+      <section class="mt-12 flex-1" hx-target="this" hx-swap="innerHTML">
+        {% if object %}
+          <div data-name="product_detail" class="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+            <div class="relative rounded-3xl border border-accent-soft/60 bg-white p-6 shadow-lamplight">
+              <div class="aspect-[3/4] overflow-hidden rounded-2xl border border-accent/20 bg-accent-soft/40">
+                {% if object.main_image %}
+                  <img
+                    src="{{ object.main_image.url }}"
+                    alt="Обложка: {{ object.name }}"
+                    class="h-full w-full object-cover object-center transition duration-300 hover:scale-105"
+                  >
+                {% else %}
+                  <div class="flex h-full w-full items-center justify-center bg-accent-soft text-ink">
+                    Нет изображения
+                  </div>
+                {% endif %}
+              </div>
+              <div class="mt-6 space-y-3 text-sm text-ink-muted">
+                {% if object.condition %}
+                  <p><span class="font-semibold text-ink">Состояние:</span> {{ object.get_condition_display }}</p>
+                {% endif %}
+                {% if object.isbn %}
+                  <p><span class="font-semibold text-ink">ISBN:</span> {{ object.isbn }}</p>
+                {% endif %}
+                {% if object.year %}
+                  <p><span class="font-semibold text-ink">Год издания:</span> {{ object.year }}</p>
+                {% endif %}
+                {% if object.publisher %}
+                  <p><span class="font-semibold text-ink">Издательство:</span> {{ object.publisher }}</p>
+                {% endif %}
+                {% if object.stock_qty %}
+                  <p><span class="font-semibold text-ink">В наличии:</span> {{ object.stock_qty }} шт.</p>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="flex flex-col gap-8 rounded-3xl border border-accent-soft/60 bg-white p-8 shadow-lamplight">
+              <div>
+                <p class="text-xs uppercase tracking-[0.4em] text-accent">
+                  {% if object.category %}{{ object.category.name }}{% else %}Редкое издание{% endif %}
+                </p>
+                <h1 class="mt-3 font-serif text-4xl tracking-wide text-ink">
+                  {{ object.name }}
+                </h1>
+                {% if object.authors %}
+                  <p class="mt-2 text-base text-ink-muted">
+                    {{ object.authors }}
+                  </p>
+                {% endif %}
+              </div>
+              <div class="flex flex-wrap items-center gap-6">
+                <div>
+                  <p class="text-sm uppercase tracking-[0.3em] text-ink-muted">Стоимость экземпляра</p>
+                  <p class="mt-2 font-serif text-3xl text-accent">
+                    {{ object.price }} {{ object.currency }}
+                  </p>
+                  {% if object.old_price %}
+                    <p class="text-sm text-ink-muted">
+                      <span class="line-through">{{ object.old_price }} {{ object.currency }}</span>
+                    </p>
+                  {% endif %}
+                </div>
+                <button
+                  type="button"
+                  class="rounded-lg border border-accent-soft bg-accent px-6 py-3 text-sm font-semibold tracking-[0.2em] text-paper transition hover:bg-accent-soft hover:text-coffee"
+                >
+                  Запросить экземпляр
+                </button>
+              </div>
+              {% if object.description %}
+                <article class="prose prose-sm prose-headings:font-serif prose-headings:text-ink prose-p:text-ink-muted prose-strong:text-ink max-w-none">
+                  {{ object.description|linebreaks }}
+                </article>
+              {% endif %}
+            </div>
+          </div>
+
+        {% elif is_catalog_page %}
+          <div data-name="catalog_page" class="flex flex-col gap-12">
+            <header class="flex flex-col gap-4">
+              <p class="text-md text-accent">
+                {% if current_category %}
+                  Категория: {{ current_category_label }}
+                {% else %}
+                  Коллекция Libra Antiqua
+                {% endif %}
+              </p>
+              <h1 class="font-serif text-4xl text-ink">Каталог редких книг</h1>
+              <p class="max-w-2xl text-base text-ink-muted">
+                Подборка букинистических изданий с сохранённой историей. Используйте фильтры, чтобы найти идеальный экземпляр для вашей коллекции.
+              </p>
+            </header>
+
+            <div class="grid gap-12 lg:grid-cols-[minmax(0,290px)_1fr]">
+              <aside class="space-y-6 rounded-3xl border border-accent-soft/60 bg-white p-6 shadow-lamplight">
+                <h2 class="font-serif text-xl text-ink">Подбор по параметрам</h2>
+                <form action="." method="get" class="space-y-4">
+                  <div>
+                    <label for="q" class="text-xs uppercase tracking-[0.3em] text-ink-muted">Поиск</label>
+                    <input
+                      id="q"
+                      name="q"
+                      type="text"
+                      value="{{ filter_params.q|default:search_query }}"
+                      placeholder="Автор, название или издательство"
+                      class="mt-2 w-full rounded-xl border border-accent/30 bg-white px-4 py-2 text-sm text-ink placeholder:text-ink-muted/70 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+                    >
+                  </div>
+                  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+                    <div>
+                      <label for="min_price" class="text-xs uppercase tracking-[0.3em] text-ink-muted">Цена от</label>
+                      <input
+                        id="min_price"
+                        name="min_price"
+                        type="number"
+                        value="{{ filter_params.min_price }}"
+                        min="0"
+                        class="mt-2 w-full rounded-xl border border-accent/30 bg-white px-4 py-2 text-sm text-ink placeholder:text-ink-muted/70 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+                      >
+                    </div>
+                    <div>
+                      <label for="max_price" class="text-xs uppercase tracking-[0.3em] text-ink-muted">Цена до</label>
+                      <input
+                        id="max_price"
+                        name="max_price"
+                        type="number"
+                        value="{{ filter_params.max_price }}"
+                        min="0"
+                        class="mt-2 w-full rounded-xl border border-accent/30 bg-white px-4 py-2 text-sm text-ink placeholder:text-ink-muted/70 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+                      >
+                    </div>
+                    <div>
+                      <label for="year" class="text-xs uppercase tracking-[0.3em] text-ink-muted">Год издания</label>
+                      <input
+                        id="year"
+                        name="year"
+                        type="number"
+                        value="{{ filter_params.year }}"
+                        class="mt-2 w-full rounded-xl border border-accent/30 bg-white px-4 py-2 text-sm text-ink placeholder:text-ink-muted/70 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+                      >
+                    </div>
+                    <div>
+                      <label for="author" class="text-xs uppercase tracking-[0.3em] text-ink-muted">Автор</label>
+                      <input
+                        id="author"
+                        name="author"
+                        type="text"
+                        value="{{ filter_params.author }}"
+                        class="mt-2 w-full rounded-xl border border-accent/30 bg-white px-4 py-2 text-sm text-ink placeholder:text-ink-muted/70 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+                      >
+                    </div>
+                  </div>
+                  <div class="flex flex-wrap gap-3">
+                    <button
+                      type="submit"
+                      class="rounded-lg border border-accent-soft bg-accent px-5 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-paper transition hover:bg-accent-soft hover:text-coffee"
+                    >
+                      Применить
+                    </button>
+                    <a
+                      href="{% url 'main:catalog_all' %}"
+                      class="rounded-lg border border-accent-soft px-5 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-accent transition hover:bg-accent-soft/20"
+                    >
+                      Сбросить
+                    </a>
+                  </div>
+                </form>
+                {% if genres %}
+                  <div>
+                    <h3 class="font-serif text-lg text-ink">Жанры и коллекции</h3>
+                    <ul class="mt-4 space-y-2 text-sm text-ink-muted">
+                      {% for genre in genres %}
+                        <li class="rounded-lg border border-transparent px-3 py-2 transition hover:border-accent hover:text-ink">
+                          {{ genre.name }}
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  </div>
+                {% endif %}
+              </aside>
+
+              <div class="space-y-8">
+                {% if search_query %}
+                  <p class="text-sm text-ink-muted">
+                    Найдено по запросу
+                    <span class="font-semibold text-accent">«{{ search_query }}»</span>
+                  </p>
+                {% endif %}
+                <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                  {% for product in products %}
+                    <article class="group flex flex-col overflow-hidden rounded-2xl border border-accent-soft/60 bg-white shadow-md shadow-coffee/10 transition hover:-translate-y-1 hover:shadow-lamplight">
+                      <a href="{% url 'main:product_detail' product.slug %}" class="flex flex-1 flex-col">
+                        <div class="relative aspect-[3/4] overflow-hidden">
+                          {% if product.main_image %}
+                            <img
+                              src="{{ product.main_image.url }}"
+                              alt="Обложка: {{ product.name }}"
+                              class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                            >
+                          {% else %}
+                              <div class="flex h-full w-full items-center justify-center bg-accent-soft text-ink">
+                                Нет изображения
+                              </div>
+                          {% endif %}
+                          <span class="absolute inset-x-2 top-2 rounded-full bg-coffee/80 px-3 py-1 text-[0.6rem] uppercase tracking-[0.4em] text-paper">
+                            Редкое издание
+                          </span>
+                        </div>
+                        <div class="flex flex-1 flex-col gap-3 px-5 py-6">
+                          <h3 class="font-serif text-xl text-ink">{{ product.name }}</h3>
+                          {% if product.authors %}
+                            <p class="text-sm text-ink-muted">{{ product.authors }}</p>
+                          {% endif %}
+                          {% if product.year %}
+                            <p class="text-xs uppercase tracking-[0.3em] text-ink-muted">Год: {{ product.year }}</p>
+                          {% endif %}
+                          <div class="mt-auto flex items-baseline gap-2">
+                            <span class="font-semibold text-accent">{{ product.price }} {{ product.currency }}</span>
+                            {% if product.old_price %}
+                              <span class="text-sm text-ink-muted line-through">{{ product.old_price }} {{ product.currency }}</span>
+                            {% endif %}
+                          </div>
+                        </div>
+                      </a>
+                    </article>
+                  {% empty %}
+                    <div class="col-span-full rounded-3xl border border-accent-soft/60 bg-white p-12 text-center text-ink-muted shadow-lamplight">
+                      К сожалению, по выбранным параметрам ничего не найдено. Попробуйте изменить условия поиска.
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          </div>
+        {% else %}
+          <div data-name="home_page" class="space-y-16">
+            <section class="relative overflow-hidden rounded-3xl border border-accent-soft/50 bg-white p-10 shadow-lamplight lg:p-16">
+              <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.18),_transparent_45%)]"></div>
+              <div class="relative grid gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+                <div class="space-y-6">
+                  <p class="text-xs uppercase tracking-[0.4em] text-accent">
+                    Букинистический салон старинных книг
+                  </p>
+                  <h1 class="font-serif text-4xl leading-tight text-ink sm:text-5xl">
+                    Атмосфера старой библиотеки <span class="text-accent">в вашем экране</span>
+                  </h1>
+                  <p class="text-lg text-ink-muted">
+                    Libra Antiqua — коллекция отобранных изданий, сохранивших тепло страниц и историю владельцев. Мы подбираем редкие книги, которые хочется держать в руках.
+                  </p>
+                  <div class="flex flex-wrap gap-4">
+                    <a
+                      href="{% url 'main:catalog_all' %}"
+                      class="rounded-lg border border-accent-soft bg-accent px-6 py-3 text-sm font-semibold uppercase tracking-[0.3em] text-paper transition hover:bg-accent-soft hover:text-coffee"
+                    >
+                      Перейти в каталог
+                    </a>
+                    <a
+                      href="#about"
+                      class="rounded-lg border border-accent-soft/60 px-6 py-3 text-sm font-semibold uppercase tracking-[0.3em] text-accent transition hover:border-accent hover:bg-accent-soft/20"
+                    >
+                      О коллекции
+                    </a>
+                  </div>
+                </div>
+                <div class="relative">
+                  <div class="absolute inset-0 translate-x-6 translate-y-6 rounded-3xl border border-accent-soft/70"></div>
+                  <img
+                    src="{% static 'images/demo-cover-1.jpg' %}"
+                    alt="Интерьер букинистического магазина"
+                    class="relative h-full w-full rounded-3xl object-cover shadow-lamplight"
+                  >
+                </div>
+              </div>
+            </section>
+
+            {% if categories %}
+              <section>
+                <div class="flex items-center gap-6">
+                  <div class="h-px flex-1 bg-gradient-to-r from-transparent via-accent-soft to-transparent"></div>
+                  <h2 class="font-serif text-2xl text-ink">Коллекции и жанры</h2>
+                  <div class="h-px flex-1 bg-gradient-to-r from-transparent via-accent-soft to-transparent"></div>
+                </div>
+                <p class="mt-4 max-w-2xl text-base text-ink-muted">
+                  Наш каталог организован по тематическим коллекциям, чтобы вы быстро нашли произведения нужной эпохи или направления.
+                </p>
+                <div class="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                  {% for category in categories %}
+                    <a
+                      href="{% url 'main:catalog' category.slug %}"
+                      class="relative flex flex-col gap-4 overflow-hidden rounded-3xl border border-accent-soft/60 bg-white p-8 shadow-md shadow-coffee/10 transition hover:-translate-y-1 hover:shadow-lamplight"
+                    >
+                      <span class="text-xs uppercase tracking-[0.4em] text-accent">Коллекция</span>
+                      <h3 class="font-serif text-2xl text-ink">{{ category.name }}</h3>
+                      <p class="text-sm text-ink-muted">
+                        {% if category.meta_description %}
+                          {{ category.meta_description }}
+                        {% else %}
+                          Подборка изданий, созданных для ценителей редких книг и уникальных находок.
+                        {% endif %}
+                      </p>
+                      <span class="mt-auto text-xs uppercase tracking-[0.4em] text-accent">
+                        Смотреть книги →
+                      </span>
+                      <div class="absolute inset-0 rounded-3xl border border-transparent transition group-hover:border-accent"></div>
+                    </a>
+                  {% endfor %}
+                </div>
+              </section>
+            {% endif %}
+
+            <section id="about" class="grid gap-10 rounded-3xl border border-accent-soft/60 bg-white p-10 shadow-lamplight lg:grid-cols-2">
+              <div class="space-y-4">
+                <h2 class="font-serif text-3xl text-ink">Традиции букинистики и современные технологии</h2>
+                <p class="text-base text-ink-muted">
+                  Мы бережно описываем каждое издание, фиксируем состояние переплётов и листов, подбираем обложки с характером и историей. Коллекция регулярно пополняется благодаря партнёрам и частным библиотекам.
+                </p>
+                <ul class="space-y-3 text-sm text-ink">
+                  <li class="flex items-start gap-3">
+                    <span class="mt-1 h-2 w-2 rounded-full bg-accent"></span>
+                    Гарантируем подлинность происхождения и описанного состояния каждого экземпляра.
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <span class="mt-1 h-2 w-2 rounded-full bg-accent"></span>
+                    Помогаем подобрать книги под интерьер, коллекцию или конкретного адресата.
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <span class="mt-1 h-2 w-2 rounded-full bg-accent"></span>
+                    Используем HTMX для мгновенного обновления каталога без перезагрузки страницы.
+                  </li>
+                </ul>
+              </div>
+              <div class="space-y-6 rounded-3xl border border-accent-soft/60 bg-white p-8">
+                <h3 class="font-serif text-xl text-ink">Экспресс-консультация</h3>
+                <p class="text-sm text-ink-muted">
+                  Не нашли нужную книгу? Оставьте запрос — мы проверим архивные фонды и партнёрские каталоги.
+                </p>
+                <form class="space-y-4">
+                  <div>
+                    <label for="request-name" class="text-xs uppercase tracking-[0.3em] text-ink-muted">Имя</label>
+                    <input
+                      id="request-name"
+                      type="text"
+                      placeholder="Например, Анна"
+                      class="mt-2 w-full rounded-xl border border-accent/30 bg-white px-4 py-2 text-sm text-ink placeholder:text-ink-muted/70 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+                    >
+                  </div>
+                  <div>
+                    <label for="request-book" class="text-xs uppercase tracking-[0.3em] text-ink-muted">Запрос</label>
+                    <textarea
+                      id="request-book"
+                      rows="3"
+                      placeholder="Автор, название или описание нужной книги"
+                      class="mt-2 w-full rounded-xl border border-accent/30 bg-white px-4 py-2 text-sm text-ink placeholder:text-ink-muted/70 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+                    ></textarea>
+                  </div>
+                  <button
+                    type="submit"
+                    class="w-full rounded-lg border border-accent-soft bg-accent px-5 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-paper transition hover:bg-accent-soft hover:text-coffee"
+                  >
+                    Отправить запрос
+                  </button>
+                </form>
+              </div>
+            </section>
+          </div>
+        {% endif %}
+      </section>
+    </main>
+
+    <section id="modal-root" class="mx-auto w-full max-w-7xl px-6" hx-target="this" hx-swap="innerHTML"></section>
+
+    {% include 'main/partials/_footer.html' %}
+  </div>
+
+  <script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-5G4Eq+y3OC/YLXTr4Wr9PXgC7cmk6VwBEm90Lk6R/+qvOB0fOkH1ZZ1xd6Q6716I" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+	  lucide.createIcons();
+	
+    document.body.addEventListener('htmx:configRequest', function (event) {
+      const csrf = document.querySelector('input[name="csrfmiddlewaretoken"]');
+      if (csrf) {
+        event.detail.headers['X-CSRFToken'] = csrf.value;
+      }
+    });
+  </script>
+  {% block body_scripts %}{% endblock %}
+</body>
+</html>

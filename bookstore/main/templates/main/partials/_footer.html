@@ -1,0 +1,32 @@
+<footer id="contacts" class="mt-24 bg-coffee text-paper">
+  <div class="h-0.5 w-full bg-gradient-to-r from-transparent via-accent-soft to-transparent"></div>
+  <div class="mx-auto max-w-7xl px-6 py-12">
+    <div class="grid gap-10 md:grid-cols-3">
+      <div class="space-y-4">
+        <span class="font-serif text-2xl">Libra Antiqua</span>
+        <p class="text-sm text-accent-soft">
+          Букинистический магазин редких и антикварных изданий. С 2025 года подбираем книги с характером и историей.
+        </p>
+      </div>
+      <div class="space-y-3">
+        <h3 class="font-serif text-lg">Контактные данные</h3>
+        <p class="text-sm text-accent-soft">📞 +7 (999) 123-45-67</p>
+        <p class="text-sm text-accent-soft">✉️ hello@libra-antiqua.ru</p>
+        <p class="text-sm text-accent-soft">🕰 пн‑сб 11:00 – 19:00</p>
+      </div>
+      <div class="space-y-3">
+        <h3 class="font-serif text-lg">Навигация</h3>
+        <nav class="flex flex-col gap-2 text-sm text-accent-soft" hx-boost="true">
+          <a href="{% url 'main:index' %}" class="transition hover:text-paper">Главная</a>
+          <a href="{% url 'main:catalog_all' %}" class="transition hover:text-paper">Каталог</a>
+          <a href="#about" class="transition hover:text-paper">О коллекции</a>
+          <a href="#contacts" class="transition hover:text-paper">Связаться</a>
+        </nav>
+      </div>
+    </div>
+    <div class="mt-12 flex flex-col items-start gap-4 border-t border-paper/10 pt-6 text-xs text-accent-soft sm:flex-row sm:items-center sm:justify-between">
+      <span>© 2025 Libra Antiqua — Шаблон сайта букинистического магазина.</span>
+      <span>Сделано с любовью к старым книгам и чистому коду.</span>
+    </div>
+  </div>
+</footer>

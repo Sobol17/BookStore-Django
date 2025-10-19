@@ -1,0 +1,32 @@
+<div class="flex items-center gap-3 rounded-lg border border-accent-soft bg-white p-2 shadow-sm" id="header-search-form">
+  <form
+    action="{% url 'main:catalog_all' %}"
+    method="get"
+    class="relative flex-grow"
+    hx-target="#page"
+    hx-swap="innerHTML"
+  >
+    <input
+      type="text"
+      name="q"
+      value="{{ search_query }}"
+      placeholder="Поиск книги или автора"
+      class="w-full rounded-md border border-transparent bg-white px-4 py-2 text-sm text-ink placeholder:text-ink-muted/60 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/40"
+    >
+    <span class="pointer-events-none absolute inset-y-0 right-3 grid place-items-center text-accent">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m21 21-5.2-5.2m0 0a7 7 0 1 0-9.9 0 7 7 0 0 0 9.9 0Z" />
+      </svg>
+    </span>
+  </form>
+  <button
+    type="button"
+    class="rounded-lg border border-accent-soft px-3 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-ink-muted transition hover:bg-accent-soft/20"
+    hx-get="."
+    hx-target="#header-search"
+    hx-swap="innerHTML"
+    hx-vals='{"reset_search": true}'
+  >
+    Скрыть
+  </button>
+</div>

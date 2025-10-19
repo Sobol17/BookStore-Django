@@ -3,12 +3,12 @@ from .models import Category, Genre, Product, ProductImage
 
 class ProductImageInline(admin.TabularInline):
     model = ProductImage
-    extra = 1 
+    extra = 1
     
 
 class ProductAdmin(admin.ModelAdmin):
-	list_display = ('name', 'category', 'genre', 'price', 'in_stock', 'is_published', 'updated_at', 'slug', 'authors', 'publisher')
-	list_filter = ('category', 'genre', 'is_published', 'in_stock')
+	list_display = ('name', 'category', 'genre', 'condition', 'price', 'in_stock', 'is_published', 'updated_at', 'slug', 'authors', 'publisher')
+	list_filter = ('category', 'genre', 'condition', 'is_published', 'in_stock')
 	search_fields = ('name', 'authors', 'publisher', 'isbn')
 	prepopulated_fields = {'slug': ('name',)}
 	autocomplete_fields = ('category', 'genre')

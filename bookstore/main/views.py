@@ -2,8 +2,14 @@ from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView, DetailView
 from django.http import HttpResponse
 from django.template.response import TemplateResponse
-from .models import Category, Genre, Product
-from django.db.models import Q
+
+from .models import Genre, Product
+from .selectors import (
+    get_categories_with_products,
+    get_published_products_queryset,
+    get_related_products,
+)
+from .services import apply_catalog_filters, extract_hx_flags
 
 
 class IndexView(TemplateView):
@@ -12,8 +18,9 @@ class IndexView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['categories'] = Category.objects.all()
+        context['categories'] = get_categories_with_products()
         context['current_category'] = None
+        context['is_catalog_page'] = False
         return context
 
     def get(self, request, *args, **kwargs):
@@ -26,43 +33,20 @@ class IndexView(TemplateView):
 class CatalogView(TemplateView):
     template_name = 'main/base.html'
 
-    FILTER_MAPPING = {
-        'min_price': lambda queryset, value: queryset.filter(price__gte=value),
-        'max_price': lambda queryset, value: queryset.filter(price__lte=value),
-        'year': lambda queryset, value: queryset.filter(year=value),
-        'author': lambda queryset, value: queryset.filter(authors__icontains=value),
-    }
-
-    @staticmethod
-    def _is_truthy(value):
-        if value is None:
-            return False
-        return str(value).lower() in {'1', 'true', 'on', 'yes'}
-
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         category_slug = kwargs.get('category_slug')
-        categories = Category.objects.all()
-        products = Product.objects.all().order_by('-created_at')
+        categories = get_categories_with_products()
+        products = get_published_products_queryset()
         current_category = None
         if category_slug:
-            current_category = get_object_or_404(Category, slug=category_slug)
+            current_category = get_object_or_404(categories, slug=category_slug)
             products = products.filter(category=current_category)
-        query = self.request.GET.get('q')
-        if query:
-            products = products.filter(
-                Q(name__icontains=query) | Q(authors__icontains=query) | Q(publisher__icontains=query)
-            )
-        filter_params = {}
-        for param, filter_func in self.FILTER_MAPPING.items():
-            value = self.request.GET.get(param)
-            if value:
-                products = filter_func(products, value)
-                filter_params[param] = value
-            else:
-                filter_params[param] = ''
-        filter_params['q'] = query or ''
+        products, filter_params, search_query = apply_catalog_filters(
+            products,
+            self.request.GET,
+        )
         context.update({
             'categories': categories,
             'products': products,
@@ -70,16 +54,10 @@ class CatalogView(TemplateView):
             'current_category_label': current_category.name if current_category else None,
             'filter_params': filter_params,
             'genres': Genre.objects.all(),
-            'search_query': query or '',
+            'search_query': search_query,
+            'is_catalog_page': True,
         })
-        if self._is_truthy(self.request.GET.get('show_search')):
-            context['show_search'] = True
-        if self._is_truthy(self.request.GET.get('reset_search')):
-            context['reset_search'] = True
-        if self._is_truthy(self.request.GET.get('show_filter')):
-            context['show_filter'] = True
-        if self._is_truthy(self.request.GET.get('reset_filter')):
-            context['reset_filter'] = True
+        context.update(extract_hx_flags(self.request.GET))
         return context
     
     def get(self, request, *args, **kwargs):
@@ -107,16 +85,15 @@ class ProductDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         product = self.get_object()
-        context['categories'] = Category.objects.all()
-        context['related_products'] = Product.objects.filter(
-            category=product.category
-        ).exclude(id=product.id)[:4]
+        context['categories'] = get_categories_with_products()
+        context['related_products'] = get_related_products(product)
         if product.category:
             context['current_category'] = product.category.slug
             context['current_category_label'] = product.category.name
         else:
             context['current_category'] = None
             context['current_category_label'] = None
+        context['is_catalog_page'] = False
         return context
     
     def get(self, request, *args, **kwargs):

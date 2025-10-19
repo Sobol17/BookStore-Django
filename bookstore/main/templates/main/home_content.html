@@ -1,0 +1,131 @@
+{% load static %}
+<div class="space-y-16">
+  <section class="relative overflow-hidden rounded-3xl border border-accent-soft/50 bg-white p-10 shadow-lamplight lg:p-16">
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.18),_transparent_45%)]"></div>
+    <div class="relative grid gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+      <div class="space-y-6">
+        <p class="text-xs uppercase tracking-[0.4em] text-accent">
+          Букинистический салон старинных книг
+        </p>
+        <h1 class="font-serif text-4xl leading-tight text-ink sm:text-5xl">
+          Атмосфера старой библиотеки <span class="text-accent">в вашем экране</span>
+        </h1>
+        <p class="text-lg text-ink-muted">
+          Libra Antiqua — коллекция отобранных изданий, сохранивших тепло страниц и историю владельцев. Мы подбираем редкие книги, которые хочется держать в руках.
+        </p>
+        <div class="flex flex-wrap gap-4">
+          <a
+            href="{% url 'main:catalog_all' %}"
+            class="rounded-lg border border-accent-soft bg-accent px-6 py-3 text-sm font-semibold uppercase tracking-[0.3em] text-paper transition hover:bg-accent-soft hover:text-coffee"
+          >
+            Перейти в каталог
+          </a>
+          <a
+            href="#about"
+            class="rounded-lg border border-accent-soft/60 px-6 py-3 text-sm font-semibold uppercase tracking-[0.3em] text-accent transition hover:border-accent hover:bg-accent-soft/20"
+          >
+            О коллекции
+          </a>
+        </div>
+      </div>
+      <div class="relative">
+        <div class="absolute inset-0 translate-x-6 translate-y-6 rounded-3xl border border-accent-soft/70"></div>
+        <img
+          src="{% static 'images/demo-cover-1.jpg' %}"
+          alt="Интерьер букинистического магазина"
+          class="relative h-full w-full rounded-3xl object-cover shadow-lamplight"
+        >
+      </div>
+    </div>
+  </section>
+
+  {% if categories %}
+    <section>
+      <div class="flex items-center gap-6">
+        <div class="h-px flex-1 bg-gradient-to-r from-transparent via-accent-soft to-transparent"></div>
+        <h2 class="font-serif text-2xl text-ink">Коллекции и жанры</h2>
+        <div class="h-px flex-1 bg-gradient-to-r from-transparent via-accent-soft to-transparent"></div>
+      </div>
+      <p class="mt-4 max-w-2xl text-base text-ink-muted">
+        Наш каталог организован по тематическим коллекциям, чтобы вы быстро нашли произведения нужной эпохи или направления.
+      </p>
+      <div class="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+        {% for category in categories %}
+          <a
+            href="{% url 'main:catalog' category.slug %}"
+            class="relative flex flex-col gap-4 overflow-hidden rounded-3xl border border-accent-soft/60 bg-white p-8 shadow-md shadow-coffee/10 transition hover:-translate-y-1 hover:shadow-lamplight"
+          >
+            <span class="text-xs uppercase tracking-[0.4em] text-accent">Коллекция</span>
+            <h3 class="font-serif text-2xl text-ink">{{ category.name }}</h3>
+            <p class="text-sm text-ink-muted">
+              {% if category.meta_description %}
+                {{ category.meta_description }}
+              {% else %}
+                Подборка изданий, созданных для ценителей редких книг и уникальных находок.
+              {% endif %}
+            </p>
+            <span class="mt-auto text-xs uppercase tracking-[0.4em] text-accent">
+              Смотреть книги →
+            </span>
+            <div class="absolute inset-0 rounded-3xl border border-transparent transition group-hover:border-accent"></div>
+          </a>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+
+  <section id="about" class="grid gap-10 rounded-3xl border border-accent-soft/60 bg-white p-10 shadow-lamplight lg:grid-cols-2">
+    <div class="space-y-4">
+      <h2 class="font-serif text-3xl text-ink">Традиции букинистики и современные технологии</h2>
+      <p class="text-base text-ink-muted">
+        Мы бережно описываем каждое издание, фиксируем состояние переплётов и листов, подбираем обложки с характером и историей. Коллекция регулярно пополняется благодаря партнёрам и частным библиотекам.
+      </p>
+      <ul class="space-y-3 text-sm text-ink">
+        <li class="flex items-start gap-3">
+          <span class="mt-1 h-2 w-2 rounded-full bg-accent"></span>
+          Гарантируем подлинность происхождения и описанного состояния каждого экземпляра.
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="mt-1 h-2 w-2 rounded-full bg-accent"></span>
+          Помогаем подобрать книги под интерьер, коллекцию или конкретного адресата.
+        </li>
+        <li class="flex items-start gap-3">
+          <span class="mt-1 h-2 w-2 rounded-full bg-accent"></span>
+          Используем HTMX для мгновенного обновления каталога без перезагрузки страницы.
+        </li>
+      </ul>
+    </div>
+    <div class="space-y-6 rounded-3xl border border-accent-soft/60 bg-white p-8">
+      <h3 class="font-serif text-xl text-ink">Экспресс-консультация</h3>
+      <p class="text-sm text-ink-muted">
+        Не нашли нужную книгу? Оставьте запрос — мы проверим архивные фонды и партнёрские каталоги.
+      </p>
+      <form class="space-y-4">
+        <div>
+          <label for="request-name" class="text-xs uppercase tracking-[0.3em] text-ink-muted">Имя</label>
+          <input
+            id="request-name"
+            type="text"
+            placeholder="Например, Анна"
+            class="mt-2 w-full rounded-xl border border-accent/30 bg-white px-4 py-2 text-sm text-ink placeholder:text-ink-muted/70 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+          >
+        </div>
+        <div>
+          <label for="request-book" class="text-xs uppercase tracking-[0.3em] text-ink-muted">Запрос</label>
+          <textarea
+            id="request-book"
+            rows="3"
+            placeholder="Автор, название или описание нужной книги"
+            class="mt-2 w-full rounded-xl border border-accent/30 bg-white px-4 py-2 text-sm text-ink placeholder:text-ink-muted/70 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+          ></textarea>
+        </div>
+        <button
+          type="submit"
+          class="w-full rounded-lg border border-accent-soft bg-accent px-5 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-paper transition hover:bg-accent-soft hover:text-coffee"
+        >
+          Отправить запрос
+        </button>
+      </form>
+    </div>
+  </section>
+</div>

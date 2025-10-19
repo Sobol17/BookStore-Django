@@ -3,6 +3,13 @@ from django.utils import timezone
 from django.utils.text import slugify
 
 
+class ProductConditionChoices(models.TextChoices):
+    GIFT = 'gift', 'Подарочное'
+    EXCELLENT = 'excellent', 'Отличное'
+    GOOD = 'good', 'Хорошее'
+    FAIR = 'fair', 'Удовлетворительное'
+
+
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
     slug = models.SlugField(unique=True, blank=True)
@@ -71,8 +78,12 @@ class Product(models.Model):
     year = models.PositiveIntegerField(null=True, blank=True)
     main_image = models.ImageField(upload_to='products/main')
     isbn = models.CharField(max_length=32, blank=True)
-    condition = models.CharField(max_length=64, blank=True)
     description = models.TextField(blank=True)
+    condition = models.CharField(
+        max_length=16,
+        choices=ProductConditionChoices.choices,
+        default=ProductConditionChoices.EXCELLENT,
+    )
     price = models.DecimalField(max_digits=10, decimal_places=2)
     old_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     currency = models.CharField(max_length=3, default='RUB')
@@ -82,6 +93,7 @@ class Product(models.Model):
     is_published = models.BooleanField(default=True)
     meta_title = models.CharField(max_length=255, blank=True)
     meta_description = models.CharField(max_length=300, blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):
@@ -103,3 +115,5 @@ class ProductImage(models.Model):
     
     def __str__(self):
         return f"Изображение {self.product.name} позиция {self.position}"
+    
+    

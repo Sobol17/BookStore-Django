@@ -1,0 +1,14 @@
+<button
+  type="button"
+  class="flex items-center gap-2 rounded-lg border border-accent-soft bg-accent px-4 py-2 text-sm font-semibold text-paper transition hover:bg-accent-soft hover:text-coffee"
+  hx-get="."
+  hx-target="#header-search"
+  hx-swap="innerHTML"
+  hx-vals='{"show_search": true}'
+  id="header-search-button"
+>
+  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m21 21-5.2-5.2m0 0a7 7 0 1 0-9.9 0 7 7 0 0 0 9.9 0Z" />
+  </svg>
+  <span>Поиск</span>
+</button>
