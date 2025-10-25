@@ -66,7 +66,19 @@
     .input {
       background-color: #5d889614;
       border: 1px solid transparent;
-      @apply mt-2 w-full rounded-xl border px-4 py-2 text-sm text-ink placeholder:text-ink-muted/70 focus:outline-none;
+      font-size: 0.875rem;
+      line-height: 1.25rem;
+      padding-left: 1rem;
+      padding-right: 1rem;
+      border-radius: 0.5rem;
+      padding-top: 0.5rem;
+      padding-bottom: 0.5rem;
+      width: 100%;
+      margin-top: 0.5rem;
+    }
+    input:focus {
+      outline: none;
+      border-color: #8BE3F5;
     }
     input::-webkit-outer-spin-button,
     input::-webkit-inner-spin-button {
@@ -189,7 +201,7 @@
                     <span class="font-semibold text-accent">«{{ search_query }}»</span>
                   </p>
                 {% endif %}
-                <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                <div class="grid gap-6 sm:grid-cols-3">
                   {% for product in products %}
                     {% include 'main/partials/_product-card.html' with product=product %}
                   {% empty %}

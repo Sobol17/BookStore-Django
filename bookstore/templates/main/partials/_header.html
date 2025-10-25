@@ -14,10 +14,9 @@
       <div class="flex items-center gap-2 text-sm text-ink-muted">
         <i data-lucide="map-pin" class="h-4 w-4 text-accent"></i>
         <span>Россия, Москва</span>
-        <i data-lucide="chevron-down" class="h-4 w-4 text-ink-muted/70"></i>
       </div>
 
-      <nav class="hidden items-center gap-6 text-sm text-ink-muted xl:flex" hx-boost="true">
+      <nav class="hidden items-center gap-6 text-sm text-ink-muted xl:flex">
         <a href="{% url 'main:index' %}" class="transition hover:text-ink {% if not is_catalog_page and not object %}text-ink{% endif %}">Главная</a>
         <a href="{% url 'main:catalog_all' %}" class="transition hover:text-ink {% if is_catalog_page %}text-ink{% endif %}">Каталог</a>
         <a href="#about" class="transition hover:text-ink">О магазине</a>
@@ -26,7 +25,7 @@
     </div>
 
     <div class="mt-5 flex flex-col gap-3 md:flex-row md:items-center">
-      <a href="{% url 'main:index' %}" class="flex flex-col leading-tight text-ink" hx-boost="true">
+      <a href="{% url 'main:index' %}" class="flex flex-col leading-tight text-ink">
         <span class="text-[0.83rem] font-semibold text-accent-dark">Букинистика</span>
         <span class="text-2xl font-black tracking-[0.05em]">DOMBB</span>
       </a>
@@ -56,7 +55,7 @@
           <i data-lucide="search" class="h-5 w-5"></i>
         </button>
       </form>
-      <div class="ml-auto hidden items-stretch gap-6 md:flex" hx-boost="true">
+      <div class="ml-auto hidden items-stretch gap-6 md:flex" >
         <a href="{% url 'main:index' %}" class="flex flex-col items-center gap-1 text-xs font-medium text-ink-muted transition hover:text-ink">
           <span class="flex h-10 w-10 items-center justify-center rounded-full border border-accent-soft text-ink">
             <i data-lucide="bookmark" class="h-5 w-5"></i>
@@ -107,7 +106,7 @@
     class="fixed inset-0 z-40 flex min-h-screen flex-col bg-white/95 px-6 py-8 backdrop-blur-md md:hidden"
   >
     <div class="flex items-center justify-between border-b border-accent-soft pb-4">
-      <a href="{% url 'main:index' %}" class="text-lg font-semibold uppercase tracking-[0.35em] text-ink" hx-boost="true">Libra Antiqua</a>
+      <a href="{% url 'main:index' %}" class="text-lg font-semibold uppercase tracking-[0.35em] text-ink" >Dombb</a>
       <button
         type="button"
         class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-accent-soft text-ink transition hover:border-accent hover:text-accent"
@@ -118,7 +117,7 @@
       </button>
     </div>
 
-    <nav class="mt-8 flex flex-col gap-4 text-base font-medium text-ink" hx-boost="true" x-on:click="mobileOpen = false">
+    <nav class="mt-8 flex flex-col gap-4 text-base font-medium text-ink" x-on:click="mobileOpen = false">
       <a href="{% url 'main:index' %}" class="flex items-center justify-between rounded-2xl border border-accent-soft px-4 py-3 transition hover:bg-accent-soft/50">
         <span>Главная</span>
         <i data-lucide="arrow-right" class="h-4 w-4"></i>
