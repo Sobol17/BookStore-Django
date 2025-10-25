@@ -1,13 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.utils.text import slugify
-
-
-class ProductConditionChoices(models.TextChoices):
-    GIFT = 'gift', 'Подарочное'
-    EXCELLENT = 'excellent', 'Отличное'
-    GOOD = 'good', 'Хорошее'
-    FAIR = 'fair', 'Удовлетворительное'
+from .enums import ProductConditionChoices, ProductCollections
 
 
 class Category(models.Model):
@@ -84,8 +78,14 @@ class Product(models.Model):
         choices=ProductConditionChoices.choices,
         default=ProductConditionChoices.EXCELLENT,
     )
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    old_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    collection = models.CharField(
+        max_length=16,
+        choices=ProductCollections.choices,
+        null=True,
+        blank=True,
+    )
+    price = models.DecimalField(max_digits=10, decimal_places=0)
+    old_price = models.DecimalField(max_digits=10, decimal_places=0, null=True, blank=True)
     currency = models.CharField(max_length=3, default='RUB')
     in_stock = models.BooleanField(default=True)
     stock_qty = models.PositiveIntegerField(default=1)
@@ -102,6 +102,15 @@ class Product(models.Model):
         if not self.slug:
             self.slug = slugify(self.name)
         super().save(*args, **kwargs)
+        
+    def formatted_price(self):
+        symbols = {
+            'RUB': '₽',
+            'USD': '$',
+            'EUR': '€',
+        }
+        symbol = symbols.get(self.currency.upper(), self.currency)
+        return f"{int(self.price):,}".replace(',', ' ') + f" {symbol}"
 
     def __str__(self):
         return self.name
@@ -117,3 +126,14 @@ class ProductImage(models.Model):
         return f"Изображение {self.product.name} позиция {self.position}"
     
     
+class Banner(models.Model):
+    title = models.CharField(max_length=255)
+    image = models.ImageField(upload_to='banners/main')
+    link = models.URLField(blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.title
+

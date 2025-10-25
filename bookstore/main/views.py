@@ -2,10 +2,13 @@ from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView, DetailView
 from django.http import HttpResponse
 from django.template.response import TemplateResponse
+from django.urls import reverse
+from .enums import ProductCollections
 
-from .models import Genre, Product
+from .models import Genre, Product, Banner
 from .selectors import (
     get_categories_with_products,
+    get_products_collection,
     get_published_products_queryset,
     get_related_products,
 )
@@ -21,6 +24,9 @@ class IndexView(TemplateView):
         context['categories'] = get_categories_with_products()
         context['current_category'] = None
         context['is_catalog_page'] = False
+        context['new_products'] = get_products_collection(ProductCollections.NEW)
+        context['new_products_link'] = reverse('main:catalog_all')
+        context['banners'] = Banner.objects.filter(is_active=True).order_by('-created_at')
         return context
 
     def get(self, request, *args, **kwargs):

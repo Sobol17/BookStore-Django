@@ -1,0 +1,153 @@
+{% load static %}
+<header class="px-4 pt-6 sm:px-6 lg:px-8" x-data="{ mobileOpen: false }">
+  <div class="mx-auto w-full my-container rounded-[1.5rem] bg-white/95 px-8 py-6 ring-1 ring-accent-soft/70 backdrop-blur-sm">
+    <div class="flex flex-wrap items-center gap-4">
+      <button
+        type="button"
+        class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-accent-soft text-ink transition hover:border-accent hover:text-accent md:hidden"
+        x-on:click="mobileOpen = true"
+        aria-label="Открыть меню"
+      >
+        <i data-lucide="menu" class="h-5 w-5"></i>
+      </button>
+
+      <div class="flex items-center gap-2 text-sm text-ink-muted">
+        <i data-lucide="map-pin" class="h-4 w-4 text-accent"></i>
+        <span>Россия, Москва</span>
+        <i data-lucide="chevron-down" class="h-4 w-4 text-ink-muted/70"></i>
+      </div>
+
+      <nav class="hidden items-center gap-6 text-sm text-ink-muted xl:flex" hx-boost="true">
+        <a href="{% url 'main:index' %}" class="transition hover:text-ink {% if not is_catalog_page and not object %}text-ink{% endif %}">Главная</a>
+        <a href="{% url 'main:catalog_all' %}" class="transition hover:text-ink {% if is_catalog_page %}text-ink{% endif %}">Каталог</a>
+        <a href="#about" class="transition hover:text-ink">О магазине</a>
+        <a href="#contacts" class="transition hover:text-ink">Связаться</a>
+      </nav>
+    </div>
+
+    <div class="mt-5 flex flex-col gap-3 md:flex-row md:items-center">
+      <a href="{% url 'main:index' %}" class="flex flex-col leading-tight text-ink" hx-boost="true">
+        <span class="text-[0.83rem] font-semibold text-accent-dark">Букинистика</span>
+        <span class="text-2xl font-black tracking-[0.05em]">DOMBB</span>
+      </a>
+      <a
+        href="{% url 'main:catalog_all' %}"
+        class="flex items-center gap-3 rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-ink transition hover:bg-accent-dark hover:text-graphite md:px-6"
+      >
+        <span class="flex h-4 w-4 items-center justify-center rounded-xl text-ink">
+          <i data-lucide="book-open" class="h-5 w-5"></i>
+        </span>
+        <span>Каталог</span>
+      </a>
+
+      <form action="{% url 'main:catalog_all' %}" method="get" class="relative flex flex-1 items-center rounded-2xl bg-white">
+        <input
+          type="text"
+          name="q"
+          value="{{ search_query }}"
+          placeholder="Поиск по книгам"
+          class="input h-10 w-full rounded-xl px-6 text-sm text-ink placeholder:text-ink-muted/70 focus:outline-none md:h-12"
+        >
+        <button
+          type="submit"
+          class="absolute right-2 flex h-8 w-8 items-center justify-center rounded-xl bg-accent text-ink transition hover:bg-accent-dark md:h-10 md:w-10"
+          aria-label="Найти"
+        >
+          <i data-lucide="search" class="h-5 w-5"></i>
+        </button>
+      </form>
+      <div class="ml-auto hidden items-stretch gap-6 md:flex" hx-boost="true">
+        <a href="{% url 'main:index' %}" class="flex flex-col items-center gap-1 text-xs font-medium text-ink-muted transition hover:text-ink">
+          <span class="flex h-10 w-10 items-center justify-center rounded-full border border-accent-soft text-ink">
+            <i data-lucide="bookmark" class="h-5 w-5"></i>
+          </span>
+          Закладки
+        </a>
+        <a href="{% url 'main:catalog_all' %}" class="flex flex-col items-center gap-1 text-xs font-medium text-ink-muted transition hover:text-ink">
+          <span class="flex h-10 w-10 items-center justify-center rounded-full border border-accent-soft text-ink">
+            <i data-lucide="shopping-bag" class="h-5 w-5"></i>
+          </span>
+          Корзина
+        </a>
+        <a href="#contacts" class="flex flex-col items-center gap-1 text-xs font-medium text-ink-muted transition hover:text-ink">
+          <span class="flex h-10 w-10 items-center justify-center rounded-full border border-accent-soft text-ink">
+            <i data-lucide="user-round" class="h-5 w-5 text-ink"></i>
+          </span>
+          Войти
+        </a>
+        {% comment %} <a href="{% url 'main:catalog_all' %}" class="flex flex-col items-center gap-1 text-xs font-medium text-ink-muted transition hover:text-ink">
+          <span class="flex h-10 w-10 items-center justify-center rounded-full border border-accent-soft text-ink">
+            <i data-lucide="package" class="h-5 w-5"></i>
+          </span>
+          Заказы
+        </a> {% endcomment %}
+      </div>
+    </div>
+  </div>
+
+  {% comment %} {% if categories %}
+    <div class="mx-auto mt-4 flex w-full my-container gap-3 overflow-x-auto px-4 sm:px-6 lg:px-8 pb-1">
+      {% for category in categories %}
+        <a
+          href="{% url 'main:catalog' category.slug %}"
+          class="whitespace-nowrap rounded-full border border-accent-soft px-4 py-2 text-xs font-medium uppercase tracking-[0.2em] text-ink-muted transition hover:border-accent hover:bg-accent-soft/60 hover:text-ink {% if current_category == category.slug %}border-accent bg-accent/90 text-graphite{% endif %}"
+        >
+          {{ category.name }}
+        </a>
+      {% endfor %}
+    </div>
+  {% endif %} {% endcomment %}
+
+  <div
+    x-cloak
+    x-show="mobileOpen"
+    x-transition.opacity.duration.200ms
+    x-on:keydown.escape.window="mobileOpen = false"
+    x-on:click.self="mobileOpen = false"
+    class="fixed inset-0 z-40 flex min-h-screen flex-col bg-white/95 px-6 py-8 backdrop-blur-md md:hidden"
+  >
+    <div class="flex items-center justify-between border-b border-accent-soft pb-4">
+      <a href="{% url 'main:index' %}" class="text-lg font-semibold uppercase tracking-[0.35em] text-ink" hx-boost="true">Libra Antiqua</a>
+      <button
+        type="button"
+        class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-accent-soft text-ink transition hover:border-accent hover:text-accent"
+        x-on:click="mobileOpen = false"
+        aria-label="Закрыть меню"
+      >
+        <i data-lucide="x" class="h-5 w-5"></i>
+      </button>
+    </div>
+
+    <nav class="mt-8 flex flex-col gap-4 text-base font-medium text-ink" hx-boost="true" x-on:click="mobileOpen = false">
+      <a href="{% url 'main:index' %}" class="flex items-center justify-between rounded-2xl border border-accent-soft px-4 py-3 transition hover:bg-accent-soft/50">
+        <span>Главная</span>
+        <i data-lucide="arrow-right" class="h-4 w-4"></i>
+      </a>
+      <a href="{% url 'main:catalog_all' %}" class="flex items-center justify-between rounded-2xl border border-accent-soft px-4 py-3 transition hover:bg-accent-soft/50">
+        <span>Каталог</span>
+        <i data-lucide="arrow-right" class="h-4 w-4"></i>
+      </a>
+      <a href="#about" class="flex items-center justify-between rounded-2xl border border-accent-soft px-4 py-3 transition hover:bg-accent-soft/50">
+        <span>О магазине</span>
+        <i data-lucide="arrow-right" class="h-4 w-4"></i>
+      </a>
+      <a href="#contacts" class="flex items-center justify-between rounded-2xl border border-accent-soft px-4 py-3 transition hover:bg-accent-soft/50">
+        <span>Связаться</span>
+        <i data-lucide="arrow-right" class="h-4 w-4"></i>
+      </a>
+    </nav>
+
+    <div class="mt-10 grid grid-cols-2 gap-4 text-md text-ink-muted">
+      <div class="space-y-1">
+        <span class="text-xs uppercase tracking-[0.4em] text-accent">Контакты</span>
+        <p>📞 +7 (999) 123-45-67</p>
+        <p>✉️ hello@libra-antiqua.ru</p>
+      </div>
+      <div class="space-y-1">
+        <span class="text-xs uppercase tracking-[0.4em] text-accent">График</span>
+        <p>🕰 пн‑сб 11:00 – 19:00</p>
+        <p>📍 Россия, Москва</p>
+      </div>
+    </div>
+  </div>
+</header>

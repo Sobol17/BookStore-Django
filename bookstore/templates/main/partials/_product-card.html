@@ -1,0 +1,65 @@
+{% load static %}
+<article class="group flex flex-col rounded-2xl bg-white p-2 transition hover:shadow">
+  <a href="{% url 'main:product_detail' product.slug %}" class="flex flex-col gap-2">
+    <div class="relative aspect-[1] overflow-hidden rounded-xl border border-accent-soft/70 bg-accent-soft/50">
+      {% if product.main_image %}
+        <img
+          src="{{ product.main_image.url }}"
+          alt="Обложка: {{ product.name }}"
+          class="h-full w-full object-cover object-center transition duration-700 group-hover:scale-105"
+        >
+      {% else %}
+        <div class="flex h-full w-full items-center justify-center bg-white/70 text-sm font-semibold text-ink">
+          Нет изображения
+        </div>
+      {% endif %}
+      <span class="absolute left-3 top-3 rounded-full bg-mint px-3 py-1 text-[0.7rem] font-semibold text-graphite">
+        {% if product.collection %}
+          {{ product.get_collection_display }}
+        {% else %}
+          Новинка
+        {% endif %}
+      </span>
+      
+      <span class="absolute right-3 top-3 rounded-full bg-blush px-3 py-1 text-xs font-bold text-white">
+        -%15
+      </span>
+      
+    </div>
+
+    <div class="flex flex-col gap-1 px-2">
+      <h3 class="text-lg font-semibold leading-snug text-ink">{{ product.name }}</h3>
+
+      {% if product.authors %}
+        <p class="text-sm text-ink-muted">{{ product.authors }}</p>
+      {% endif %}
+
+      {% if product.year %}
+        <p class="text-xs font-semibold text-ink-muted">Издание {{ product.year }}</p>
+      {% endif %}
+    </div>
+
+    <div class="flex items-baseline gap-2 px-2">
+        <span class="text-xl font-semibold text-ink">{{ product.formatted_price }}</span>
+        {% if product.old_price %}
+          <span class="text-sm text-ink-muted line-through">{{ product.old_price }}</span>
+        {% endif %}
+      </div>
+  </a>
+
+  <div class="mt-1 flex items-center gap-3 px-2">
+    <button
+      type="button"
+      class="flex-1 rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-ink transition hover:bg-accent-dark hover:text-graphite"
+    >
+      Купить
+    </button>
+    <button
+      type="button"
+      class="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-accent-dark text-graphite transition hover:border-accent hover:bg-accent-soft/60 hover:text-graphite"
+      aria-label="Добавить в закладки"
+    >
+      <i data-lucide="bookmark" class="h-5 w-5"></i>
+    </button>
+  </div>
+</article>

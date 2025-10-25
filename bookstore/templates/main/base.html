@@ -61,10 +61,25 @@
       background-image: none;
     }
     .my-container {
-      max-width: 1440px;
+      max-width: 1280px;
     }
     .input {
       background-color: #5d889614;
+      border: 1px solid transparent;
+      @apply mt-2 w-full rounded-xl border px-4 py-2 text-sm text-ink placeholder:text-ink-muted/70 focus:outline-none;
+    }
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        /* display: none; <- Crashes Chrome on hover */
+        -webkit-appearance: none;
+        margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
+    }
+    input[type=number] {
+        -moz-appearance:textfield; /* Firefox */
+    }
+    .input:focus {
+        background-color: #fff;
+        border-color: #f1f1f1;
     }
   </style>
   {% block head_extra %}{% endblock %}
@@ -73,10 +88,8 @@
   <div class="min-h-screen bg-paper">
     {% include 'main/partials/_header.html' %}
 
-    <main id="page" class="mx-auto flex w-full my-container flex-1 flex-col px-4 py-14 sm:px-6 lg:px-8">
-      <div class="h-[3px] w-24 rounded-full bg-accent/70"></div>
-
-      <section class="mt-12 flex-1" hx-target="this" hx-swap="innerHTML">
+    <main id="page" class="mx-auto flex w-full my-container flex-1 flex-col px-4 py-10 sm:px-6 lg:px-8">
+      <section class="flex-1" hx-target="this" hx-swap="innerHTML">
         {% if object %}
           <div data-name="product_detail" class="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
             <div class="relative rounded-3xl border border-accent-soft/60 bg-white p-6">
@@ -156,106 +169,18 @@
         {% elif is_catalog_page %}
           <div data-name="catalog_page" class="flex flex-col gap-12">
             <header class="flex flex-col gap-4">
-              <p class="text-md text-accent">
+              <p class="text-md text-graphite">
                 {% if current_category %}
                   Категория: {{ current_category_label }}
                 {% else %}
                   Коллекция Libra Antiqua
                 {% endif %}
               </p>
-              <h1 class="font-serif text-4xl text-ink">Каталог редких книг</h1>
-              <p class="max-w-2xl text-base text-ink-muted">
-                Подборка букинистических изданий с сохранённой историей. Используйте фильтры, чтобы найти идеальный экземпляр для вашей коллекции.
-              </p>
+              <h1 class="font-serif text-4xl text-ink">Каталог</h1>
             </header>
 
             <div class="grid gap-12 lg:grid-cols-[minmax(0,290px)_1fr]">
-              <aside class="space-y-6 rounded-3xl border border-accent-soft/60 bg-white p-6">
-                <h2 class="font-serif text-xl text-ink">Подбор по параметрам</h2>
-                <form action="." method="get" class="space-y-4">
-                  <div>
-                    <label for="q" class="text-xs uppercase tracking-[0.3em] text-ink-muted">Поиск</label>
-                    <input
-                      id="q"
-                      name="q"
-                      type="text"
-                      value="{{ filter_params.q|default:search_query }}"
-                      placeholder="Автор, название или издательство"
-                      class="mt-2 w-full rounded-xl border border-accent/30 bg-white px-4 py-2 text-sm text-ink placeholder:text-ink-muted/70 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
-                    >
-                  </div>
-                  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
-                    <div>
-                      <label for="min_price" class="text-xs uppercase tracking-[0.3em] text-ink-muted">Цена от</label>
-                      <input
-                        id="min_price"
-                        name="min_price"
-                        type="number"
-                        value="{{ filter_params.min_price }}"
-                        min="0"
-                        class="mt-2 w-full rounded-xl border border-accent/30 bg-white px-4 py-2 text-sm text-ink placeholder:text-ink-muted/70 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
-                      >
-                    </div>
-                    <div>
-                      <label for="max_price" class="text-xs uppercase tracking-[0.3em] text-ink-muted">Цена до</label>
-                      <input
-                        id="max_price"
-                        name="max_price"
-                        type="number"
-                        value="{{ filter_params.max_price }}"
-                        min="0"
-                        class="mt-2 w-full rounded-xl border border-accent/30 bg-white px-4 py-2 text-sm text-ink placeholder:text-ink-muted/70 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
-                      >
-                    </div>
-                    <div>
-                      <label for="year" class="text-xs uppercase tracking-[0.3em] text-ink-muted">Год издания</label>
-                      <input
-                        id="year"
-                        name="year"
-                        type="number"
-                        value="{{ filter_params.year }}"
-                        class="mt-2 w-full rounded-xl border border-accent/30 bg-white px-4 py-2 text-sm text-ink placeholder:text-ink-muted/70 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
-                      >
-                    </div>
-                    <div>
-                      <label for="author" class="text-xs uppercase tracking-[0.3em] text-ink-muted">Автор</label>
-                      <input
-                        id="author"
-                        name="author"
-                        type="text"
-                        value="{{ filter_params.author }}"
-                        class="mt-2 w-full rounded-xl border border-accent/30 bg-white px-4 py-2 text-sm text-ink placeholder:text-ink-muted/70 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
-                      >
-                    </div>
-                  </div>
-                  <div class="flex flex-wrap gap-3">
-                    <button
-                      type="submit"
-                      class="rounded-2xl border border-accent-soft bg-accent px-5 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-ink transition hover:bg-accent-soft/80 hover:text-graphite"
-                    >
-                      Применить
-                    </button>
-                    <a
-                      href="{% url 'main:catalog_all' %}"
-                      class="rounded-lg border border-accent-soft px-5 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-accent transition hover:bg-accent-soft/20"
-                    >
-                      Сбросить
-                    </a>
-                  </div>
-                </form>
-                {% if genres %}
-                  <div>
-                    <h3 class="font-serif text-lg text-ink">Жанры и коллекции</h3>
-                    <ul class="mt-4 space-y-2 text-sm text-ink-muted">
-                      {% for genre in genres %}
-                        <li class="rounded-lg border border-transparent px-3 py-2 transition hover:border-accent hover:text-ink">
-                          {{ genre.name }}
-                        </li>
-                      {% endfor %}
-                    </ul>
-                  </div>
-                {% endif %}
-              </aside>
+              {% include 'main/partials/_catalog_filters.html' %}
 
               <div class="space-y-8">
                 {% if search_query %}
@@ -280,9 +205,9 @@
           <div data-name="home_page" class="space-y-16">
             {% include 'main/partials/_banner.html' with banners=banners %}
 
-            <section class="relative overflow-hidden rounded-3xl border border-accent-soft/50 bg-white p-10  lg:p-16">
+            <section class="relative overflow-hidden rounded-2xl border border-accent-soft/50 bg-white p-7 lg:p-10">
               <div class="absolute inset-0"></div>
-              <div class="relative grid gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+              <div class="relative grid gap-7 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
                 <div class="space-y-6">
                   <p class="text-xs text-accent-darker">
                     Букинистический салон старинных книг и атрибутики
@@ -296,7 +221,7 @@
                   <div class="flex flex-wrap gap-4">
                     <a
                       href="{% url 'main:catalog_all' %}"
-                      class="rounded-xl border border-accent-soft bg-accent px-6 py-3 text-sm font-semibold text-ink transition hover:bg-accent-soft/80 hover:text-graphite"
+                      class="rounded-xl border border-accent-soft bg-accent px-6 py-3 text-sm font-semibold text-ink transition hover:bg-accent-dark hover:text-graphite"
                     >
                       Перейти в каталог
                     </a>
@@ -323,22 +248,16 @@
 
             {% if categories %}
               <section>
-                <div class="flex items-center gap-6">
-                  <div class="h-px flex-1 bg-gradient-to-r from-transparent via-accent-soft to-transparent"></div>
-                  <h2 class="font-serif text-2xl text-ink">Коллекции и жанры</h2>
-                  <div class="h-px flex-1 bg-gradient-to-r from-transparent via-accent-soft to-transparent"></div>
-                </div>
-                <p class="mt-4 max-w-2xl text-base text-ink-muted">
-                  Наш каталог организован по тематическим коллекциям, чтобы вы быстро нашли произведения нужной эпохи или направления.
-                </p>
+                <h2 class="text-2xl font-bold">Коллекции и жанры</h2>
+                
                 <div class="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
                   {% for category in categories %}
                     <a
                       href="{% url 'main:catalog' category.slug %}"
-                      class="relative flex flex-col gap-4 overflow-hidden rounded-3xl border border-accent-soft/60 bg-white p-8 transition hover:-translate-y-1"
+                      class="relative flex flex-col gap-1 overflow-hidden rounded-xl border border-accent-soft/60 bg-white p-6 transition hover:shadow-xl"
                     >
-                      <span class="text-xs uppercase tracking-[0.4em] text-accent">Коллекция</span>
-                      <h3 class="font-serif text-2xl text-ink">{{ category.name }}</h3>
+                      <span class="text-sm text-bold text-graphite">Коллекция</span>
+                      <h3 class="text-2xl font-bold text-ink">{{ category.name }}</h3>
                       <p class="text-sm text-ink-muted">
                         {% if category.meta_description %}
                           {{ category.meta_description }}
@@ -346,7 +265,7 @@
                           Подборка изданий, созданных для ценителей редких книг и уникальных находок.
                         {% endif %}
                       </p>
-                      <span class="mt-auto text-xs uppercase tracking-[0.4em] text-accent">
+                      <span class="mt-4 text-sm font-bold text-accent-darker">
                         Смотреть книги →
                       </span>
                       <div class="absolute inset-0 rounded-3xl border border-transparent transition group-hover:border-accent"></div>
@@ -366,48 +285,54 @@
                 </p>
                 <ul class="space-y-3 text-sm text-ink">
                   <li class="flex items-start gap-3">
-                    <span class="mt-1 h-2 w-2 rounded-full bg-accent"></span>
+                    <span class="mt-1 h-2 w-2 rounded-full bg-graphite shrink-0"></span>
                     Гарантируем подлинность происхождения и описанного состояния каждого экземпляра.
                   </li>
                   <li class="flex items-start gap-3">
-                    <span class="mt-1 h-2 w-2 rounded-full bg-accent"></span>
+                    <span class="mt-1 h-2 w-2 rounded-full bg-graphite shrink-0"></span>
                     Помогаем подобрать книги под интерьер, коллекцию или конкретного адресата.
                   </li>
-                  <li class="flex items-start gap-3">
-                    <span class="mt-1 h-2 w-2 rounded-full bg-accent"></span>
-                    Используем HTMX для мгновенного обновления каталога без перезагрузки страницы.
-                  </li>
+                  
                 </ul>
               </div>
-              <div class="space-y-6 rounded-3xl border border-accent-soft/60 bg-white p-8">
-                <h3 class="font-serif text-xl text-ink">Экспресс-консультация</h3>
+              <div class="space-y-4 rounded-2xl border border-accent-soft/60 bg-white p-7">
+                <h3 class="font-serif text-xl">Экспресс-консультация</h3>
                 <p class="text-sm text-ink-muted">
                   Не нашли нужную книгу? Оставьте запрос — мы проверим архивные фонды и партнёрские каталоги.
                 </p>
                 <form class="space-y-4">
-                  <div>
-                    <label for="request-name" class="text-xs uppercase tracking-[0.3em] text-ink-muted">Имя</label>
+                    <div>
+                    <label for="request-phone" class="text-sm text-ink-muted mb-1">Телефон</label>
                     <input
-                      id="request-name"
+                      id="request-phone"
                       type="text"
-                      placeholder="Например, Анна"
-                      class="mt-2 w-full rounded-xl border border-accent/30 bg-white px-4 py-2 text-sm text-ink placeholder:text-ink-muted/70 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+                      placeholder="Введите телефон"
+                      class="input h-10 w-full rounded-xl px-6 text-sm text-ink placeholder:text-ink-muted/70 focus:outline-none md:h-12"
                     >
                   </div>
                   <div>
-                    <label for="request-book" class="text-xs uppercase tracking-[0.3em] text-ink-muted">Запрос</label>
+                    <label for="request-name" class="text-sm text-ink-muted mb-1">Имя</label>
+                    <input
+                      id="request-name"
+                      type="text"
+                      placeholder="Введите имя"
+                      class="input h-10 w-full rounded-xl px-6 text-sm text-ink placeholder:text-ink-muted/70 focus:outline-none md:h-12"
+                    >
+                  </div>
+                  <div>
+                    <label for="request-book" class="text-sm text-ink-muted mb-1">Запрос</label>
                     <textarea
                       id="request-book"
                       rows="3"
                       placeholder="Автор, название или описание нужной книги"
-                      class="mt-2 w-full rounded-xl border border-accent/30 bg-white px-4 py-2 text-sm text-ink placeholder:text-ink-muted/70 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+                      class="input mt-2 w-full rounded-xl px-4 py-2 text-sm text-ink placeholder:text-ink-muted/70 resize-none focus:outline-none"
                     ></textarea>
                   </div>
                   <button
                     type="submit"
-                    class="w-full rounded-2xl border border-accent-soft bg-accent px-5 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-ink transition hover:bg-accent-soft/80 hover:text-graphite"
+                    class="w-full rounded-xl border border-accent-soft bg-accent px-5 py-3 text-sm font-semibold text-ink transition hover:bg-accent-dark hover:text-graphite"
                   >
-                    Отправить запрос
+                    Отправить
                   </button>
                 </form>
               </div>
@@ -439,17 +364,60 @@
       if (!window.Swiper) {
         return;
       }
+      document.querySelectorAll('[data-banner-id]').forEach(function (bannerRoot) {
+        const mainSlider = bannerRoot.querySelector('.js-banner-slider');
+        if (!mainSlider || mainSlider.dataset.sliderInitialized === 'true') {
+          return;
+        }
+        const thumbsEl = bannerRoot.querySelector('.js-banner-thumbs');
+        let thumbsSwiper = null;
+        if (thumbsEl && thumbsEl.dataset.sliderInitialized !== 'true') {
+          thumbsSwiper = new Swiper(thumbsEl, {
+            slidesPerView: 4,
+            spaceBetween: 12,
+            freeMode: true,
+            watchSlidesProgress: true,
+            breakpoints: {
+              1280: { slidesPerView: 7 },
+            }
+          });
+          thumbsEl.dataset.sliderInitialized = 'true';
+        }
+        const bannerOptions = {
+          slidesPerView: 1,
+          loop: true,
+          autoplay: {
+            delay: 4800,
+            disableOnInteraction: false
+          },
+          speed: 1400,
+          spaceBetween: 30
+        };
+        if (thumbsSwiper) {
+          bannerOptions.thumbs = { swiper: thumbsSwiper };
+        }
+        const prev = bannerRoot.querySelector('.js-banner-prev');
+        const next = bannerRoot.querySelector('.js-banner-next');
+        if (prev && next) {
+          bannerOptions.navigation = {
+            prevEl: prev,
+            nextEl: next
+          };
+        }
+        new Swiper(mainSlider, bannerOptions);
+        mainSlider.dataset.sliderInitialized = 'true';
+      });
       document.querySelectorAll('.js-product-slider').forEach(function (container) {
         if (container.dataset.sliderInitialized === 'true') {
           return;
         }
         const root = container.closest('[data-slider-root]');
         const options = {
-          slidesPerView: 1.1,
+          slidesPerView: 5,
           spaceBetween: 16,
           breakpoints: {
-            640: { slidesPerView: 2, spaceBetween: 20 },
-            1024: { slidesPerView: 3, spaceBetween: 24 },
+            640: { slidesPerView: 4, spaceBetween: 20 },
+            1024: { slidesPerView: 5, spaceBetween: 24 },
             1280: { slidesPerView: 5, spaceBetween: 28 }
           }
         };
@@ -465,20 +433,8 @@
         }
         new Swiper(container, options);
         container.dataset.sliderInitialized = 'true';
+        
       });
-
-      const bannerSwiper = new Swiper(container, {
-          slidesPerView: 1,
-          loop: true,
-          autoplay: {
-            delay: 5000,
-            disableOnInteraction: false,
-          },
-          navigation: {
-            nextEl: root.querySelector('.js-banner-next'),
-            prevEl: root.querySelector('.js-banner-prev'),
-          },
-        });
     }
 
     document.addEventListener('DOMContentLoaded', initProductSliders);

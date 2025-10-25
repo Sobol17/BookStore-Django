@@ -3,7 +3,7 @@
   role="dialog"
   aria-modal="true"
 >
-  <div class="relative w-full max-w-2xl rounded-3xl border border-accent-soft/60 bg-white shadow-lamplight">
+  <div class="relative w-full max-w-2xl rounded-3xl border border-accent-soft/60 bg-white">
     <div class="flex items-start justify-between gap-4 border-b border-accent-soft/40 px-6 py-5">
       <div>
         <p class="text-xs uppercase tracking-[0.35em] text-accent">HTMX фильтр</p>
@@ -98,7 +98,7 @@
       <div class="flex flex-wrap items-center justify-between gap-3 border-t border-accent-soft/40 pt-4">
         <a
           href="{% url 'main:catalog_all' %}"
-          class="text-xs font-semibold uppercase tracking-[0.3em] text-accent transition hover:text-coffee"
+          class="text-xs font-semibold uppercase tracking-[0.3em] text-accent transition hover:text-graphite"
         >
           Сбросить фильтры
         </a>
@@ -115,7 +115,7 @@
           </button>
           <button
             type="submit"
-            class="rounded-lg border border-accent-soft bg-accent px-5 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-paper transition hover:bg-accent-soft hover:text-coffee"
+            class="rounded-lg border border-accent-soft bg-accent px-5 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-ink transition hover:bg-accent-soft/80 hover:text-graphite"
           >
             Применить
           </button>

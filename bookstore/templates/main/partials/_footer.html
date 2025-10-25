@@ -1,0 +1,42 @@
+<footer id="contacts" class="mt-12 text-ink">
+  <div class="mx-auto my-container px-6">
+    <div class="grid gap-10 md:grid-cols-4">
+      <div class="space-y-4">
+        <a href="{% url 'main:index' %}" class="flex flex-col leading-tight text-ink" hx-boost="true">
+          <span class="text-[0.83rem] font-semibold text-accent-dark">Букинистика</span>
+          <span class="text-2xl font-black tracking-[0.05em]">DOMBB</span>
+        </a>
+        <p class="text-sm text-ink-muted">
+          Букинистический магазин редких и антикварных изданий. С 2025 года подбираем книги с характером и историей.
+        </p>
+      </div>
+      <div class="space-y-3">
+        <h3 class="text-lg text-ink">О магазине</h3>
+        <nav class="flex flex-col gap-2 text-sm text-ink-muted" hx-boost="true">
+          <a href="{% url 'main:index' %}" class="transition hover:text-ink">Главная</a>
+          <a href="{% url 'main:catalog_all' %}" class="transition hover:text-ink">Каталог</a>
+          <a href="#about" class="transition hover:text-ink">О коллекции</a>
+          <a href="#contacts" class="transition hover:text-ink">Связаться</a>
+        </nav>
+      </div>
+      <div class="space-y-3">
+        <h3 class="text-lg text-ink">Навигация</h3>
+        <nav class="flex flex-col gap-2 text-sm text-ink-muted" hx-boost="true">
+          <a href="{% url 'main:index' %}" class="transition hover:text-ink">Главная</a>
+          <a href="{% url 'main:catalog_all' %}" class="transition hover:text-ink">Каталог</a>
+          <a href="#about" class="transition hover:text-ink">О коллекции</a>
+          <a href="#contacts" class="transition hover:text-ink">Связаться</a>
+        </nav>
+      </div>
+      <div class="space-y-3">
+        <h3 class="text-lg text-ink">Контакты</h3>
+        <p class="text-sm text-ink-muted">📞 +7 (999) 123-45-67</p>
+        <p class="text-sm text-ink-muted">✉️ hello@libra-antiqua.ru</p>
+        <p class="text-sm text-ink-muted">🕰 пн‑сб 11:00 – 19:00</p>
+      </div>
+    </div>
+    <div class="mt-12 flex flex-col items-start gap-4 border-t border-gray py-4 text-sm sm:flex-row sm:items-center sm:justify-between text-ink-muted">
+      <span>© 2025 букинистика dombb. Все права защищены</span>
+    </div>
+  </div>
+</footer>

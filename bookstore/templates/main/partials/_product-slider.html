@@ -1,0 +1,52 @@
+{% load static %}
+{% with slider_id=title|slugify|default:'slider' %}
+<section class="space-y-6" aria-label="{{ title }}" data-slider-root>
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <h2 class="text-2xl font-bold text-ink">{{ title }}</h2>
+    {% if link %}
+      <a href="{{ link }}" class="flex items-center gap-2 text-md font-semibold font-semibol dtext-accent transition hover:text-graphite">
+        Смотреть все
+        <i data-lucide="arrow-right"></i>
+      </a>
+    {% endif %}
+  </div>
+
+  <div class="relative">
+    <div class="swiper js-product-slider" id="slider-{{ slider_id }}">
+      <div class="swiper-wrapper">
+        {% for product in products %}
+          <div class="swiper-slide pb-6">
+            {% include 'main/partials/_product-card.html' with product=product %}
+          </div>
+        {% empty %}
+          <div class="swiper-slide pb-6">
+            <div class="flex h-full min-h-[240px] items-center justify-center rounded-2xl border border-dashed border-accent-soft bg-white/60 px-6 text-sm text-ink-muted">
+              В подборке пока нет товаров.
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <button
+        type="button"
+        class="absolute inset-y-0 left-[-22px] js-slider-prev flex h-10 w-10 items-center justify-center rounded-full border border-accent bg-white text-graphite transition hover:bg-accent disabled:hidden cursor-pointer"
+        aria-label="Предыдущие товары"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m15 19-7-7 7-7" />
+        </svg>
+      </button>
+
+    <button
+        type="button"
+        class="absolute inset-y-0 right-[-22px] z-10 js-slider-next flex h-10 w-10 items-center justify-center rounded-full border border-accent bg-white text-graphite transition hover:bg-accent cursor-pointer"
+        aria-label="Следующие товары"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m9 5 7 7-7 7" />
+        </svg>
+      </button>
+  </div>
+</section>
+{% endwith %}

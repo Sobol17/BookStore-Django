@@ -1,5 +1,5 @@
 <div class="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
-  <div class="relative rounded-3xl border border-accent-soft/60 bg-white p-6 shadow-lamplight">
+  <div class="relative rounded-3xl border border-accent-soft/60 bg-white p-6">
     <div class="aspect-[3/4] overflow-hidden rounded-2xl border border-accent/20 bg-accent-soft/40">
       {% if object.main_image %}
         <img
@@ -32,7 +32,7 @@
     </div>
   </div>
 
-  <div class="flex flex-col gap-8 rounded-3xl border border-accent-soft/60 bg-white p-8 shadow-lamplight">
+  <div class="flex flex-col gap-8 rounded-3xl border border-accent-soft/60 bg-white p-8">
     <div>
       <p class="text-xs uppercase tracking-[0.4em] text-accent">
         {% if object.category %}{{ object.category.name }}{% else %}Редкое издание{% endif %}
@@ -60,7 +60,7 @@
       </div>
       <button
         type="button"
-        class="rounded-lg border border-accent-soft bg-accent px-6 py-3 text-sm font-semibold tracking-[0.2em] text-paper transition hover:bg-accent-soft hover:text-coffee"
+        class="rounded-2xl border border-accent-soft bg-accent px-6 py-3 text-sm font-semibold tracking-[0.2em] text-ink transition hover:bg-accent-soft/80 hover:text-graphite"
       >
         Запросить экземпляр
       </button>
@@ -80,35 +80,9 @@
       <h2 class="font-serif text-2xl tracking-wide text-ink">Редкие книги в той же коллекции</h2>
       <div class="h-px flex-1 bg-gradient-to-r from-transparent via-accent-soft to-transparent"></div>
     </div>
-    <div class="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="mt-8 grid gap-7 sm:grid-cols-2 lg:grid-cols-4">
       {% for related in related_products %}
-        <article class="group flex flex-col overflow-hidden rounded-2xl border border-accent-soft/60 bg-white shadow-md shadow-coffee/15 transition hover:-translate-y-1 hover:shadow-lamplight">
-          <a href="{% url 'main:product_detail' related.slug %}" class="flex flex-1 flex-col">
-            <div class="relative aspect-[3/4] overflow-hidden">
-              {% if related.main_image %}
-                <img
-                  src="{{ related.main_image.url }}"
-                  alt="Обложка: {{ related.name }}"
-                  class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                >
-              {% else %}
-                <div class="flex h-full w-full items-center justify-center bg-accent-soft text-ink">
-                  Нет изображения
-                </div>
-              {% endif %}
-              <span class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-coffee/80 via-coffee/20 to-transparent px-4 py-3 text-xs uppercase tracking-[0.3em] text-paper">
-                Смотреть книгу
-              </span>
-            </div>
-            <div class="flex flex-1 flex-col gap-3 px-5 py-6">
-              <h3 class="font-serif text-lg text-ink">{{ related.name }}</h3>
-              {% if related.authors %}
-                <p class="text-sm text-ink-muted">{{ related.authors }}</p>
-              {% endif %}
-              <p class="mt-auto font-semibold text-accent">{{ related.price }} {{ related.currency }}</p>
-            </div>
-          </a>
-        </article>
+        {% include 'main/partials/_product-card.html' with product=related %}
       {% endfor %}
     </div>
   </div>

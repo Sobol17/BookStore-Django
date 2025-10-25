@@ -1,0 +1,62 @@
+<div id="catalog-content" class="flex flex-col gap-12">
+  <header class="flex flex-col gap-4">
+    <p class="text-md text-graphite">
+      {% if current_category %}
+        Категория: {{ current_category_label|default:current_category }}
+        {{current_category}}
+      {% else %}
+        Коллекция dombb
+      {% endif %}
+    </p>
+    <h1 class="font-serif text-4xl text-ink">Каталог редких книг</h1>
+    <p class="max-w-2xl text-base text-ink-muted">
+      Подборка букинистических изданий с сохранённой историей. Используйте фильтры, чтобы найти идеальный экземпляр для вашей коллекции.
+    </p>
+  </header>
+
+  <div class="grid gap-12 lg:grid-cols-[minmax(0,290px)_1fr]">
+    {% include 'main/partials/_catalog_filters.html' %}
+
+    <div class="space-y-8">
+      {% if search_query %}
+        <p class="text-sm text-ink-muted">
+          Найдено по запросу
+          <span class="font-semibold text-accent">«{{ search_query }}»</span>
+        </p>
+      {% endif %}
+      <div class="relative">
+        <div class="grid gap-7 sm:grid-cols-3">
+          {% for product in products %}
+            {% include 'main/partials/_product-card.html' with product=product %}
+          {% empty %}
+            <div class="col-span-full rounded-3xl border border-accent-soft/60 bg-white p-12 text-center text-ink-muted">
+              К сожалению, по выбранным параметрам ничего не найдено. Попробуйте изменить условия поиска.
+            </div>
+          {% endfor %}
+        </div>
+        <div
+          id="catalog-loading"
+          class="htmx-indicator absolute inset-0 z-20 flex items-center justify-center bg-paper/70 backdrop-blur-sm"
+          style="display: none;"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          <div class="flex flex-col items-center gap-3 text-ink-muted">
+            <svg
+              class="h-10 w-10 animate-spin text-accent"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0113.657-5.657l-2.829 2.829A4 4 0 008 12H4z"></path>
+            </svg>
+            <span class="text-sm">Ищем книги…</span>
+            <span class="sr-only">Идёт загрузка каталога</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
