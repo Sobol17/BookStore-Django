@@ -1,0 +1,38 @@
+<div class="rounded-2xl border border-accent-soft/60">
+  <form
+    action="{{ request.path }}"
+    class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end"
+    hx-get="{{ request.path }}"
+    hx-target="#catalog-content"
+    hx-swap="outerHTML"
+    hx-push-url="true"
+    hx-indicator="#catalog-loading"
+    hx-trigger="change from:select[name='sort']"
+  >
+    <label for="catalog-sort" class="text-sm font-semibold text-ink">
+      Сортировка:
+    </label>
+    {% for key, value in filter_params.items %}
+      {% if value %}
+        {% if key != 'sort' and key != 'genre' %}
+          <input type="hidden" name="{{ key }}" value="{{ value }}">
+        {% endif %}
+      {% endif %}
+    {% endfor %}
+    {% if active_genre %}
+      <input type="hidden" name="genre" value="{{ active_genre }}">
+    {% endif %}
+    <select
+      id="catalog-sort"
+      name="sort"
+      onchange="if (!window.htmx) { this.form.submit(); }"
+      class="w-full rounded-xl border border-accent/40 bg-white px-4 py-2 text-sm font-semibold text-ink transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30 sm:w-60"
+    >
+      {% for option in sort_options %}
+        <option value="{{ option.key }}" {% if option.is_active %}selected{% endif %}>
+          {{ option.label }}
+        </option>
+      {% endfor %}
+    </select>
+  </form>
+</div>
