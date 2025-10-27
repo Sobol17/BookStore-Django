@@ -1,3 +1,6 @@
+from urllib.parse import urlencode
+
+from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView, DetailView
 from django.http import HttpResponse
@@ -12,7 +15,15 @@ from .selectors import (
     get_published_products_queryset,
     get_related_products,
 )
-from .services import apply_catalog_filters, extract_hx_flags
+from .services import (
+    build_genre_filters,
+    build_pagination,
+    apply_catalog_filters,
+    apply_catalog_sorting,
+    build_sorting_options,
+    extract_hx_flags,
+    CATALOG_SORT_OPTIONS,
+)
 
 
 class IndexView(TemplateView):
@@ -53,15 +64,37 @@ class CatalogView(TemplateView):
             products,
             self.request.GET,
         )
+        products, current_sort = apply_catalog_sorting(
+            products,
+            self.request.GET.get('sort', 'popular'),
+        )
+        sort_options = build_sorting_options(self.request, current_sort)
+
+        genres = Genre.objects.filter(category=current_category) if current_category else Genre.objects.all()
+        genres = list(genres)
+        paginator = Paginator(products, 15)
+        page_obj = paginator.get_page(self.request.GET.get('page'))
+        pagination = build_pagination(self.request, page_obj)
+        genre_filters, genre_reset_url = build_genre_filters(self.request, genres)
+        filter_params['sort'] = current_sort
         context.update({
             'categories': categories,
-            'products': products,
+            'products': page_obj,
             'current_category': current_category.slug if current_category else None,
             'current_category_label': current_category.name if current_category else None,
             'filter_params': filter_params,
-            'genres': Genre.objects.all(),
+            'genres': genres,
+            'genre_filters': genre_filters,
+            'genre_reset_url': genre_reset_url,
+            'active_genre': self.request.GET.get('genre'),
             'search_query': search_query,
             'is_catalog_page': True,
+            'is_paginated': paginator.num_pages > 1,
+            'page_obj': page_obj,
+            'pagination': pagination,
+            'sort_options': sort_options,
+            'current_sort': current_sort,
+            'current_sort_label': CATALOG_SORT_OPTIONS[current_sort]['label'],
         })
         context.update(extract_hx_flags(self.request.GET))
         return context

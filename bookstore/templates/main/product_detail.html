@@ -49,12 +49,10 @@
     <div class="flex flex-wrap items-center gap-6">
       <div>
         <p class="text-sm uppercase tracking-[0.3em] text-ink-muted">Стоимость экземпляра</p>
-        <p class="mt-2 font-serif text-3xl text-accent">
-          {{ object.price }} {{ object.currency }}
-        </p>
+        <p class="mt-2 font-serif text-3xl text-accent">{{ object.formatted_price }}</p>
         {% if object.old_price %}
           <p class="text-sm text-ink-muted">
-            <span class="line-through">{{ object.old_price }} {{ object.currency }}</span>
+            <span class="line-through">{{ object.formatted_old_price }}</span>
           </p>
         {% endif %}
       </div>

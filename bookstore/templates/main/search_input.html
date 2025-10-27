@@ -6,6 +6,7 @@
     hx-target="#page"
     hx-swap="innerHTML"
   >
+    <input type="hidden" name="sort" value="{{ current_sort|default:'popular' }}">
     <input
       type="text"
       name="q"

@@ -74,7 +74,6 @@
       padding-top: 0.5rem;
       padding-bottom: 0.5rem;
       width: 100%;
-      margin-top: 0.5rem;
     }
     input:focus {
       outline: none;
@@ -154,13 +153,9 @@
               <div class="flex flex-wrap items-center gap-6">
                 <div>
                   <p class="text-sm uppercase tracking-[0.3em] text-ink-muted">Стоимость экземпляра</p>
-                  <p class="mt-2 font-serif text-3xl text-accent">
-                    {{ object.price }} {{ object.currency }}
-                  </p>
+                  <p class="mt-2 font-serif text-3xl text-accent">{{ object.formatted_price }}</p>
                   {% if object.old_price %}
-                    <p class="text-sm text-ink-muted">
-                      <span class="line-through">{{ object.old_price }} {{ object.currency }}</span>
-                    </p>
+                    <p class="text-sm text-ink-muted"><span class="line-through">{{ object.formatted_old_price }}</span></p>
                   {% endif %}
                 </div>
                 <button
@@ -177,21 +172,19 @@
               {% endif %}
             </div>
           </div>
-
         {% elif is_catalog_page %}
-          <div data-name="catalog_page" class="flex flex-col gap-12">
+          <div id="catalog-content" data-name="catalog_page" class="flex flex-col gap-8">
             <header class="flex flex-col gap-4">
-              <p class="text-md text-graphite">
+              <h1 class="text-4xl font-semibold text-ink">
                 {% if current_category %}
-                  Категория: {{ current_category_label }}
+                  {{ current_category_label }}
                 {% else %}
-                  Коллекция Libra Antiqua
+                  Каталог
                 {% endif %}
-              </p>
-              <h1 class="font-serif text-4xl text-ink">Каталог</h1>
+              </h1>
             </header>
 
-            <div class="grid gap-12 lg:grid-cols-[minmax(0,290px)_1fr]">
+            <div class="grid gap-6 lg:grid-cols-[minmax(0,275px)_1fr]">
               {% include 'main/partials/_catalog_filters.html' %}
 
               <div class="space-y-8">
@@ -201,14 +194,132 @@
                     <span class="font-semibold text-accent">«{{ search_query }}»</span>
                   </p>
                 {% endif %}
-                <div class="grid gap-6 sm:grid-cols-3">
-                  {% for product in products %}
-                    {% include 'main/partials/_product-card.html' with product=product %}
-                  {% empty %}
-                    <div class="col-span-full rounded-3xl border border-accent-soft/60 bg-white p-12 text-center text-ink-muted">
-                      К сожалению, по выбранным параметрам ничего не найдено. Попробуйте изменить условия поиска.
+                
+                <div class="relative">
+                {% include 'main/partials/_catalog_sort.html' %}
+                  {% if genre_filters and current_category %}
+                      <div class="mb-3 flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          class="rounded-xl border border-accent px-4 py-2 text-sm font-semibold transition hover:bg-accent-soft {% if not active_genre %}bg-accent text-graphite{% else %}bg-white text-ink{% endif %}"
+                          hx-get="{{ genre_reset_url }}"
+                          hx-target="#catalog-content"
+                          hx-swap="outerHTML"
+                          hx-push-url="true"
+                          hx-indicator="#catalog-loading"
+                        >
+                          Все жанры
+                        </button>
+                        {% for genre in genre_filters %}
+                          <button
+                            type="button"
+                            class="rounded-xl border border-accent px-4 py-2 text-sm font-semibold transition hover:bg-accent-soft {% if genre.is_active %}bg-accent text-graphite{% else %}bg-white text-ink{% endif %}"
+                            hx-get="{{ genre.url }}"
+                            hx-target="#catalog-content"
+                            hx-swap="outerHTML"
+                            hx-push-url="true"
+                            hx-indicator="#catalog-loading"
+                          >
+                            {{ genre.label }}
+                          </button>
+                        {% endfor %}
+                      </div>
+                    {% elif categories %}
+                      <div class="mb-3 flex flex-wrap gap-2">
+                        {% for category in categories %}
+                          <a
+                            href="{% url 'main:catalog' category.slug %}"
+                            hx-get="{% url 'main:catalog' category.slug %}"
+                            hx-target="#catalog-content"
+                            hx-swap="outerHTML"
+                            hx-push-url="true"
+                            hx-indicator="#catalog-loading"
+                            class="rounded-xl border border-accent px-4 py-2 text-sm font-semibold transition hover:bg-accent-soft {% if current_category == category.slug %}bg-accent text-graphite{% else %}bg-white text-ink{% endif %}"
+                          >
+                            {{ category.name }}
+                          </a>
+                        {% endfor %}
+                      </div>
+                    {% endif %}
+                  <div class="grid gap-6 sm:grid-cols-4">
+                    {% for product in products %}
+                      {% include 'main/partials/_product-card.html' with product=product %}
+                    {% empty %}
+                      <div class="col-span-full rounded-3xl border border-accent-soft/60 bg-white p-12 text-center text-ink-muted">
+                        К сожалению, по выбранным параметрам ничего не найдено. Попробуйте изменить условия поиска.
+                      </div>
+                    {% endfor %}
+                  </div>
+                  {% if is_paginated and pagination.links %}
+                    <nav class="mt-6 flex flex-wrap items-center justify-center gap-2 text-sm" aria-label="Пагинация каталога">
+                      {% if pagination.has_previous %}
+                        <button
+                          type="button"
+                          class="rounded-lg border border-accent px-3 py-1 font-semibold text-ink transition hover:bg-accent-soft"
+                          hx-get="{{ pagination.previous_url }}"
+                          hx-target="#catalog-content"
+                          hx-swap="outerHTML"
+                          hx-push-url="true"
+                          hx-indicator="#catalog-loading"
+                        >
+                          Назад
+                        </button>
+                      {% endif %}
+                      {% for link in pagination.links %}
+                        {% if link.is_gap %}
+                          <span class="px-2 text-ink-muted">…</span>
+                        {% else %}
+                          <button
+                            type="button"
+                            class="rounded-lg border border-accent px-3 py-1 font-semibold transition hover:bg-accent-soft {% if link.is_current %}bg-accent text-graphite{% else %}bg-white text-ink{% endif %}"
+                            hx-get="{{ link.url }}"
+                            hx-target="#catalog-content"
+                            hx-swap="outerHTML"
+                            hx-push-url="true"
+                            hx-indicator="#catalog-loading"
+                            aria-current="{% if link.is_current %}page{% else %}false{% endif %}"
+                          >
+                            {{ link.label }}
+                          </button>
+                        {% endif %}
+                      {% endfor %}
+                      {% if pagination.has_next %}
+                        <button
+                          type="button"
+                          class="rounded-lg border border-accent px-3 py-1 font-semibold text-ink transition hover:bg-accent-soft"
+                          hx-get="{{ pagination.next_url }}"
+                          hx-target="#catalog-content"
+                          hx-swap="outerHTML"
+                          hx-push-url="true"
+                          hx-indicator="#catalog-loading"
+                        >
+                          Вперёд
+                        </button>
+                      {% endif %}
+                    </nav>
+                  {% endif %}
+                  <div
+                    id="catalog-loading"
+                    class="htmx-indicator absolute inset-0 z-20 flex items-center justify-center bg-paper/70 backdrop-blur-sm"
+                    style="display: none;"
+                    role="status"
+                    aria-live="polite"
+                    aria-atomic="true"
+                  >
+                    <div class="flex flex-col items-center gap-3 text-ink-muted">
+                      <svg
+                        class="h-10 w-10 animate-spin text-accent"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0113.657-5.657l-2.829 2.829A4 4 0 008 12H4z"></path>
+                      </svg>
+                      <span class="text-sm">Ищем книги…</span>
+                      <span class="sr-only">Идёт загрузка каталога</span>
                     </div>
-                  {% endfor %}
+                  </div>
                 </div>
               </div>
             </div>
@@ -364,7 +475,7 @@
   <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js" defer></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script>
-	lucide.createIcons();
+	  lucide.createIcons();
 	
     document.body.addEventListener('htmx:configRequest', function (event) {
       const csrf = document.querySelector('input[name="csrfmiddlewaretoken"]');
@@ -425,11 +536,12 @@
         }
         const root = container.closest('[data-slider-root]');
         const options = {
-          slidesPerView: 5,
-          spaceBetween: 16,
+          slidesPerView: 1.9,
+          spaceBetween: 8,
           breakpoints: {
-            640: { slidesPerView: 4, spaceBetween: 20 },
-            1024: { slidesPerView: 5, spaceBetween: 24 },
+            420: { slidesPerView: 2.2, spaceBetween: 8 },
+            640: { slidesPerView: 3, spaceBetween: 20 },
+            1024: { slidesPerView: 4, spaceBetween: 24 },
             1280: { slidesPerView: 5, spaceBetween: 28 }
           }
         };
@@ -451,6 +563,8 @@
 
     document.addEventListener('DOMContentLoaded', initProductSliders);
     document.body.addEventListener('htmx:afterSwap', function (event) {
+      lucide.createIcons();
+      
       if (event.detail.target && event.detail.target.closest('#page')) {
         initProductSliders();
         lucide.createIcons();

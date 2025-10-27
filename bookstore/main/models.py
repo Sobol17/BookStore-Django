@@ -103,14 +103,25 @@ class Product(models.Model):
             self.slug = slugify(self.name)
         super().save(*args, **kwargs)
         
-    def formatted_price(self):
+    def _format_amount(self, amount):
+        """
+        Приводит числовое значение к строке с символом валюты и пробелами между разрядами.
+        """
         symbols = {
             'RUB': '₽',
             'USD': '$',
             'EUR': '€',
         }
         symbol = symbols.get(self.currency.upper(), self.currency)
-        return f"{int(self.price):,}".replace(',', ' ') + f" {symbol}"
+        return f"{int(amount):,}".replace(',', ' ') + f" {symbol}"
+
+    def formatted_price(self):
+        return self._format_amount(self.price)
+    
+    def formatted_old_price(self):
+        if self.old_price is None:
+            return ''
+        return self._format_amount(self.old_price)
 
     def __str__(self):
         return self.name
@@ -136,4 +147,3 @@ class Banner(models.Model):
 
     def __str__(self):
         return self.title
-
