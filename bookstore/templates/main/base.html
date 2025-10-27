@@ -102,76 +102,7 @@
     <main id="page" class="mx-auto flex w-full my-container flex-1 flex-col px-4 py-10 sm:px-6 lg:px-8">
       <section class="flex-1" hx-target="this" hx-swap="innerHTML">
         {% if object %}
-          <div data-name="product_detail" class="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
-            <div class="relative rounded-3xl border border-accent-soft/60 bg-white p-6">
-              <div class="aspect-[3/4] overflow-hidden rounded-2xl border border-accent/20 bg-accent-soft/40">
-                {% if object.main_image %}
-                  <img
-                    src="{{ object.main_image.url }}"
-                    alt="Обложка: {{ object.name }}"
-                    class="h-full w-full object-cover object-center transition duration-300 hover:scale-105"
-                  >
-                {% else %}
-                  <div class="flex h-full w-full items-center justify-center bg-accent-soft text-ink">
-                    Нет изображения
-                  </div>
-                {% endif %}
-              </div>
-              <div class="mt-6 space-y-3 text-sm text-ink-muted">
-                {% if object.condition %}
-                  <p><span class="font-semibold text-ink">Состояние:</span> {{ object.get_condition_display }}</p>
-                {% endif %}
-                {% if object.isbn %}
-                  <p><span class="font-semibold text-ink">ISBN:</span> {{ object.isbn }}</p>
-                {% endif %}
-                {% if object.year %}
-                  <p><span class="font-semibold text-ink">Год издания:</span> {{ object.year }}</p>
-                {% endif %}
-                {% if object.publisher %}
-                  <p><span class="font-semibold text-ink">Издательство:</span> {{ object.publisher }}</p>
-                {% endif %}
-                {% if object.stock_qty %}
-                  <p><span class="font-semibold text-ink">В наличии:</span> {{ object.stock_qty }} шт.</p>
-                {% endif %}
-              </div>
-            </div>
-
-            <div class="flex flex-col gap-8 rounded-3xl border border-accent-soft/60 bg-white p-8">
-              <div>
-                <p class="text-xs uppercase tracking-[0.4em] text-accent">
-                  {% if object.category %}{{ object.category.name }}{% else %}Редкое издание{% endif %}
-                </p>
-                <h1 class="mt-3 font-serif text-4xl tracking-wide text-ink">
-                  {{ object.name }}
-                </h1>
-                {% if object.authors %}
-                  <p class="mt-2 text-base text-ink-muted">
-                    {{ object.authors }}
-                  </p>
-                {% endif %}
-              </div>
-              <div class="flex flex-wrap items-center gap-6">
-                <div>
-                  <p class="text-sm uppercase tracking-[0.3em] text-ink-muted">Стоимость экземпляра</p>
-                  <p class="mt-2 font-serif text-3xl text-accent">{{ object.formatted_price }}</p>
-                  {% if object.old_price %}
-                    <p class="text-sm text-ink-muted"><span class="line-through">{{ object.formatted_old_price }}</span></p>
-                  {% endif %}
-                </div>
-                <button
-                  type="button"
-                  class="rounded-2xl border border-accent-soft bg-accent px-6 py-3 text-sm font-semibold tracking-[0.2em] text-ink transition hover:bg-accent-soft/80 hover:text-graphite"
-                >
-                  Запросить экземпляр
-                </button>
-              </div>
-              {% if object.description %}
-                <article class="prose prose-sm prose-headings:font-serif prose-headings:text-ink prose-p:text-ink-muted prose-strong:text-ink max-w-none">
-                  {{ object.description|linebreaks }}
-                </article>
-              {% endif %}
-            </div>
-          </div>
+          {% include 'main/product_detail.html' %}
         {% elif is_catalog_page %}
           <div id="catalog-content" data-name="catalog_page" class="flex flex-col gap-8">
             <header class="flex flex-col gap-4">
@@ -561,12 +492,65 @@
       });
     }
 
-    document.addEventListener('DOMContentLoaded', initProductSliders);
+    function initProductGallery() {
+      if (!window.Swiper) {
+        return;
+      }
+      document.querySelectorAll('[data-gallery-root]').forEach(function (root) {
+        const gallery = root.querySelector('.js-product-gallery');
+        if (!gallery || gallery.dataset.sliderInitialized === 'true') {
+          return;
+        }
+        const slidesCount = gallery.querySelectorAll('.swiper-slide').length;
+        const prev = root.querySelector('.js-gallery-prev');
+        const next = root.querySelector('.js-gallery-next');
+        const thumbsEl = root.querySelector('.js-product-gallery-thumbs');
+        let thumbsSwiper = null;
+        if (thumbsEl && slidesCount > 1) {
+          thumbsSwiper = new Swiper(thumbsEl, {
+            slidesPerView: 3.2,
+            spaceBetween: 12,
+            freeMode: true,
+            watchSlidesProgress: true,
+            breakpoints: {
+              640: { slidesPerView: 4 },
+              1024: { slidesPerView: 5 },
+            }
+          });
+          thumbsEl.dataset.sliderInitialized = 'true';
+        }
+        const options = {
+          slidesPerView: 1,
+          spaceBetween: 12,
+          loop: slidesCount > 1,
+          speed: 600,
+        };
+        if (thumbsSwiper) {
+          options.thumbs = { swiper: thumbsSwiper };
+        }
+        if (prev && next && slidesCount > 1) {
+          options.navigation = {
+            prevEl: prev,
+            nextEl: next,
+          };
+          prev.classList.remove('hidden');
+          next.classList.remove('hidden');
+        }
+        new Swiper(gallery, options);
+        gallery.dataset.sliderInitialized = 'true';
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      initProductSliders();
+      initProductGallery();
+    });
     document.body.addEventListener('htmx:afterSwap', function (event) {
       lucide.createIcons();
       
       if (event.detail.target && event.detail.target.closest('#page')) {
         initProductSliders();
+        initProductGallery();
         lucide.createIcons();
       }
     });

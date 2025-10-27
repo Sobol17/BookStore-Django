@@ -125,7 +125,20 @@ class ProductDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         product = self.get_object()
         context['categories'] = get_categories_with_products()
-        context['related_products'] = get_related_products(product)
+        context['related_products'] = get_related_products(product, limit=8)
+        gallery_images = []
+        if product.main_image:
+            gallery_images.append({
+                'url': product.main_image.url,
+                'alt': f'Обложка: {product.name}',
+            })
+        for image in product.images.order_by('position', 'id'):
+            gallery_images.append({
+                'url': image.image.url,
+                'alt': image.alt_text or product.name,
+            })
+        context['gallery_images'] = gallery_images
+        context['seo_text'] = getattr(product, 'seo_text', None) or product.meta_description or product.description
         if product.category:
             context['current_category'] = product.category.slug
             context['current_category_label'] = product.category.name

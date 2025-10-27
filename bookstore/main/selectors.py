@@ -15,10 +15,15 @@ def get_published_products_queryset():
     return Product.objects.filter(is_published=True).order_by('-created_at')
 
 
-def get_related_products(product, limit=4):
-    return Product.objects.filter(
-        category=product.category
-    ).exclude(id=product.id)[:limit]
+def get_related_products(product, limit=8):
+    return (
+        Product.objects.filter(
+            category=product.category,
+            is_published=True,
+        )
+        .exclude(id=product.id)
+        .order_by('-created_at')[:limit]
+    )
     
 
 def get_products_collection(collection, limit=8):
