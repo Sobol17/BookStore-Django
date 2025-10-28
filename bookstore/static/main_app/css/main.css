@@ -1,0 +1,40 @@
+[x-cloak] {
+	display: none !important;
+}
+body {
+	background-color: #F1F4FA;
+	color: #1F2532;
+	background-image: none;
+}
+.my-container {
+	max-width: 1280px;
+}
+.input {
+	background-color: #5d889614;
+	border: 1px solid transparent;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	padding-left: 1rem;
+	padding-right: 1rem;
+	border-radius: 0.5rem;
+	padding-top: 0.5rem;
+	padding-bottom: 0.5rem;
+	width: 100%;
+}
+input:focus {
+	outline: none;
+	border-color: #8BE3F5;
+}
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+	/* display: none; <- Crashes Chrome on hover */
+	-webkit-appearance: none;
+	margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
+}
+input[type=number] {
+	-moz-appearance:textfield; /* Firefox */
+}
+.input:focus {
+	background-color: #fff;
+	border-color: #f1f1f1;
+}

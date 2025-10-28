@@ -139,6 +139,45 @@ class ProductDetailView(DetailView):
             })
         context['gallery_images'] = gallery_images
         context['seo_text'] = getattr(product, 'seo_text', None) or product.meta_description or product.description
+        rating_value = getattr(product, 'rating', None)
+        reviews_count = (
+            getattr(product, 'reviews_count', None)
+            or getattr(product, 'review_count', None)
+        )
+        if rating_value is not None:
+            try:
+                rating_value = float(rating_value)
+            except (TypeError, ValueError):
+                rating_value = None
+        if reviews_count is not None:
+            try:
+                reviews_count = int(reviews_count)
+            except (TypeError, ValueError):
+                reviews_count = None
+        stars = []
+        if rating_value:
+            full = int(rating_value)
+            remainder = rating_value - full
+            for _ in range(min(full, 5)):
+                stars.append('full')
+            if len(stars) < 5 and remainder >= 0.5:
+                stars.append('half')
+            while len(stars) < 5:
+                stars.append('empty')
+        else:
+            stars = ['empty'] * 5
+        context['rating_value'] = rating_value
+        context['reviews_count'] = reviews_count
+        context['rating_stars'] = stars
+        discount_percent = None
+        if product.old_price:
+            try:
+                discount_percent = int(
+                    max(0, round((1 - (product.price / product.old_price)) * 100))
+                )
+            except (TypeError, ZeroDivisionError):
+                discount_percent = None
+        context['discount_percent'] = discount_percent
         if product.category:
             context['current_category'] = product.category.slug
             context['current_category_label'] = product.category.name
