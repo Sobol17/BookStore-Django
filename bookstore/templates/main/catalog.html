@@ -12,7 +12,7 @@
   <div class="grid gap-8 lg:grid-cols-[minmax(0,290px)_1fr]">
     {% include 'main/partials/_catalog_filters.html' %}
 
-    <div class="space-y-8">
+    <div>
       {% if search_query %}
         <p class="text-sm text-ink-muted">
           Найдено по запросу
@@ -65,7 +65,7 @@
             {% endfor %}
           </div>
         {% endif %}
-        <div class="grid gap-6 sm:grid-cols-4">
+        <div class="grid gap-6 grid-cols-2 sm:grid-cols-3 xl:grid-cols-4">
           {% for product in products %}
             {% include 'main/partials/_product-card.html' with product=product %}
           {% empty %}

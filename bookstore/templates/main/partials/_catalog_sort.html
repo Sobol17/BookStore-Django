@@ -1,7 +1,7 @@
 <div class="rounded-2xl border border-accent-soft/60">
   <form
     action="{{ request.path }}"
-    class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end"
+    class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end mb-2 sm:mb-0"
     hx-get="{{ request.path }}"
     hx-target="#catalog-content"
     hx-swap="outerHTML"
@@ -9,7 +9,7 @@
     hx-indicator="#catalog-loading"
     hx-trigger="change from:select[name='sort']"
   >
-    <label for="catalog-sort" class="text-sm font-semibold text-ink">
+    <label for="catalog-sort" class="text-sm font-semibold text-ink hidden sm:block">
       Сортировка:
     </label>
     {% for key, value in filter_params.items %}
@@ -26,7 +26,7 @@
       id="catalog-sort"
       name="sort"
       onchange="if (!window.htmx) { this.form.submit(); }"
-      class="w-full rounded-xl border border-accent/40 bg-white px-4 py-2 text-sm font-semibold text-ink transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30 sm:w-60"
+      class="w-full rounded-xl border border-accent/40 bg-white px-4 py-2 text-sm font-semibold text-ink transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30 sm:w-60 w-max"
     >
       {% for option in sort_options %}
         <option value="{{ option.key }}" {% if option.is_active %}selected{% endif %}>
