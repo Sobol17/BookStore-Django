@@ -13,10 +13,10 @@
       <div class="space-y-3">
         <h3 class="text-lg text-ink">О магазине</h3>
         <nav class="flex flex-col gap-2 text-sm text-ink-muted" hx-boost="true">
-          <a href="{% url 'main:index' %}" class="transition hover:text-ink">Главная</a>
-          <a href="{% url 'main:catalog_all' %}" class="transition hover:text-ink">Каталог</a>
-          <a href="#about" class="transition hover:text-ink">О коллекции</a>
-          <a href="#contacts" class="transition hover:text-ink">Связаться</a>
+          <a href="/dostavka" class="transition hover:text-ink">Доставка</a>
+          <a href="/oplata" class="transition hover:text-ink">Оплата</a>
+          <a href="/about" class="transition hover:text-ink">Новости</a>
+          <a href="/#contacts" class="transition hover:text-ink">Контакты</a>
         </nav>
       </div>
       <div class="space-y-3">
@@ -30,9 +30,9 @@
       </div>
       <div class="space-y-3">
         <h3 class="text-lg text-ink">Контакты</h3>
-        <p class="text-sm text-ink-muted">📞 +7 (999) 123-45-67</p>
-        <p class="text-sm text-ink-muted">✉️ hello@libra-antiqua.ru</p>
-        <p class="text-sm text-ink-muted">🕰 пн‑сб 11:00 – 19:00</p>
+        <p class="text-sm flex gap-x-2 items-center text-ink-muted"><i data-lucide="phone" class="h-5 w-5"></i> <a class='hover:underline' href="tel:+7 (999) 999-99-99">+7 (999) 999-99-99</a></p>
+        <p class="text-sm flex gap-x-2 items-center text-ink-muted"><i data-lucide="mail" class="h-5 w-5"></i> <a class='hover:underline' href="mailto:mail@dombb.ru">mail@dombb.ru</a></p>
+        <p class="text-sm flex gap-x-2 items-center text-ink-muted"><i data-lucide="clock" class="h-5 w-5"></i> пн‑сб 11:00 – 19:00</p>
       </div>
     </div>
     <div class="mt-12 flex flex-col items-start gap-4 border-t border-gray py-4 text-sm sm:flex-row sm:items-center sm:justify-between text-ink-muted">

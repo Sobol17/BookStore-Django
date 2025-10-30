@@ -193,3 +193,24 @@ class ProductDetailView(DetailView):
         if request.headers.get('HX-Request'):
             return TemplateResponse(request, 'main/product_detail.html', context)
         return TemplateResponse(request, self.template_name, context)
+
+
+class ProductSearchView(TemplateView):
+    template_name = 'main/search_results.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        query = self.request.GET.get('q', '').strip()
+        products_queryset = get_published_products_queryset()
+        filtered_products, _, search_query = apply_catalog_filters(
+            products_queryset,
+            self.request.GET,
+        )
+        if not search_query:
+            filtered_products = products_queryset.none()
+        limited_products = filtered_products[:12]
+        context.update({
+            'products': limited_products,
+            'search_query': search_query,
+        })
+        return context

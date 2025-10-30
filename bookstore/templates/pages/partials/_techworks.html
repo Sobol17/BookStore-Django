@@ -1,0 +1,24 @@
+<section class="relative mx-auto my-16 max-w-3xl overflow-hidden rounded-3xl bg-white/90 px-8 py-14 text-center shadow-xl ring-1 ring-accent-soft backdrop-blur">
+  <div class="absolute inset-0 bg-gradient-to-br from-accent/10 via-accent-soft/40 to-mint/20"></div>
+  <div class="relative space-y-8">
+    <div class="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-accent-soft/60 ring-4 ring-white/70">
+       <i data-lucide="icon-network" class="h-5 w-5 text-accent"></i>
+    </div>
+    <div class="space-y-3">
+      <h1 class="text-3xl font-black tracking-wide text-ink">Эта страница ещё готовится</h1>
+      <p class="mx-auto max-w-xl text-base text-ink-muted">
+        Мы уже работаем над наполнением этой секции. Загляните позже — скоро здесь появится свежий контент о наших коллекциях и редких изданиях.
+      </p>
+    </div>
+    <div class="space-y-2">
+      <p class="text-sm uppercase tracking-[0.1em] text-graphite">А пока...</p>
+      <a
+        href="{% url 'main:index' %}"
+        class="inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 text-sm font-semibold text-ink transition hover:bg-accent-dark hover:text-graphite"
+      >
+        <span>Вернуться на главную</span>
+        <i data-lucide="arrow-right" class="h-4 w-4"></i>
+      </a>
+    </div>
+  </div>
+</section>

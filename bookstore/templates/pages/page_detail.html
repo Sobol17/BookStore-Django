@@ -1,0 +1,25 @@
+{% load static %}
+
+{% include 'layout/head-metrics.html' %}
+
+<body class="min-h-screen font-sans text-ink antialiased">
+  <div class="min-h-screen bg-paper">
+    {% include 'layout/partials/_header.html' %}
+
+	<main id="page_detail" class="mx-auto flex w-full my-container flex-1 flex-col px-4 py-10 sm:px-6 lg:px-8">
+    <section class='typical'>
+      {{page|safe}}
+    </section>
+		<section>
+      {% include 'pages/partials/_techworks.html' %}
+    </section>
+	</main>
+
+    <section id="modal-root" class="mx-auto w-full my-container px-4 sm:px-6 lg:px-8" hx-target="this" hx-swap="innerHTML"></section>
+
+    {% include 'layout/partials/_footer.html' %}
+  </div>
+
+  {% include 'layout/footer-scripts.html' %}
+</body>
+</html>
