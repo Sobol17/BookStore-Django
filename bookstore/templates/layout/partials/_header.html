@@ -15,44 +15,57 @@
         <a href="/about" class="transition hover:text-ink">Связаться</a>
       </nav>
     </div>
-    <div class="flex">
-      <a href="{% url 'main:index' %}" class="flex-col leading-tight text-ink flex md:hidden">
-        <span class="text-[0.83rem] font-semibold text-accent-dark">Букинистика</span>
-        <span class="text-2xl font-black tracking-[0.05em]">DOMBB</span>
+    <div class="flex items-center gap-3 md:hidden">
+      <a href="{% url 'main:index' %}" class="flex flex-col leading-tight text-ink">
+        <span class="text-[0.43rem] font-semibold text-accent-dark">Букинистика</span>
+        <span class="text-xl font-black tracking-[0.05em]">DOMBB</span>
       </a>
-      <button
-          type="button"
-          class="inline-flex ml-auto h-11 w-11 items-center justify-center rounded-full border border-accent-soft text-ink transition hover:border-accent hover:text-accent md:hidden"
-          x-on:click="mobileOpen = true"
-          aria-label="Открыть меню"
-      >
-        <i data-lucide="menu" class="h-5 w-5"></i>
-      </button>
+      <div class="flex-grow flex items-center gap-4">
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            class="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-ink/5 text-ink transition hover:bg-ink/10"
+            x-on:click="mobileSearchOpen = true; mobileOpen = false"
+            aria-label="Открыть поиск"
+          >
+            <i data-lucide="search" class="h-5 w-5"></i>
+          </button>
+          <button
+            type="button"
+            class="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-accent text-ink transition hover:bg-accent-dark"
+            x-on:click="mobileOpen = true"
+            aria-label="Открыть меню"
+          >
+            <i data-lucide="grid-3x3" class="h-5 w-5"></i>
+          </button>
+        </div>
+        <div class="ml-auto flex items-center gap-1 border-l border-accent-soft/60 text-ink-muted">
+          <a href="/about" class="inline-flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full transition hover:text-ink" aria-label="Закладки">
+            <i data-lucide="bookmark" class="h-5 w-5"></i>
+          </a>
+          <a href="/about" class="inline-flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full transition hover:text-ink" aria-label="Корзина">
+            <i data-lucide="shopping-bag" class="h-5 w-5"></i>
+          </a>
+          <a href="/about" class="inline-flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full transition hover:text-ink" aria-label="Профиль">
+            <i data-lucide="user-round" class="h-5 w-5"></i>
+          </a>
+        </div>
+      </div>
     </div>
-    <div class="mt-5 flex gap-3 md:items-center">
+    <div class="mt-5 hidden gap-3 md:flex md:items-center">
       <a href="{% url 'main:index' %}" class="flex-col leading-tight text-ink hidden md:flex">
         <span class="text-[0.83rem] font-semibold text-accent-dark">Букинистика</span>
         <span class="text-2xl font-black tracking-[0.05em]">DOMBB</span>
       </a>
       <a
         href="{% url 'main:catalog_all' %}"
-        class="flex items-center gap-3 rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-ink transition hover:bg-accent-dark hover:text-graphite md:px-6"
+        class="hidden items-center gap-3 rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-ink transition hover:bg-accent-dark hover:text-graphite md:flex md:px-6"
       >
         <span class="flex h-4 w-4 items-center justify-center rounded-xl text-ink">
           <i data-lucide="book-open" class="h-5 w-5"></i>
         </span>
         <span>Каталог</span>
       </a>
-
-      <button
-        type="button"
-        class="inline-flex h-12 w-12 items-center justify-center rounded-full border border-accent-soft text-ink transition hover:border-accent hover:text-accent md:hidden"
-        x-on:click="mobileSearchOpen = true; mobileOpen = false"
-        aria-label="Открыть поиск"
-      >
-        <i data-lucide="search" class="h-5 w-5"></i>
-      </button>
-
       <form action="{% url 'main:catalog_all' %}" method="get" class="relative hidden flex-1 items-center rounded-2xl bg-white md:flex">
         <input type="hidden" name="sort" value="{{ current_sort|default:'popular' }}">
         <input
