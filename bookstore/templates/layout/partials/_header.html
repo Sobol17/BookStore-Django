@@ -30,14 +30,13 @@
           >
             <i data-lucide="search" class="h-5 w-5"></i>
           </button>
-          <button
-            type="button"
+          <a
             class="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-accent text-ink transition hover:bg-accent-dark"
-            x-on:click="mobileOpen = true"
+            href="{% url 'main:catalog_all' %}"
             aria-label="Открыть меню"
           >
             <i data-lucide="grid-3x3" class="h-5 w-5"></i>
-          </button>
+          </a>
         </div>
         <div class="ml-auto flex items-center gap-1 border-l border-accent-soft/60 text-ink-muted">
           <a href="/about" class="inline-flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full transition hover:text-ink" aria-label="Закладки">
