@@ -37,6 +37,8 @@ CSRF_TRUSTED_ORIGINS = [
     'http://localhost:8000',
     'http://dev-sobol.ru',
     'http://www.dev-sobol.ru',
+    'https://dev-sobol.ru',
+    'https://www.dev-sobol.ru',
 ]
 
 CSRF_COOKIE_SECURE = True
@@ -44,6 +46,7 @@ SESSION_COOKIE_SECURE = True
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Application definition
 
