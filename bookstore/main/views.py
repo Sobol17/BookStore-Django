@@ -1,14 +1,17 @@
 from urllib.parse import urlencode
 
 from django.core.paginator import Paginator
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView, DetailView
-from django.http import HttpResponse
+from django.views import View
+from django.http import HttpResponse, JsonResponse
 from django.template.response import TemplateResponse
 from django.urls import reverse
 from .enums import ProductCollections
 
 from .models import Genre, Product, Banner
+from .forms import ProductReviewForm
 from .selectors import (
     get_categories_with_products,
     get_products_collection,
@@ -24,6 +27,20 @@ from .services import (
     extract_hx_flags,
     CATALOG_SORT_OPTIONS,
 )
+
+
+def build_product_reviews_context(product):
+    reviews_qs = product.reviews.filter(is_public=True)
+    total = reviews_qs.count()
+    average = reviews_qs.aggregate(avg=Avg('rating'))['avg'] or 0
+    average_display = f'{average:.1f}' if average else '0'
+    return {
+        'product': product,
+        'reviews': reviews_qs,
+        'reviews_total': total,
+        'reviews_average': average,
+        'reviews_average_display': average_display,
+    }
 
 
 class IndexView(TemplateView):
@@ -60,7 +77,7 @@ class CatalogView(TemplateView):
         if category_slug:
             current_category = get_object_or_404(categories, slug=category_slug)
             products = products.filter(category=current_category)
-        products, filter_params, search_query = apply_catalog_filters(
+        products, filter_params, search_query, price_bounds = apply_catalog_filters(
             products,
             self.request.GET,
         )
@@ -72,10 +89,15 @@ class CatalogView(TemplateView):
 
         genres = Genre.objects.filter(category=current_category) if current_category else Genre.objects.all()
         genres = list(genres)
+        all_genres = list(Genre.objects.select_related('category').all())
         paginator = Paginator(products, 15)
         page_obj = paginator.get_page(self.request.GET.get('page'))
         pagination = build_pagination(self.request, page_obj)
         genre_filters, genre_reset_url = build_genre_filters(self.request, genres)
+        active_genres = [
+            slug for slug in filter_params.get('genre', '').split(',') if slug
+        ]
+        active_genre_value = ','.join(active_genres)
         filter_params['sort'] = current_sort
         context.update({
             'categories': categories,
@@ -83,10 +105,13 @@ class CatalogView(TemplateView):
             'current_category': current_category.slug if current_category else None,
             'current_category_label': current_category.name if current_category else None,
             'filter_params': filter_params,
+            'price_bounds': price_bounds,
             'genres': genres,
             'genre_filters': genre_filters,
             'genre_reset_url': genre_reset_url,
-            'active_genre': self.request.GET.get('genre'),
+            'active_genre': active_genre_value,
+            'active_genres': active_genres,
+            'all_genres': all_genres,
             'search_query': search_query,
             'is_catalog_page': True,
             'is_paginated': paginator.num_pages > 1,
@@ -185,6 +210,7 @@ class ProductDetailView(DetailView):
             context['current_category'] = None
             context['current_category_label'] = None
         context['is_catalog_page'] = False
+        context.update(build_product_reviews_context(product))
         return context
     
     def get(self, request, *args, **kwargs):
@@ -198,11 +224,109 @@ class ProductDetailView(DetailView):
 class ProductSearchView(TemplateView):
     template_name = 'main/search_results.html'
 
+
+class ProductReviewCreateView(View):
+    template_name = 'main/partials/review_modal.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        self.product = get_object_or_404(Product, slug=kwargs['slug'])
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        form = ProductReviewForm()
+        context = {
+            'form': form,
+            'product': self.product,
+            'initial_rating': form.fields['rating'].initial or 5,
+        }
+        return TemplateResponse(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        form = ProductReviewForm(request.POST)
+        if form.is_valid():
+            review = form.save(commit=False)
+            review.product = self.product
+            review.save()
+            context = build_product_reviews_context(self.product)
+            response = TemplateResponse(request, 'main/partials/_product_reviews.html', context)
+            response['HX-Trigger'] = 'close-review-modal'
+            return response
+        try:
+            initial_rating = int(form.data.get('rating'))
+        except (TypeError, ValueError):
+            initial_rating = form.fields['rating'].initial or 5
+        context = {
+            'form': form,
+            'product': self.product,
+            'initial_rating': initial_rating,
+        }
+        return TemplateResponse(request, self.template_name, context, status=400)
+
+
+class ProductStockNotifyView(View):
+    template_name = 'main/partials/stock_notify_modal.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        self.product = get_object_or_404(Product, slug=kwargs['slug'])
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        context = {'product': self.product}
+        return TemplateResponse(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        email = (request.POST.get('email') or '').strip()
+        if not email:
+            context = {
+                'product': self.product,
+                'error': 'Укажите корректный email',
+            }
+            return TemplateResponse(request, self.template_name, context, status=400)
+        return TemplateResponse(
+            request,
+            'main/partials/stock_notify_success.html',
+            {'product': self.product, 'email': email},
+        )
+
+class AuthorSuggestView(View):
+    """
+    Возвращает список подсказок по авторам в формате JSON.
+    """
+    max_results = 8
+
+    def get(self, request, *args, **kwargs):
+        query = (request.GET.get('q') or '').strip()
+        products = get_published_products_queryset().exclude(authors='')
+        if query:
+            products = products.filter(authors__icontains=query)
+        raw_authors = products.values_list('authors', flat=True).distinct()
+        suggestions = []
+        normalized_query = query.lower()
+        separators = [',', ';', '/']
+        for entry in raw_authors:
+            if not entry:
+                continue
+            normalized_entry = entry
+            for separator in separators[1:]:
+                normalized_entry = normalized_entry.replace(separator, separators[0])
+            parts = [part.strip() for part in normalized_entry.split(separators[0])]
+            for part in parts:
+                if not part:
+                    continue
+                if query and normalized_query not in part.lower():
+                    continue
+                if part not in suggestions:
+                    suggestions.append(part)
+                if len(suggestions) >= self.max_results:
+                    break
+            if len(suggestions) >= self.max_results:
+                break
+        return JsonResponse({'results': suggestions})
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         query = self.request.GET.get('q', '').strip()
         products_queryset = get_published_products_queryset()
-        filtered_products, _, search_query = apply_catalog_filters(
+        filtered_products, _, search_query, _ = apply_catalog_filters(
             products_queryset,
             self.request.GET,
         )

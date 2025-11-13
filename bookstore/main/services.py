@@ -1,7 +1,7 @@
-from typing import Dict, Iterable, Tuple
+from typing import Dict, Iterable, Tuple, List
 from urllib.parse import urlencode
 from django.core.paginator import Paginator
-from django.db.models import Q, QuerySet
+from django.db.models import Q, QuerySet, Min, Max
 from django.http import QueryDict
 
 CATALOG_FILTERS = {
@@ -9,7 +9,6 @@ CATALOG_FILTERS = {
     'max_price': lambda queryset, value: queryset.filter(price__lte=value),
     'year': lambda queryset, value: queryset.filter(year=value),
     'author': lambda queryset, value: queryset.filter(authors__icontains=value),
-    'genre': lambda queryset, value: queryset.filter(genre__slug=value),
 }
 
 CATALOG_SORT_OPTIONS = {
@@ -30,13 +29,93 @@ CATALOG_SORT_OPTIONS = {
 TRUTHY_VALUES = {'1', 'true', 'on', 'yes'}
 
 
+def extract_selected_genres(params: QueryDict) -> List[str]:
+    """
+    Возвращает список выбранных жанров из QueryDict с сохранением порядка.
+    Поддерживает как повторяющиеся параметры genre, так и значения через запятую.
+    """
+    raw_values = params.getlist('genre')
+    if not raw_values:
+        single_value = params.get('genre')
+        if single_value:
+            raw_values = [single_value]
+    selected: List[str] = []
+    for raw in raw_values:
+        if not raw:
+            continue
+        for slug in raw.split(','):
+            clean_slug = slug.strip()
+            if clean_slug and clean_slug not in selected:
+                selected.append(clean_slug)
+    return selected
+
+
+def determine_price_step(span: int) -> int:
+    """
+    Возвращает шаг слайдера цены в зависимости от диапазона значений.
+    """
+    if span <= 100:
+        return 1
+    if span <= 500:
+        return 5
+    if span <= 2_000:
+        return 10
+    if span <= 5_000:
+        return 25
+    if span <= 20_000:
+        return 50
+    if span <= 100_000:
+        return 100
+    if span <= 500_000:
+        return 250
+    if span <= 1_000_000:
+        return 500
+    if span <= 2_000_000:
+        return 1_000
+    return 5_000
+
+
+def build_price_bounds(queryset: QuerySet) -> Dict[str, int]:
+    """
+    Определяет минимальную и максимальную цену доступных товаров для текущего среза каталога.
+    """
+    aggregates = queryset.aggregate(
+        min_price=Min('price'),
+        max_price=Max('price'),
+    )
+    min_value = aggregates.get('min_price')
+    max_value = aggregates.get('max_price')
+    try:
+        min_value = int(min_value)
+    except (TypeError, ValueError):
+        min_value = 0
+    try:
+        max_value = int(max_value)
+    except (TypeError, ValueError):
+        max_value = min_value
+    if max_value < min_value:
+        max_value = min_value
+    span = max_value - min_value
+    if span <= 0:
+        span = 1
+        max_value = min_value + span
+    step = determine_price_step(span)
+    return {
+        'min': min_value,
+        'max': max_value,
+        'step': step,
+        'gap': 0,
+    }
+
+
 def apply_catalog_filters(
     products: QuerySet,
     params: QueryDict,
-) -> Tuple[QuerySet, Dict[str, str], str]:
+) -> Tuple[QuerySet, Dict[str, str], str, Dict[str, int]]:
     """
     Применяет поисковый запрос и набор фильтров из QueryDict к переданному queryset.
-    Возвращает обновлённый queryset, словарь текущих параметров фильтра и строку поиска.
+    Возвращает обновлённый queryset, словарь текущих параметров фильтра, строку поиска
+    и вычисленные границы цен для текущего набора товаров.
     """
     query = params.get('q')
     if query:
@@ -47,7 +126,29 @@ def apply_catalog_filters(
         )
 
     filter_params: Dict[str, str] = {}
+    price_keys = {'min_price', 'max_price'}
+    multi_keys = {'genre'}
     for key, filter_func in CATALOG_FILTERS.items():
+        if key in price_keys or key in multi_keys:
+            continue
+        value = params.get(key)
+        if value:
+            products = filter_func(products, value)
+            filter_params[key] = value
+        else:
+            filter_params[key] = ''
+
+    selected_genres = extract_selected_genres(params)
+    if selected_genres:
+        products = products.filter(genre__slug__in=selected_genres)
+        filter_params['genre'] = ','.join(selected_genres)
+    else:
+        filter_params['genre'] = ''
+
+    price_bounds = build_price_bounds(products)
+
+    for key in ('min_price', 'max_price'):
+        filter_func = CATALOG_FILTERS[key]
         value = params.get(key)
         if value:
             products = filter_func(products, value)
@@ -56,7 +157,7 @@ def apply_catalog_filters(
             filter_params[key] = ''
 
     filter_params['q'] = query or ''
-    return products, filter_params, query or ''
+    return products, filter_params, query or '', price_bounds
 
 def apply_catalog_sorting(products: QuerySet, sort_key: str) -> Tuple[QuerySet, str]:
     """
@@ -83,26 +184,35 @@ def extract_hx_flags(
 
 
 def build_genre_filters(request, genres):
-        existing_params = {
+        selected_genres = extract_selected_genres(request.GET)
+        selected_set = set(selected_genres)
+        base_params = {
             key: value
             for key, value in request.GET.items()
             if key not in {'genre', 'page'} and value
         }
-        active_genre = request.GET.get('genre')
+
+        def build_url(slugs: List[str]) -> str:
+            params = base_params.copy()
+            if slugs:
+                params['genre'] = ','.join(slugs)
+            query_string = urlencode(params)
+            return f'{request.path}?{query_string}' if query_string else request.path
+
         filters = []
         for genre in genres:
-            params = existing_params.copy()
-            params['genre'] = genre.slug
-            query_string = urlencode(params)
-            url = f'{request.path}?{query_string}' if query_string else request.path
+            if genre.slug in selected_set:
+                updated = [slug for slug in selected_genres if slug != genre.slug]
+            else:
+                updated = selected_genres + [genre.slug]
             filters.append({
                 'label': genre.name,
                 'slug': genre.slug,
-                'url': url,
-                'is_active': active_genre == genre.slug,
+                'url': build_url(updated),
+                'is_active': genre.slug in selected_set,
             })
-        reset_query = urlencode(existing_params)
-        reset_url = f'{request.path}?{reset_query}' if reset_query else request.path
+
+        reset_url = build_url([])
         return filters, reset_url
 
 

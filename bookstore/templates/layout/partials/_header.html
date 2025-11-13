@@ -10,7 +10,7 @@
 
       <nav class="hidden items-center gap-6 text-sm text-ink-muted xl:flex">
         <a href="{% url 'main:index' %}" class="transition hover:text-ink {% if not is_catalog_page and not object %}text-ink{% endif %}">Главная</a>
-        <a href="{% url 'main:catalog_all' %}" class="transition hover:text-ink {% if is_catalog_page %}text-ink{% endif %}">Каталог</a>
+        <a href="{% url 'main:catalog_all' %}" class="transition hover:text-ink {% if is_catalog_page %}text-ink{% endif %}">Закупка книг</a>
         <a href="/about" class="transition hover:text-ink">О магазине</a>
         <a href="/about" class="transition hover:text-ink">Связаться</a>
       </nav>
@@ -198,7 +198,7 @@
         <i data-lucide="arrow-right" class="h-4 w-4"></i>
       </a>
       <a href="{% url 'main:catalog_all' %}" class="flex items-center justify-between rounded-2xl border border-accent-soft px-4 py-3 transition hover:bg-accent-soft/50">
-        <span>Каталог</span>
+        <span>Закупка книг</span>
         <i data-lucide="arrow-right" class="h-4 w-4"></i>
       </a>
       <a href="#about" class="flex items-center justify-between rounded-2xl border border-accent-soft px-4 py-3 transition hover:bg-accent-soft/50">

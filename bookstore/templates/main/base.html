@@ -21,6 +21,10 @@
                 {% endif %}
               </h1>
             </header>
+            
+            {% if all_genres %}
+              {% include 'main/partials/_all_genres.html' with all_genres=all_genres %}
+            {% endif %}
 
             <div class="grid gap-6 lg:grid-cols-[minmax(0,275px)_1fr]">
               {% include 'main/partials/_catalog_filters.html' %}
@@ -39,14 +43,19 @@
                       <div class="mb-3 flex flex-wrap gap-2">
                         <button
                           type="button"
-                          class="rounded-xl border border-accent px-4 py-2 text-sm font-semibold transition hover:bg-accent-soft {% if not active_genre %}bg-accent text-graphite{% else %}bg-white text-ink{% endif %}"
+                          class="rounded-xl border border-accent px-4 py-2 text-sm font-semibold transition hover:bg-accent-soft {% if not active_genres %}bg-accent text-graphite{% else %}bg-white text-ink{% endif %}"
                           hx-get="{{ genre_reset_url }}"
                           hx-target="#catalog-content"
                           hx-swap="outerHTML"
                           hx-push-url="true"
                           hx-indicator="#catalog-loading"
                         >
-                          Все жанры
+                          <span class="flex items-center gap-2">
+                            {% if not active_genres %}
+                              <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/90 text-xs font-bold text-graphite">✓</span>
+                            {% endif %}
+                            <span>Все жанры</span>
+                          </span>
                         </button>
                         {% for genre in genre_filters %}
                           <button
@@ -58,7 +67,12 @@
                             hx-push-url="true"
                             hx-indicator="#catalog-loading"
                           >
-                            {{ genre.label }}
+                            <span class="flex items-center gap-2">
+                              {% if genre.is_active %}
+                                <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/90 text-xs font-bold text-graphite">✓</span>
+                              {% endif %}
+                              <span>{{ genre.label }}</span>
+                            </span>
                           </button>
                         {% endfor %}
                       </div>
@@ -166,7 +180,29 @@
           <div data-name="home_page" class="space-y-16">
             {% include 'main/partials/_banner.html' with banners=banners %}
 
-            <section class="relative overflow-hidden rounded-2xl border border-accent-soft/50 bg-white p-7 lg:p-10">
+            {% if categories %}
+              <section>
+                <h2 class="text-2xl font-bold">Подборки</h2>
+                
+                <div class="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                  {% for category in categories %}
+                    <a
+                      href="{% url 'main:catalog' category.slug %}"
+                      class="relative flex flex-col gap-1 overflow-hidden rounded-xl border border-accent-soft/60 bg-white p-6 transition hover:shadow-xl"
+                    >
+                      <img
+                        src="{{ category.image.url }}"
+                        alt="{{ category.name }}"
+                        class="w-full h-auto object-cover rounded-xl"
+                      >
+                      <h3 class="text-2xl font-bold text-ink text-center mt-1">{{ category }}</h3>
+                    </a>
+                  {% endfor %}
+                </div>
+              </section>
+            {% endif %}
+
+            {% comment %} <section class="relative overflow-hidden rounded-2xl border border-accent-soft/50 bg-white p-7 lg:p-10">
               <div class="absolute inset-0"></div>
               <div class="relative grid gap-7 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
                 <div class="space-y-6">
@@ -196,47 +232,11 @@
                 </div>
                 <div class="relative">
                   <div class="absolute inset-0 translate-x-6 translate-y-6 rounded-3xl border border-accent-soft/70"></div>
-                  {% comment %} <img
-                    src="{% static 'images/demo-cover-1.jpg' %}"
-                    alt="Интерьер букинистического магазина"
-                    class="relative h-full w-full rounded-3xl object-cover"
-                  > {% endcomment %}
                 </div>
               </div>
-            </section>
+            </section> {% endcomment %}
 
             {% include 'main/partials/_product-slider.html' with products=new_products title="Новинки" link=new_products_link %}
-
-            {% if categories %}
-              <section>
-                <h2 class="text-2xl font-bold">Коллекции и жанры</h2>
-                
-                <div class="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-                  {% for category in categories %}
-                    <a
-                      href="{% url 'main:catalog' category.slug %}"
-                      class="relative flex flex-col gap-1 overflow-hidden rounded-xl border border-accent-soft/60 bg-white p-6 transition hover:shadow-xl"
-                    >
-                      <span class="text-sm text-bold text-graphite">Коллекция</span>
-                      <h3 class="text-2xl font-bold text-ink">{{ category.name }}</h3>
-                      <p class="text-sm text-ink-muted">
-                        {% if category.meta_description %}
-                          {{ category.meta_description }}
-                        {% else %}
-                          Подборка изданий, созданных для ценителей редких книг и уникальных находок.
-                        {% endif %}
-                      </p>
-                      <span class="mt-4 text-sm font-bold text-accent-darker">
-                        Смотреть книги →
-                      </span>
-                      <div class="absolute inset-0 rounded-3xl border border-transparent transition group-hover:border-accent"></div>
-                    </a>
-                  {% endfor %}
-                </div>
-              </section>
-            {% endif %}
-
-            {% include 'main/partials/_product-slider.html' with products=new_products title="Рекомендуемые находки" link=new_products_link %}
 
             <section id="about" class="grid gap-10 rounded-3xl border border-accent-soft/60 bg-white p-10 lg:grid-cols-2">
               <div class="space-y-4">

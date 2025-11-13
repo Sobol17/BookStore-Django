@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Genre, Product, ProductImage, Banner
+from .models import Category, Genre, Product, ProductImage, Banner, ProductReview
 
 
 class BannerAdmin(admin.ModelAdmin):
@@ -11,6 +11,14 @@ class BannerAdmin(admin.ModelAdmin):
 class ProductImageInline(admin.TabularInline):
     model = ProductImage
     extra = 1
+
+
+class ProductReviewInline(admin.TabularInline):
+    model = ProductReview
+    extra = 0
+    readonly_fields = ('author_name', 'rating', 'text', 'created_at')
+    can_delete = False
+    show_change_link = False
     
 
 class ProductAdmin(admin.ModelAdmin):
@@ -19,7 +27,7 @@ class ProductAdmin(admin.ModelAdmin):
 	search_fields = ('name', 'authors', 'publisher', 'isbn')
 	prepopulated_fields = {'slug': ('name',)}
 	autocomplete_fields = ('category', 'genre')
-	inlines = [ProductImageInline]
+	inlines = [ProductImageInline, ProductReviewInline]
 
 
 class CategoryAdmin(admin.ModelAdmin):
@@ -29,7 +37,7 @@ class CategoryAdmin(admin.ModelAdmin):
 
 
 class GenreAdmin(admin.ModelAdmin):
-	list_display = ('name', 'category', 'position', 'slug')
+	list_display = ('name', 'category', 'position', 'slug', 'image')
 	list_filter = ('category',)
 	search_fields = ('name',)
 	prepopulated_fields = {'slug': ('name',)}

@@ -13,15 +13,10 @@
       Сортировка:
     </label>
     {% for key, value in filter_params.items %}
-      {% if value %}
-        {% if key != 'sort' and key != 'genre' %}
-          <input type="hidden" name="{{ key }}" value="{{ value }}">
-        {% endif %}
+      {% if value and key != 'sort' %}
+        <input type="hidden" name="{{ key }}" value="{{ value }}">
       {% endif %}
     {% endfor %}
-    {% if active_genre %}
-      <input type="hidden" name="genre" value="{{ active_genre }}">
-    {% endif %}
     <select
       id="catalog-sort"
       name="sort"

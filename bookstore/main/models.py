@@ -7,6 +7,7 @@ from .enums import ProductConditionChoices, ProductCollections
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
     slug = models.SlugField(unique=True, blank=True)
+    image = models.ImageField(upload_to='categories/', blank=True)
     meta_title = models.CharField(max_length=255, blank=True)
     meta_description = models.CharField(max_length=300, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
@@ -30,6 +31,7 @@ class Genre(models.Model):
     name = models.CharField(max_length=100)
     slug = models.SlugField()
     position = models.PositiveIntegerField(default=0)
+    image = models.ImageField(upload_to='genres/', blank=True, null=True)
 
     class Meta:
         unique_together = ('category', 'slug')
@@ -125,6 +127,25 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class ProductReview(models.Model):
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name='reviews',
+    )
+    author_name = models.CharField(max_length=120)
+    rating = models.PositiveSmallIntegerField(default=5)
+    text = models.TextField()
+    is_public = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('-created_at',)
+
+    def __str__(self):
+        return f'{self.author_name}: {self.rating}'
     
 
 class ProductImage(models.Model):

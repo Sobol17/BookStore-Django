@@ -12,30 +12,77 @@
   >
     <input type="hidden" name="sort" value="{{ current_sort|default:'popular' }}">
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
-      <div>
-        <label for="min_price" class="text-sm font-semibold text-ink mb-1 block">Цена от</label>
-        <input
-          id="min_price"
-          name="min_price"
-          type="number"
-          placeholder="Минимальная цена"
-          value="{{ filter_params.min_price }}"
-          min="0"
-          class="input"
-        >
-      </div>
-      <div>
-        <label for="max_price" class="text-sm font-semibold text-ink mb-1 block">Цена до</label>
-        <input
-          id="max_price"
-          name="max_price"
-          type="number"
-          placeholder="Максимальная цена"
-          value="{{ filter_params.max_price }}"
-          min="0"
-          class="input"
-        >
-      </div>
+      {% with slider_floor=price_bounds.min|default:0 slider_ceiling=price_bounds.max|default:200000 slider_step=price_bounds.step|default:100 %}
+        {% with slider_start=filter_params.min_price|default:slider_floor slider_end=filter_params.max_price|default:slider_ceiling %}
+          <div class="sm:col-span-2 lg:col-span-1 space-y-4">
+            <span class="range-filter__title">Цена, ₽</span>
+            <div
+              class="range-filter space-y-3"
+              x-data="window.rangeSlider({
+                min: {{ slider_floor }},
+                max: {{ slider_ceiling }},
+                from: {{ slider_start }},
+                to: {{ slider_end }},
+                step: {{ slider_step }}
+              })"
+              x-init="init($refs)"
+            >
+              <input type="hidden" name="min_price" :value="getLowerValue()">
+              <input type="hidden" name="max_price" :value="getUpperValue()">
+              <div
+                class="range-slider"
+                x-ref="slider"
+                @mouseleave="dragEnd"
+                @mousemove.window="drag($event)"
+                @touchmove.window.prevent="drag($event)"
+                @mouseup.window="dragEnd"
+                @touchend.window="dragEnd"
+              >
+                <div class="range-slider__track"></div>
+                <div
+                  class="range-slider__selection"
+                  :style="`width:${getWidth()}; left:${getMinPos()};`"
+                  aria-hidden="true"
+                ></div>
+                <div
+                  class="range-slider__handle"
+                  role="slider"
+                  tabindex="0"
+                  aria-label="Минимальная цена"
+                  :aria-valuemin="min"
+                  :aria-valuemax="max"
+                  :aria-valuenow="from"
+                  @mousedown.prevent="startDrag('from', $event)"
+                  @touchstart.prevent="startDrag('from', $event)"
+                  @keydown="handleKey($event, 'from')"
+                  :style="`left:${getFromPos()};`"
+                ></div>
+                <div
+                  class="range-slider__handle"
+                  role="slider"
+                  tabindex="0"
+                  aria-label="Максимальная цена"
+                  :aria-valuemin="min"
+                  :aria-valuemax="max"
+                  :aria-valuenow="to"
+                  @mousedown.prevent="startDrag('to', $event)"
+                  @touchstart.prevent="startDrag('to', $event)"
+                  @keydown="handleKey($event, 'to')"
+                  :style="`left:${getToPos()};`"
+                ></div>
+              </div>
+              <div class="range-display">
+                <span class="range-display__value">
+                  от <span x-text="formatValue(getLowerValue())"></span>
+                </span>
+                <span class="range-display__value text-right">
+                  до <span x-text="formatValue(getUpperValue())"></span>
+                </span>
+              </div>
+            </div>
+          </div>
+        {% endwith %}
+      {% endwith %}
       <div>
         <label for="year" class="text-sm font-semibold text-ink mb-1 block">Год издания</label>
         <input
@@ -47,16 +94,54 @@
           class="input"
         >
       </div>
-      <div>
+      <div
+        x-data="authorAutocomplete('{{ filter_params.author|default:''|escapejs }}', '{% url 'main:author_suggest' %}')"
+        class="space-y-1"
+      >
         <label for="author" class="text-sm font-semibold text-ink mb-1 block">Автор</label>
-        <input
-          id="author"
-          name="author"
-          type="text"
-          placeholder="Введите имя автора"
-          value="{{ filter_params.author }}"
-          class="input"
-        >
+        <div class="autocomplete" @click.away="closePanel()">
+          <input
+            id="author"
+            name="author"
+            type="text"
+            placeholder="Введите имя автора"
+            x-model="value"
+            @focus="openPanel()"
+            @input="handleInput"
+            @keydown.arrow-down.prevent="moveHighlight(1)"
+            @keydown.arrow-up.prevent="moveHighlight(-1)"
+            @keydown.enter.prevent="selectHighlighted()"
+            @keydown.escape="closePanel()"
+            value="{{ filter_params.author }}"
+            class="input"
+            autocomplete="off"
+            spellcheck="false"
+            aria-autocomplete="list"
+            :aria-expanded="open && suggestions.length ? 'true' : 'false'"
+            aria-controls="author-suggestions"
+          >
+          <div
+            id="author-suggestions"
+            class="autocomplete__panel"
+            x-show="open && suggestions.length"
+            x-cloak
+            role="listbox"
+          >
+            <template x-for="(item, index) in suggestions" :key="item">
+              <button
+                type="button"
+                class="autocomplete__item"
+                :class="{'autocomplete__item--active': index === highlightedIndex}"
+                @mousedown.prevent="select(item)"
+                @mouseenter="highlightedIndex = index"
+                role="option"
+                :aria-selected="index === highlightedIndex"
+              >
+                <span x-text="item"></span>
+              </button>
+            </template>
+          </div>
+        </div>
       </div>
     </div>
     <div class="flex flex-wrap gap-3">

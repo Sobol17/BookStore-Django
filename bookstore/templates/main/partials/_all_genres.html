@@ -1,0 +1,38 @@
+<section class="mb-6 space-y-4">
+	<h3 class="text-lg font-semibold text-ink">Все жанры</h3>
+	<div class="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+	{% for genre in all_genres %}
+		{% url 'main:catalog' genre.category.slug as genre_category_url %}
+		{% with genre_href=genre_category_url|add:'?genre='|add:genre.slug %}
+		<a
+			href="{{ genre_href }}"
+			hx-get="{{ genre_href }}"
+			hx-target="#catalog-content"
+			hx-swap="outerHTML"
+			hx-push-url="true"
+			hx-indicator="#catalog-loading"
+			class="flex flex-col gap-3 rounded-2xl border border-accent-soft/70 bg-white/80 p-4 text-left transition hover:-translate-y-1 hover:border-accent hover:shadow-xl"
+		>
+			<div class="aspect-[4/3] w-full overflow-hidden rounded-xl bg-accent-soft/60">
+			{% if genre.image %}
+				<img
+				src="{{ genre.image.url }}"
+				alt="{{ genre.name }}"
+				class="h-full w-full object-cover"
+				loading="lazy"
+				>
+			{% else %}
+				<div class="flex h-full w-full items-center justify-center text-2xl font-semibold text-accent-dark">
+				{{ genre.name|slice:":1" }}
+				</div>
+			{% endif %}
+			</div>
+			<div class="space-y-1">
+			<p class="text-base font-semibold text-ink">{{ genre.name }}</p>
+			<p class="text-sm text-ink-muted/80">{{ genre.category.name }}</p>
+			</div>
+		</a>
+		{% endwith %}
+	{% endfor %}
+	</div>
+</section>
