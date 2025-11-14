@@ -1,5 +1,6 @@
 from urllib.parse import urlencode
 
+from django.conf import settings
 from django.core.paginator import Paginator
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
@@ -8,6 +9,11 @@ from django.views import View
 from django.http import HttpResponse, JsonResponse
 from django.template.response import TemplateResponse
 from django.urls import reverse
+from .deepseek import (
+    DeepSeekAPIError,
+    DeepSeekConfigurationError,
+    DeepSeekReviewService,
+)
 from .enums import ProductCollections
 
 from .models import Genre, Product, Banner
@@ -210,6 +216,7 @@ class ProductDetailView(DetailView):
             context['current_category'] = None
             context['current_category_label'] = None
         context['is_catalog_page'] = False
+        context['can_request_ai_review'] = bool(getattr(settings, 'DEEPSEEK_API_KEY', ''))
         context.update(build_product_reviews_context(product))
         return context
     
@@ -286,6 +293,41 @@ class ProductStockNotifyView(View):
             request,
             'main/partials/stock_notify_success.html',
             {'product': self.product, 'email': email},
+        )
+
+
+class ProductAIReviewView(View):
+    template_name = 'main/partials/_product_ai_review.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        self.product = get_object_or_404(Product, slug=kwargs['slug'])
+        return super().dispatch(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        context = {
+            'product': self.product,
+            'initial': False,
+        }
+        try:
+            service = self._build_service()
+            context['review_text'] = service.generate_review(
+                title=self.product.name,
+                authors=self.product.authors,
+                year=self.product.year,
+                genre=self.product.genre.name if self.product.genre else None,
+            )
+        except DeepSeekConfigurationError:
+            context['error'] = 'Интеграция DeepSeek не настроена.'
+        except DeepSeekAPIError as exc:
+            context['error'] = str(exc) or 'Не удалось получить рецензию. Попробуйте позже.'
+        return TemplateResponse(request, self.template_name, context)
+
+    def _build_service(self) -> DeepSeekReviewService:
+        return DeepSeekReviewService(
+            api_key=getattr(settings, 'DEEPSEEK_API_KEY', ''),
+            api_url=getattr(settings, 'DEEPSEEK_API_URL', 'https://api.deepseek.com/chat/completions'),
+            model=getattr(settings, 'DEEPSEEK_MODEL', 'deepseek-chat'),
+            timeout=getattr(settings, 'DEEPSEEK_TIMEOUT', 30),
         )
 
 class AuthorSuggestView(View):

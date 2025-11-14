@@ -28,7 +28,7 @@ TEMPLATES_DIR = BASE_DIR / 'templates'
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'dev-sobol.ru', 'www.dev-sobol.ru']
 
@@ -163,3 +163,10 @@ CKEDITOR_CONFIGS = {
         'height': 400,
     }
 }
+
+# DeepSeek integration
+DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY')
+DEEPSEEK_API_URL = os.getenv('DEEPSEEK_API_URL')
+DEEPSEEK_MODEL = os.getenv('DEEPSEEK_MODEL')
+DEEPSEEK_TIMEOUT = 30
+    

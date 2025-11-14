@@ -1,0 +1,17 @@
+<div class="space-y-3">
+  {% if review_text %}
+    <article class="prose prose-sm max-w-none prose-p:text-ink prose-strong:text-ink">
+      {{ review_text|linebreaksbr }}
+    </article>
+  {% elif error %}
+    <p class="text-sm font-semibold text-blush">{{ error }}</p>
+  {% else %}
+    <p class="text-sm text-ink-muted">
+      {% if initial %}
+        Нажмите «Получить», чтобы сервис DeepSeek подготовил свежий взгляд на книгу.
+      {% else %}
+        Не удалось получить ответ от DeepSeek. Попробуйте ещё раз через пару минут.
+      {% endif %}
+    </p>
+  {% endif %}
+</div>
