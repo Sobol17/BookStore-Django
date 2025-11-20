@@ -1,11 +1,11 @@
 from django.contrib import admin
-from .models import Category, Genre, Product, ProductImage, Banner, ProductReview
+from .models import Category, Genre, Product, ProductImage, Banner, ProductReview, DeepSeekPrompt
 
 
 class BannerAdmin(admin.ModelAdmin):
-	list_display = ('title', 'image', 'link', 'is_active', 'created_at', 'updated_at')
-	list_filter = ('is_active', 'title')
-	search_fields = ('title', 'link')
+    list_display = ('title', 'image', 'link', 'is_active', 'created_at', 'updated_at')
+    list_filter = ('is_active', 'title')
+    search_fields = ('title', 'link')
 
 
 class ProductImageInline(admin.TabularInline):
@@ -22,28 +22,38 @@ class ProductReviewInline(admin.TabularInline):
     
 
 class ProductAdmin(admin.ModelAdmin):
-	list_display = ('name', 'category', 'genre', 'condition', 'collection', 'price', 'in_stock', 'is_published', 'updated_at', 'slug', 'authors', 'publisher')
-	list_filter = ('category', 'genre', 'condition', 'is_published', 'in_stock', 'collection')
-	search_fields = ('name', 'authors', 'publisher', 'isbn')
-	prepopulated_fields = {'slug': ('name',)}
-	autocomplete_fields = ('category', 'genre')
-	inlines = [ProductImageInline, ProductReviewInline]
+    list_display = ('name', 'category', 'genre', 'condition', 'collection', 'price', 'in_stock', 'is_published', 'updated_at', 'slug', 'authors', 'publisher')
+    list_filter = ('category', 'genre', 'condition', 'is_published', 'in_stock', 'collection')
+    search_fields = ('name', 'authors', 'publisher', 'isbn')
+    prepopulated_fields = {'slug': ('name',)}
+    autocomplete_fields = ('category', 'genre')
+    inlines = [ProductImageInline, ProductReviewInline]
 
 
 class CategoryAdmin(admin.ModelAdmin):
-	list_display = ('name', 'slug')
-	search_fields = ('name',)
-	prepopulated_fields = {'slug': ('name',)}
+    list_display = ('name', 'slug')
+    search_fields = ('name',)
+    prepopulated_fields = {'slug': ('name',)}
 
 
 class GenreAdmin(admin.ModelAdmin):
-	list_display = ('name', 'category', 'position', 'slug', 'image')
-	list_filter = ('category',)
-	search_fields = ('name',)
-	prepopulated_fields = {'slug': ('name',)}
+    list_display = ('name', 'category', 'position', 'slug', 'image')
+    list_filter = ('category',)
+    search_fields = ('name',)
+    prepopulated_fields = {'slug': ('name',)}
+
+
+class DeepSeekPromptAdmin(admin.ModelAdmin):
+    list_display = ('short_text', 'created_at', 'updated_at')
+
+    def short_text(self, obj):
+        return (obj.text or '').strip()[:80]
+
+    short_text.short_description = 'Текст'
  
 
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(Genre, GenreAdmin)
 admin.site.register(Product, ProductAdmin)
 admin.site.register(Banner, BannerAdmin)
+admin.site.register(DeepSeekPrompt, DeepSeekPromptAdmin)

@@ -168,3 +168,10 @@ class Banner(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class DeepSeekPrompt(models.Model):
+    text = models.TextField(default='Ты — литературный критик. Сформулируй по-русски выразительную рецензию из 2–3 абзацев, '
+            'делай акцент на идеях и стиле произведения. Не пересказывай сюжет подробно и уложись примерно в 1200 символов.\n')
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)

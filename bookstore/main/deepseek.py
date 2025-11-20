@@ -4,8 +4,21 @@ from dataclasses import dataclass
 from typing import Any, Dict, Optional
 from urllib import error, request
 
+from django.core.exceptions import AppRegistryNotReady
+from django.db import DatabaseError
+
+from .models import DeepSeekPrompt
+
 
 logger = logging.getLogger(__name__)
+
+DETAILS_PLACEHOLDER = '{details}'
+DETAILS_HEADER = 'Используй следующие сведения:'
+DEFAULT_PROMPT_TEMPLATE = (
+    'Ты — литературный критик. Сформулируй по-русски выразительную рецензию из 2–3 абзацев, '
+    'делай акцент на идеях и стиле произведения. Не пересказывай сюжет подробно и уложись примерно в 1200 символов.\n'
+    f'{DETAILS_PLACEHOLDER}'
+)
 
 
 class DeepSeekConfigurationError(RuntimeError):
@@ -76,12 +89,13 @@ class DeepSeekReviewService:
         if genre:
             details.append(f'Жанр: {genre}')
         details_text = '\n'.join(f'- {item}' for item in details)
-        return (
-            'Ты — литературный критик. Сформулируй по-русски выразительную рецензию из 2–3 абзацев, '
-            'делай акцент на идеях и стиле произведения. Не пересказывай сюжет подробно и уложись примерно в 1200 символов.\n'
-            'Используй следующие сведения:\n'
-            f'{details_text}'
-        )
+        details_block = f'{DETAILS_HEADER}\n{details_text}'
+        template = self._get_prompt_template()
+        if DETAILS_PLACEHOLDER in template:
+            return template.replace(DETAILS_PLACEHOLDER, details_block)
+        template = template.rstrip()
+        separator = '\n' if template else ''
+        return f'{template}{separator}{details_block}'
 
     def _build_payload(self, prompt: str) -> Dict[str, Any]:
         return {
@@ -138,6 +152,26 @@ class DeepSeekReviewService:
         if not content:
             raise DeepSeekAPIError('DeepSeek не вернул текст рецензии.')
         return content
+
+    def _get_prompt_template(self) -> str:
+        saved_prompt = self._load_prompt_from_db()
+        return saved_prompt or DEFAULT_PROMPT_TEMPLATE
+
+    @staticmethod
+    def _load_prompt_from_db() -> Optional[str]:
+        try:
+            prompt_text = (
+                DeepSeekPrompt.objects.order_by('-updated_at').values_list('text', flat=True).first()
+            )
+        except (DatabaseError, AppRegistryNotReady) as exc:
+            logger.warning('DeepSeek prompt is not available yet: %s', exc)
+            return None
+        except Exception:
+            logger.exception('Failed to load DeepSeek prompt from the database.')
+            return None
+        if prompt_text:
+            return prompt_text.strip()
+        return None
 
     @staticmethod
     def _read_error_body(exc: error.HTTPError) -> Optional[str]:
