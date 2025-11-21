@@ -6,7 +6,7 @@ from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView, DetailView
 from django.views import View
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 from django.template.response import TemplateResponse
 from django.urls import reverse
 from .deepseek import (
@@ -17,7 +17,7 @@ from .deepseek import (
 from .enums import ProductCollections
 
 from .models import Genre, Product, Banner
-from .forms import ProductReviewForm
+from .forms import ProductReviewForm, BookPurchaseRequestForm
 from .selectors import (
     get_categories_with_products,
     get_products_collection,
@@ -51,9 +51,11 @@ def build_product_reviews_context(product):
 
 class IndexView(TemplateView):
     template_name = 'main/base.html'
-
+    form_class = BookPurchaseRequestForm
 
     def get_context_data(self, **kwargs):
+        purchase_form = kwargs.pop('purchase_form', None)
+        purchase_form_success = kwargs.pop('purchase_form_success', None)
         context = super().get_context_data(**kwargs)
         context['categories'] = get_categories_with_products()
         context['current_category'] = None
@@ -61,12 +63,25 @@ class IndexView(TemplateView):
         context['new_products'] = get_products_collection(ProductCollections.NEW)
         context['new_products_link'] = reverse('main:catalog_all')
         context['banners'] = Banner.objects.filter(is_active=True).order_by('-created_at')
+        if purchase_form is None:
+            purchase_form = self.form_class()
+        context['purchase_form'] = purchase_form
+        if purchase_form_success is None:
+            purchase_form_success = self.request.GET.get('purchase_submitted') == '1'
+        context['purchase_form_success'] = purchase_form_success
         return context
 
     def get(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
-        if request.headers.get('HX-Request'):
-            return TemplateResponse(request, 'main/home_content.html', context)
+        return TemplateResponse(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            redirect_url = f"{reverse('main:index')}?purchase_submitted=1"
+            return HttpResponseRedirect(redirect_url)
+        context = self.get_context_data(purchase_form=form)
         return TemplateResponse(request, self.template_name, context)
 
 

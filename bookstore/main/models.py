@@ -153,11 +153,38 @@ class ProductImage(models.Model):
     image = models.ImageField(upload_to='products/extra')
     alt_text = models.CharField(max_length=255, blank=True)
     position = models.PositiveIntegerField(default=0)
-    
+
     def __str__(self):
         return f"Изображение {self.product.name} позиция {self.position}"
-    
-    
+
+
+class BookPurchaseRequest(models.Model):
+    email = models.EmailField()
+    phone = models.CharField(max_length=64)
+    book_description = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ('-created_at',)
+
+    def __str__(self):
+        return f"Заявка {self.email} от {self.created_at:%d.%m.%Y}"
+
+
+class BookPurchasePhoto(models.Model):
+    request = models.ForeignKey(
+        BookPurchaseRequest,
+        on_delete=models.CASCADE,
+        related_name='photos',
+    )
+    image = models.ImageField(upload_to='purchase_requests/photos')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Фото заявки #{self.request_id}"
+
+
 class Banner(models.Model):
     title = models.CharField(max_length=255)
     image = models.ImageField(upload_to='banners/main')

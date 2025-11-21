@@ -1,5 +1,15 @@
 from django.contrib import admin
-from .models import Category, Genre, Product, ProductImage, Banner, ProductReview, DeepSeekPrompt
+from .models import (
+    Category,
+    Genre,
+    Product,
+    ProductImage,
+    Banner,
+    ProductReview,
+    DeepSeekPrompt,
+    BookPurchaseRequest,
+    BookPurchasePhoto,
+)
 
 
 class BannerAdmin(admin.ModelAdmin):
@@ -11,6 +21,12 @@ class BannerAdmin(admin.ModelAdmin):
 class ProductImageInline(admin.TabularInline):
     model = ProductImage
     extra = 1
+
+
+class BookPurchasePhotoInline(admin.TabularInline):
+    model = BookPurchasePhoto
+    extra = 0
+    readonly_fields = ('image', 'uploaded_at')
 
 
 class ProductReviewInline(admin.TabularInline):
@@ -50,7 +66,15 @@ class DeepSeekPromptAdmin(admin.ModelAdmin):
         return (obj.text or '').strip()[:80]
 
     short_text.short_description = 'Текст'
- 
+
+
+@admin.register(BookPurchaseRequest)
+class BookPurchaseRequestAdmin(admin.ModelAdmin):
+    list_display = ('email', 'phone', 'created_at')
+    readonly_fields = ('email', 'phone', 'book_description', 'created_at', 'updated_at')
+    search_fields = ('email', 'phone', 'book_description')
+    inlines = (BookPurchasePhotoInline,)
+    ordering = ('-created_at',)
 
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(Genre, GenreAdmin)
