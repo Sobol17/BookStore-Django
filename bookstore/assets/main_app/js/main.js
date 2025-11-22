@@ -427,6 +427,206 @@ document.body.addEventListener('close-review-modal', function () {
 	}
 });
 
+if (typeof window.getCookie !== 'function') {
+	window.getCookie = function (name) {
+		let cookieValue = null;
+		if (document.cookie && document.cookie !== '') {
+			const cookies = document.cookie.split(';');
+			for (let i = 0; i < cookies.length; i += 1) {
+				const cookie = cookies[i].trim();
+				if (cookie.substring(0, name.length + 1) === `${name}=`) {
+					cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+					break;
+				}
+			}
+		}
+		return cookieValue;
+	};
+}
+
+if (typeof window.showNotification !== 'function') {
+	window.showNotification = function (message) {
+		const notification = document.createElement('div');
+		notification.className = 'fixed top-20 right-4 bg-black text-white px-6 py-3 rounded shadow-lg z-50 transform translate-x-full transition-transform duration-300';
+		notification.textContent = message;
+		document.body.appendChild(notification);
+		setTimeout(() => {
+			notification.style.transform = 'translateX(0)';
+		}, 10);
+		setTimeout(() => {
+			notification.style.transform = 'translateX(100%)';
+			setTimeout(() => {
+				notification.remove();
+			}, 300);
+		}, 3000);
+	};
+}
+
+function getProductCardElements(productId) {
+	const nodes = document.querySelectorAll(`[data-product-card="${productId}"]`);
+	return Array.from(nodes).map((node) => ({
+		element: node,
+		addWrapper: node.querySelector('[data-card-add]'),
+		qtyWrapper: node.querySelector('[data-card-qty]'),
+		qtyValue: node.querySelector('[data-card-qty-value]'),
+		addUrl: node.dataset.addUrl,
+		updateUrlTemplate: node.dataset.updateUrlTemplate,
+		productName: node.dataset.productName || '',
+	}));
+}
+
+function showProductCardQuantity(cards, cartItemId, quantity) {
+	cards.forEach((card) => {
+		if (!card.qtyWrapper || !card.qtyValue) {
+			return;
+		}
+		card.qtyWrapper.classList.remove('hidden');
+		card.qtyWrapper.dataset.cartItemId = cartItemId;
+		card.qtyValue.textContent = quantity;
+		if (card.addWrapper) {
+			card.addWrapper.classList.add('hidden');
+		}
+	});
+}
+
+function resetProductCardState(cards) {
+	cards.forEach((card) => {
+		if (card.qtyWrapper) {
+			card.qtyWrapper.classList.add('hidden');
+			card.qtyWrapper.dataset.cartItemId = '';
+		}
+		if (card.addWrapper) {
+			card.addWrapper.classList.remove('hidden');
+		}
+	});
+}
+
+function refreshCartModal() {
+	if (typeof openCart === 'function') {
+		openCart();
+	}
+}
+
+function updateProductCardQuantity(productId, newQuantity) {
+	const cards = getProductCardElements(productId);
+	if (!cards.length) {
+		return;
+	}
+	const qtyWrapper = cards[0].qtyWrapper;
+	if (!qtyWrapper) {
+		return;
+	}
+	const cartItemId = qtyWrapper.dataset.cartItemId;
+	const template = cards[0].updateUrlTemplate;
+	if (!cartItemId || !template) {
+		return;
+	}
+	const targetQuantity = Math.max(0, newQuantity);
+	const url = template.replace('/0/', `/${cartItemId}/`);
+	const formData = new FormData();
+	formData.append('quantity', targetQuantity);
+	fetch(url, {
+		method: 'POST',
+		body: formData,
+		headers: {
+			'X-CSRFToken': window.getCookie('csrftoken'),
+		},
+	})
+		.then((response) => response.json())
+		.then((data) => {
+			if (data.error) {
+				window.showNotification(data.error);
+				return;
+			}
+			if (typeof updateHeaderCartCount === 'function') {
+				updateHeaderCartCount(data.total_items);
+			}
+			if (data.removed || data.quantity <= 0) {
+				resetProductCardState(cards);
+				window.showNotification('Товар удалён из корзины');
+			} else {
+				showProductCardQuantity(cards, data.cart_item_id || cartItemId, data.quantity);
+				window.showNotification('Количество обновлено');
+			}
+		})
+		.catch((error) => {
+			console.error('Error updating cart item', error);
+			window.showNotification('Не удалось обновить корзину');
+		});
+}
+
+window.addProductCardToCart = function addProductCardToCart(productId) {
+	const cards = getProductCardElements(productId);
+	if (!cards.length) {
+		return;
+	}
+	const addUrl = cards[0].addUrl;
+	if (!addUrl) {
+		return;
+	}
+	const formData = new FormData();
+	formData.append('quantity', '1');
+	fetch(addUrl, {
+		method: 'POST',
+		body: formData,
+		headers: {
+			'X-CSRFToken': window.getCookie('csrftoken'),
+		},
+	})
+		.then((response) => response.json())
+		.then((data) => {
+			if (data.error) {
+				window.showNotification(data.error);
+				return;
+			}
+			if (typeof updateHeaderCartCount === 'function') {
+				updateHeaderCartCount(data.total_items);
+			}
+			showProductCardQuantity(cards, data.cart_item_id, data.quantity || 1);
+			window.showNotification(data.message || 'Товар добавлен в корзину');
+			refreshCartModal();
+		})
+		.catch((error) => {
+			console.error('Error adding to cart', error);
+			window.showNotification('Не удалось добавить товар в корзину');
+		});
+};
+
+window.changeProductCardQuantity = function changeProductCardQuantity(productId, delta) {
+	const cards = getProductCardElements(productId);
+	if (!cards.length) {
+		return;
+	}
+	const qtyValue = cards[0].qtyValue;
+	if (!qtyValue) {
+		return;
+	}
+	const currentQuantity = parseInt(qtyValue.textContent, 10) || 0;
+	const nextQuantity = currentQuantity + delta;
+	updateProductCardQuantity(productId, nextQuantity);
+};
+
+document.body.addEventListener('click', function (event) {
+	const addButton = event.target.closest('[data-card-add-button]');
+	if (addButton) {
+		const card = addButton.closest('[data-product-card]');
+		const productId = card ? card.dataset.productCard : null;
+		if (productId) {
+			addProductCardToCart(productId);
+		}
+		return;
+	}
+	const qtyButton = event.target.closest('[data-card-qty-button]');
+	if (qtyButton) {
+		const card = qtyButton.closest('[data-product-card]');
+		const productId = card ? card.dataset.productCard : null;
+		const delta = Number(qtyButton.dataset.delta || 0);
+		if (productId && delta) {
+			changeProductCardQuantity(productId, delta);
+		}
+	}
+});
+
 document.addEventListener('DOMContentLoaded', function () {
 	initProductSliders();
 	initProductGallery();

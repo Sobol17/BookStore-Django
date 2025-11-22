@@ -23,3 +23,11 @@ def multiply(value, arg):
         return float(value) * float(arg)
     except (ValueError, TypeError):
         return 0
+
+
+@register.filter
+def dict_get(dictionary, key):
+    try:
+        return dictionary.get(key)
+    except AttributeError:
+        return None

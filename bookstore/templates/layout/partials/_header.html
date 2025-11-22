@@ -42,9 +42,15 @@
           <a href="/about" class="inline-flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full transition hover:text-ink" aria-label="Закладки">
             <i data-lucide="bookmark" class="h-5 w-5"></i>
           </a>
-          <div class="inline-flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full transition hover:text-ink" aria-label="Корзина">
+          <button
+            type="button"
+            class="inline-flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full transition hover:text-ink"
+            aria-label="Корзина"
+            onclick="openCart()"
+          >
             <i data-lucide="shopping-bag" class="h-5 w-5"></i>
-          </div>
+            <span id="mobileCart" class="sr-only">Корзина</span>
+          </button>
           <a href="/about" class="inline-flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full transition hover:text-ink" aria-label="Профиль">
             <i data-lucide="user-round" class="h-5 w-5"></i>
           </a>
@@ -210,6 +216,17 @@
         <i data-lucide="arrow-right" class="h-4 w-4"></i>
       </a>
     </nav>
+
+    <button
+      type="button"
+      class="mt-6 flex items-center justify-between rounded-2xl border border-accent px-4 py-3 text-base font-semibold text-ink transition hover:bg-accent-soft/60"
+      x-on:click="mobileOpen = false; openCart();"
+    >
+      <span id="mobileCartHeader">Корзина</span>
+      <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-accent text-ink">
+        <i data-lucide="shopping-bag" class="h-4 w-4"></i>
+      </span>
+    </button>
 
     <div class="mt-10 grid grid-cols-2 gap-4 text-md text-ink-muted">
       <div class="space-y-1">

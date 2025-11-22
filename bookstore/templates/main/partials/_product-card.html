@@ -1,5 +1,13 @@
-{% load static %}
-<article class="group flex flex-col rounded-2xl bg-white p-2 transition hover:shadow min-w-[180px] sm:min-w-[220px]">
+{% load static cart_tags %}
+{% with cart_item=cart_items_map|dict_get:product.id %}
+<article
+  class="group flex flex-col rounded-2xl bg-white p-2 transition hover:shadow min-w-[180px] sm:min-w-[220px]"
+  data-product-card="{{ product.id }}"
+  data-product-slug="{{ product.slug }}"
+  data-product-name="{{ product.name }}"
+  data-add-url="{% url 'cart:add_to_cart' product.slug %}"
+  data-update-url-template="{% url 'cart:update_item' 0 %}"
+>
   <a href="{% url 'main:product_detail' product.slug %}" class="flex flex-col gap-2">
     <div class="relative aspect-[1] overflow-hidden rounded-xl border border-accent-soft/70 bg-accent-soft/50">
       {% if product.main_image %}
@@ -70,20 +78,53 @@
         <span class="text-sm text-ink-muted line-through">{{ product.formatted_old_price }}</span>
       {% endif %}
     </div>
-    <div class='mt-1 flex items-center gap-3 px-2'>
+    <div class="mt-1 flex items-center gap-3 px-2">
+      <div class="flex-1 {% if cart_item %}hidden{% endif %}" data-card-add>
+        <button
+          type="button"
+          class="w-full rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-ink transition hover:bg-accent-dark hover:text-graphite"
+          data-card-add-button
+        >
+          В корзину
+        </button>
+      </div>
+      <div
+        class="flex-1 {% if not cart_item %}hidden{% endif %}"
+        data-card-qty
+        data-cart-item-id="{{ cart_item.cart_item_id|default_if_none:'' }}"
+      >
+        <div class="flex items-center justify-between rounded-2xl border border-accent-soft bg-white">
+          <button
+            type="button"
+            class="h-11 w-11 text-lg font-semibold text-ink transition hover:bg-accent-soft"
+            data-card-qty-button
+            data-delta="-1"
+            aria-label="Уменьшить количество"
+          >
+            −
+          </button>
+          <span data-card-qty-value class="text-sm font-semibold text-ink">
+            {{ cart_item.quantity|default:1 }}
+          </span>
+          <button
+            type="button"
+            class="h-11 w-11 text-lg font-semibold text-ink transition hover:bg-accent-soft"
+            data-card-qty-button
+            data-delta="1"
+            aria-label="Увеличить количество"
+          >
+            +
+          </button>
+        </div>
+      </div>
       <button
-      type="button"
-      class="flex-1 rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-ink transition hover:bg-accent-dark hover:text-graphite"
-    >
-      Купить
-    </button>
-    <button
-      type="button"
-      class="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-accent-dark text-graphite transition hover:border-accent hover:bg-accent-soft/60 hover:text-graphite"
-      aria-label="Добавить в закладки"
-    >
-      <i data-lucide="bookmark" class="h-5 w-5"></i>
-    </button>
+        type="button"
+        class="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-accent-dark text-graphite transition hover:border-accent hover:bg-accent-soft/60 hover:text-graphite"
+        aria-label="Добавить в закладки"
+      >
+        <i data-lucide="bookmark" class="h-5 w-5"></i>
+      </button>
     </div>
   </div>
 </article>
+{% endwith %}
