@@ -89,12 +89,12 @@
           </span>
           Закладки
         </a>
-        <a href="/about" class="flex flex-col items-center gap-1 text-xs font-medium text-ink-muted transition hover:text-ink">
+        <div onclick="openCart()" class="flex flex-col items-center gap-1 text-xs font-medium text-ink-muted transition hover:text-ink">
           <span class="flex h-10 w-10 items-center justify-center rounded-full border border-accent-soft text-ink">
             <i data-lucide="shopping-bag" class="h-5 w-5"></i>
           </span>
-          Корзина
-        </a>
+          <span id="desktopCart">Корзина</span>
+        </div>
         <a href="/about" class="flex flex-col items-center gap-1 text-xs font-medium text-ink-muted transition hover:text-ink">
           <span class="flex h-10 w-10 items-center justify-center rounded-full border border-accent-soft text-ink">
             <i data-lucide="user-round" class="h-5 w-5 text-ink"></i>
@@ -225,3 +225,36 @@
     </div>
   </div>
 </header>
+
+<script>
+
+// Cart functionality
+const desktopCart = document.getElementById('desktopCart');
+const mobileCart = document.getElementById('mobileCart');
+const mobileCartHeader = document.getElementById('mobileCartHeader');
+
+// Get initial cart count
+updateCartCount();
+
+function updateHeaderCartCount(count) {
+    const cartText = `Корзина (${count})`;
+    if (desktopCart) desktopCart.textContent = cartText;
+    if (mobileCart) mobileCart.textContent = cartText;
+    if (mobileCartHeader) mobileCartHeader.textContent = cartText;
+}
+
+function updateCartCount() {
+    fetch('{% url "cart:cart_count" %}')
+        .then(response => response.json())
+        .then(data => {
+            updateHeaderCartCount(data.total_items);
+        });
+}
+
+function openCart() {
+    htmx.ajax('GET', '{% url "cart:cart_modal" %}', {
+        target: '#cart-container',
+        swap: 'innerHTML'
+    });
+}
+</script>

@@ -216,6 +216,7 @@
           <div class="mt-6 flex flex-col gap-3 sm:flex-row">
             <button
               type="button"
+              onclick="addToCart()"
               class="w-full rounded-xl border border-accent-soft bg-accent px-6 py-3 text-sm font-semibold text-ink transition hover:bg-accent-dark hover:text-graphite sm:w-auto"
             >
               В корзину
@@ -310,3 +311,73 @@
     </section>
   {% endif %}
 </div>
+
+<script>
+    function addToCart() {
+    const productSlug = '{{ product.slug }}';
+    console.log('Product Slug:', productSlug);
+
+    let formData = new FormData();
+    formData.append('quantity', '1');
+    fetch(`{% url 'cart:add_to_cart' 'PLACEHOLDER' %}`.replace('PLACEHOLDER', productSlug), {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => {
+        console.log('Response Status:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Response Data:', data);
+        if (data.error) {
+            showNotification(data.error);
+        } else {
+            updateHeaderCartCount(data.total_items);
+            showNotification(data.message);
+            htmx.ajax('GET', '{% url "cart:cart_modal" %}', {
+                target: '#cart-container',
+                swap: 'innerHTML'
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error adding to cart');
+    });
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function showNotification(message) {
+    const notification = document.createElement('div');
+    notification.className = 'fixed top-20 right-4 bg-black text-white px-6 py-3 rounded shadow-lg z-50 transform translate-x-full transition-transform duration-300';
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+    }, 10);
+    setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            notification.remove();
+        }, 300);
+    }, 3000);
+}
+
+</script>

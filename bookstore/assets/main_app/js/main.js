@@ -413,6 +413,7 @@ window.reviewRating = function (config) {
 if (window.Alpine && typeof window.Alpine.data === 'function') {
 	window.Alpine.data('reviewRating', window.reviewRating);
 }
+
 document.addEventListener('alpine:init', function () {
 	if (window.Alpine && typeof window.Alpine.data === 'function') {
 		window.Alpine.data('reviewRating', window.reviewRating);
