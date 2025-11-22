@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.sessions.models import Session
-from bookstore.main.models import Product
+from main.models import Product
 from decimal import Decimal
 
 

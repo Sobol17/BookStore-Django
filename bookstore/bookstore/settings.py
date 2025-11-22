@@ -62,7 +62,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'ckeditor',
     'main',
-    'pages'
+    'pages',
+    'cart',
 ]
 
 MIDDLEWARE = [
@@ -73,6 +74,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    'cart.middleware.CartMiddleware',
 ]
 
 ROOT_URLCONF = 'bookstore.urls'
@@ -87,6 +90,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+
+                'cart.context_processors.cart_processor',
             ],
         },
     },
