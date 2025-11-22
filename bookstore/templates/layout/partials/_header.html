@@ -42,9 +42,9 @@
           <a href="/about" class="inline-flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full transition hover:text-ink" aria-label="Закладки">
             <i data-lucide="bookmark" class="h-5 w-5"></i>
           </a>
-          <a href="/about" class="inline-flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full transition hover:text-ink" aria-label="Корзина">
+          <div class="inline-flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full transition hover:text-ink" aria-label="Корзина">
             <i data-lucide="shopping-bag" class="h-5 w-5"></i>
-          </a>
+          </div>
           <a href="/about" class="inline-flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full transition hover:text-ink" aria-label="Профиль">
             <i data-lucide="user-round" class="h-5 w-5"></i>
           </a>
@@ -89,7 +89,7 @@
           </span>
           Закладки
         </a>
-        <div onclick="openCart()" class="flex flex-col items-center gap-1 text-xs font-medium text-ink-muted transition hover:text-ink">
+        <div onclick="openCart()" class="flex flex-col items-center gap-1 text-xs font-medium text-ink-muted transition hover:text-ink cursor-pointer">
           <span class="flex h-10 w-10 items-center justify-center rounded-full border border-accent-soft text-ink">
             <i data-lucide="shopping-bag" class="h-5 w-5"></i>
           </span>
@@ -236,8 +236,13 @@ const mobileCartHeader = document.getElementById('mobileCartHeader');
 // Get initial cart count
 updateCartCount();
 
+function formatCartLabel(count) {
+    return count > 0 ? `Корзина (${count})` : 'Корзина';
+}
+
 function updateHeaderCartCount(count) {
-    const cartText = `Корзина (${count})`;
+    const numericCount = typeof count === 'number' ? count : parseInt(count || 0, 10) || 0;
+    const cartText = formatCartLabel(numericCount);
     if (desktopCart) desktopCart.textContent = cartText;
     if (mobileCart) mobileCart.textContent = cartText;
     if (mobileCartHeader) mobileCartHeader.textContent = cartText;
@@ -248,6 +253,9 @@ function updateCartCount() {
         .then(response => response.json())
         .then(data => {
             updateHeaderCartCount(data.total_items);
+        })
+        .catch(error => {
+            console.error('Failed to fetch cart count', error);
         });
 }
 

@@ -1,13 +1,28 @@
-<div class="border-t border-gray-200 pt-4">
-    <div class="flex justify-between text-sm font-medium mb-4">
-        <span>SUBTOTAL:</span>
-        <span>${{ cart.subtotal|floatformat:2 }}</span>
-    </div>
-    <a href="#"
-       hx-get="#"
-       hx-target="#main-content"
-       hx-push-url="true"
-       class="w-full block bg-black text-white py-3 px-6 text-sm font-medium text-center uppercase hover:bg-gray-800 transition-colors">
-        Checkout
-    </a>
-</div>
+{% with first_item=cart_items|first %}
+    {% with currency=first_item.product.currency|default:'₽' %}
+        <div class="space-y-2">
+            <div class="flex items-center justify-between text-sm text-ink-muted">
+                <span>Количество</span>
+                <span class="font-semibold text-ink">{{ cart.total_items }} шт.</span>
+            </div>
+            <div class="flex items-center justify-between text-lg font-semibold text-ink">
+                <span>Итого</span>
+                <span>{{ cart.subtotal|floatformat:0 }} {{ currency }}</span>
+            </div>
+            <a
+                href="#"
+                class="inline-flex w-full items-center justify-center rounded-xl bg-accent px-5 py-3 text-sm font-semibold text-ink transition hover:bg-accent-dark"
+                aria-disabled="true"
+            >
+                Оформить заказ
+            </a>
+            <button
+                type="button"
+                class="inline-flex w-full items-center justify-center rounded-xl border border-accent-soft px-5 py-3 text-sm font-semibold text-ink transition hover:bg-accent-soft"
+                onclick="hideCartModal()"
+            >
+                Продолжить покупки
+            </button>
+        </div>
+    {% endwith %}
+{% endwith %}

@@ -24,7 +24,7 @@
               <div class="swiper js-product-gallery-thumbs h-full max-h-[400px] thumbs-vertical lg:max-h-[450px]" data-orientation="vertical">
                 <div class="swiper-wrapper">
                   {% for image in gallery_images %}
-                    <div class="swiper-slide cursor-pointer">
+                    <div class="swiper-slide cursor-pointer !h-[102px]">
                       <div class="thumb-tile h-[90px] lg:h-[102px] w-full overflow-hidden rounded-xl border border-accent-soft bg-white transition hover:border-accent">
                         <img
                           src="{{ image.url }}"
@@ -214,13 +214,43 @@
             {% endif %}
           </div>
           <div class="mt-6 flex flex-col gap-3 sm:flex-row">
-            <button
-              type="button"
-              onclick="addToCart()"
-              class="w-full rounded-xl border border-accent-soft bg-accent px-6 py-3 text-sm font-semibold text-ink transition hover:bg-accent-dark hover:text-graphite sm:w-auto"
-            >
-              В корзину
-            </button>
+            <div id="product-cart-action" class="w-full sm:w-auto">
+              <div id="product-cart-add" class="{% if product_cart_item %}hidden{% endif %}">
+                <button
+                  type="button"
+                  onclick="addToCart()"
+                  class="w-full rounded-xl border border-accent-soft bg-accent px-6 py-3 text-sm font-semibold text-ink transition hover:bg-accent-dark hover:text-graphite"
+                >
+                  В корзину
+                </button>
+              </div>
+              <div
+                id="product-cart-quantity-wrapper"
+                class="{% if not product_cart_item %}hidden{% endif %}"
+                data-cart-item-id="{% if product_cart_item %}{{ product_cart_item.id }}{% endif %}"
+                data-update-url-template="{% url 'cart:update_item' 0 %}"
+              >
+                <div class="flex items-center justify-between rounded-xl border border-accent-soft bg-white px-2 py-1 gap-x-4">
+                  <button
+                    type="button"
+                    class="h-12 w-12 rounded-xl border border-accent-soft text-2xl font-semibold text-ink transition hover:bg-accent-soft"
+                    onclick="changeProductQuantity(-1)"
+                    aria-label="Уменьшить количество"
+                  >
+                    −
+                  </button>
+                  <span id="product-cart-quantity-value" class="text-lg font-semibold text-ink">{{ product_cart_item.quantity|default:1 }}</span>
+                  <button
+                    type="button"
+                    class="h-12 w-12 rounded-xl border border-accent-soft text-2xl font-semibold text-ink transition hover:bg-accent-soft"
+                    onclick="changeProductQuantity(1)"
+                    aria-label="Увеличить количество"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+            </div>
             <button
               type="button"
               class="w-full rounded-xl border border-accent px-6 py-3 text-xs font-semibold text-graphite transition hover:bg-accent-soft sm:w-auto"
@@ -313,6 +343,95 @@
 </div>
 
 <script>
+function getProductCartQuantityWrapper() {
+    return document.getElementById('product-cart-quantity-wrapper');
+}
+
+function showProductAddButton() {
+    const addWrapper = document.getElementById('product-cart-add');
+    const quantityWrapper = getProductCartQuantityWrapper();
+    if (quantityWrapper) {
+        quantityWrapper.classList.add('hidden');
+        quantityWrapper.dataset.cartItemId = '';
+    }
+    if (addWrapper) {
+        addWrapper.classList.remove('hidden');
+    }
+}
+
+function showProductQuantityControls(cartItemId, quantity) {
+    const addWrapper = document.getElementById('product-cart-add');
+    const quantityWrapper = getProductCartQuantityWrapper();
+    const quantityValue = document.getElementById('product-cart-quantity-value');
+    if (!quantityWrapper || !quantityValue) {
+        return;
+    }
+    quantityWrapper.classList.remove('hidden');
+    quantityWrapper.dataset.cartItemId = cartItemId;
+    quantityValue.textContent = quantity;
+    if (addWrapper) {
+        addWrapper.classList.add('hidden');
+    }
+}
+
+function changeProductQuantity(delta) {
+    const quantityWrapper = getProductCartQuantityWrapper();
+    const quantityValue = document.getElementById('product-cart-quantity-value');
+    if (!quantityWrapper || !quantityValue) {
+        return;
+    }
+    const cartItemId = quantityWrapper.dataset.cartItemId;
+    if (!cartItemId) {
+        return;
+    }
+    const currentQuantity = parseInt(quantityValue.textContent, 10) || 0;
+    const nextQuantity = currentQuantity + delta;
+    updateProductCartQuantity(cartItemId, nextQuantity);
+}
+
+function updateProductCartQuantity(cartItemId, newQuantity) {
+    const quantityWrapper = getProductCartQuantityWrapper();
+    if (!quantityWrapper) {
+        return;
+    }
+    if (newQuantity < 0) {
+        newQuantity = 0;
+    }
+    const urlTemplate = quantityWrapper.dataset.updateUrlTemplate;
+    if (!urlTemplate) {
+        return;
+    }
+    const url = urlTemplate.replace('/0/', `/${cartItemId}/`);
+    const formData = new FormData();
+    formData.append('quantity', newQuantity);
+    fetch(url, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            showNotification(data.error);
+            return;
+        }
+        updateHeaderCartCount(data.total_items);
+        if (data.removed) {
+            showProductAddButton();
+        } else {
+            const updatedId = data.cart_item_id || cartItemId;
+            const displayedQuantity = data.quantity != null ? data.quantity : newQuantity;
+            showProductQuantityControls(updatedId, displayedQuantity);
+        }
+    })
+    .catch(error => {
+        console.error('Error updating cart item', error);
+        showNotification('Не удалось обновить корзину');
+    });
+}
+
     function addToCart() {
     const productSlug = '{{ product.slug }}';
     console.log('Product Slug:', productSlug);
@@ -337,6 +456,7 @@
         } else {
             updateHeaderCartCount(data.total_items);
             showNotification(data.message);
+            showProductQuantityControls(data.cart_item_id, data.quantity || 1);
             htmx.ajax('GET', '{% url "cart:cart_modal" %}', {
                 target: '#cart-container',
                 swap: 'innerHTML'
@@ -379,5 +499,21 @@ function showNotification(message) {
         }, 300);
     }, 3000);
 }
+
+document.body.addEventListener('cart-updated', function(event) {
+    const detail = event.detail || {};
+    if (detail && typeof detail.total_items !== 'undefined' && typeof updateHeaderCartCount === 'function') {
+        updateHeaderCartCount(detail.total_items);
+    }
+    if (!detail || detail.product_slug !== '{{ object.slug }}') {
+        return;
+    }
+    const quantity = parseInt(detail.quantity, 10) || 0;
+    if (quantity > 0) {
+        showProductQuantityControls(detail.cart_item_id || '', quantity);
+    } else {
+        showProductAddButton();
+    }
+});
 
 </script>

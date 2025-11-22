@@ -18,6 +18,8 @@ from .deepseek import (
 )
 from .enums import ProductCollections
 
+from cart.models import Cart
+
 from .models import Genre, Product, Banner
 from .forms import ProductReviewForm, BookPurchaseRequestForm
 from .selectors import (
@@ -255,6 +257,13 @@ class ProductDetailView(DetailView):
             context['current_category_label'] = None
         context['is_catalog_page'] = False
         context['can_request_ai_review'] = bool(getattr(settings, 'DEEPSEEK_API_KEY', ''))
+        cart = None
+        if not self.request.session.session_key:
+            self.request.session.create()
+        cart, _ = Cart.objects.get_or_create(session_key=self.request.session.session_key)
+        cart_item = cart.items.filter(product=product).first()
+        context['product_cart_item'] = cart_item
+        context['product_cart_quantity'] = cart_item.quantity if cart_item else 0
         context.update(build_product_reviews_context(product))
         return context
     

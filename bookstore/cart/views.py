@@ -85,6 +85,7 @@ class AddToCartView(CartMixin,View):
                 'total_items': cart.total_items,
                 'message': f'{product.name} is added to cart.',
                 'cart_item_id': cart_item.id,
+                'quantity': cart_item.quantity,
             })
 
 
@@ -93,33 +94,60 @@ class UpdateCartItemView(CartMixin,View):
     def post(self, request, item_id):
         cart = self.get_cart(request)
         cart_item = get_object_or_404(CartItem, id=item_id, cart=cart)
+        product = cart_item.product
+        cart_item_id = cart_item.id
+        new_quantity = cart_item.quantity
 
-        quantity = int(request.POST.get('quantity', 1))
+        try:
+            quantity = int(request.POST.get('quantity', 1))
+        except (TypeError, ValueError):
+            return JsonResponse({'error': 'Invalid quantity.'}, status=400)
+
+        removed = False
         if quantity <= 0:
-            return JsonResponse({
-                'error': 'Quantity must be greater than 0.',
-            })
-        if quantity == 0:
             cart_item.delete()
+            removed = True
+            new_quantity = 0
         else:
             if quantity > cart_item.product.stock_qty:
                 return JsonResponse({
-                    'error': f'Only {quantity} items available for {cart_item.product.name} is available.',
-                })
+                    'error': f'Only {cart_item.product.stock_qty} items available for {cart_item.product.name}.',
+                }, status=400)
 
             cart_item.quantity = quantity
             cart_item.save()
+            new_quantity = cart_item.quantity
 
         request.session['cart_id'] = cart.id
         request.session.modified = True
 
         context = {
             'cart': cart,
-            'cart_item': cart.items.select_related(
+            'cart_items': cart.items.select_related(
                 'product',
             ).order_by('-added_at'),
         }
-        return TemplateResponse(request, 'cart/cart_modal.html', context)
+        if request.headers.get('HX-Request'):
+            response = TemplateResponse(request, 'cart/cart_modal.html', context)
+            response['HX-Trigger'] = json.dumps({
+                'cart-updated': {
+                    'product_id': product.id,
+                    'product_slug': product.slug,
+                    'cart_item_id': None if removed else cart_item_id,
+                    'quantity': new_quantity,
+                    'total_items': cart.total_items,
+                }
+            })
+            return response
+
+        response_data = {
+            'success': True,
+            'total_items': cart.total_items,
+            'cart_item_id': cart_item_id,
+            'quantity': new_quantity,
+            'removed': removed,
+        }
+        return JsonResponse(response_data)
 
 
 
@@ -129,6 +157,8 @@ class RemoveCartItemView(CartMixin,View):
         cart = self.get_cart(request)
         try:
             cart_item = cart.items.get(id=item_id)
+            product = cart_item.product
+            cart_item_id = cart_item.id
             cart_item.delete()
 
             request.session['cart_id'] = cart.id
@@ -136,11 +166,28 @@ class RemoveCartItemView(CartMixin,View):
 
             context = {
                 'cart': cart,
-                'cart_item': cart.items.select_related(
+                'cart_items': cart.items.select_related(
                     'product',
                 ).order_by('-added_at'),
             }
-            return TemplateResponse(request, 'cart/cart_modal.html', context)
+            if request.headers.get('HX-Request'):
+                response = TemplateResponse(request, 'cart/cart_modal.html', context)
+                response['HX-Trigger'] = json.dumps({
+                    'cart-updated': {
+                        'product_id': product.id,
+                        'product_slug': product.slug,
+                        'cart_item_id': cart_item_id,
+                        'quantity': 0,
+                        'total_items': cart.total_items,
+                    }
+                })
+                return response
+            return JsonResponse({
+                'success': True,
+                'total_items': cart.total_items,
+                'cart_item_id': cart_item_id,
+                'removed': True,
+            })
         except CartItem.DoesNotExist:
             return JsonResponse({
                 'error': 'Item not found.',
