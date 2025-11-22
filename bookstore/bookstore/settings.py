@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+
+from django.conf.global_settings import SESSION_COOKIE_AGE, SESSION_SAVE_EVERY_REQUEST
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -41,11 +43,13 @@ CSRF_TRUSTED_ORIGINS = [
     'https://www.dev-sobol.ru'
 ]
 
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True
-SECURE_BROWSER_XSS_FILTER = True
-SECURE_CONTENT_TYPE_NOSNIFF = True
-X_FRAME_OPTIONS = 'DENY'
+SESSION_COOKIE_AGE = 86400 #30 дней
+SESSION_SAVE_EVERY_REQUEST = True
+# CSRF_COOKIE_SECURE = True
+# SESSION_COOKIE_SECURE = True
+# SECURE_BROWSER_XSS_FILTER = True
+# SECURE_CONTENT_TYPE_NOSNIFF = True
+# X_FRAME_OPTIONS = 'DENY'
 
 # Application definition
 

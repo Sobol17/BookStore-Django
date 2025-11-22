@@ -7,6 +7,8 @@ from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView, DetailView
 from django.views import View
 from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.template.response import TemplateResponse
 from django.urls import reverse
 from .deepseek import (
@@ -49,6 +51,7 @@ def build_product_reviews_context(product):
     }
 
 
+@method_decorator(ensure_csrf_cookie, name='dispatch')
 class IndexView(TemplateView):
     template_name = 'main/base.html'
     form_class = BookPurchaseRequestForm
@@ -79,9 +82,29 @@ class IndexView(TemplateView):
         form = self.form_class(request.POST, request.FILES)
         if form.is_valid():
             form.save()
+            if request.headers.get('HX-Request'):
+                context = self.get_context_data(
+                    purchase_form=self.form_class(),
+                    purchase_form_success=True,
+                )
+                return TemplateResponse(
+                    request,
+                    'main/partials/_book_purchase_form.html',
+                    context,
+                )
             redirect_url = f"{reverse('main:index')}?purchase_submitted=1"
             return HttpResponseRedirect(redirect_url)
-        context = self.get_context_data(purchase_form=form)
+        context = self.get_context_data(
+            purchase_form=form,
+            purchase_form_success=False,
+        )
+        if request.headers.get('HX-Request'):
+            return TemplateResponse(
+                request,
+                'main/partials/_book_purchase_form.html',
+                context,
+                status=400,
+            )
         return TemplateResponse(request, self.template_name, context)
 
 

@@ -1,0 +1,111 @@
+<div id="book-purchase-form" class="space-y-6 rounded-3xl border border-accent-soft/60 bg-white p-8">
+  <h3 class="font-serif text-xl text-ink">Закупка книг</h3>
+  <p class="text-sm text-ink-muted">
+    Предложите книгу для нашей коллекции. Мы оценим состояние экземпляра по фото и свяжемся, чтобы обсудить условия выкупа.
+  </p>
+  {% if purchase_form_success %}
+    <div class="rounded-2xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-sm text-emerald-900">
+      Спасибо! Мы получили заявку и ответим на указанные контакты в ближайший рабочий день.
+    </div>
+  {% endif %}
+  <form
+    action="{% url 'main:index' %}"
+    method="post"
+    enctype="multipart/form-data"
+    class="space-y-4"
+    novalidate
+    hx-post="{% url 'main:index' %}"
+    hx-target="#book-purchase-form"
+    hx-swap="outerHTML"
+    hx-encoding="multipart/form-data"
+  >
+    {% csrf_token %}
+    {% if purchase_form.non_field_errors %}
+      <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-900">
+        {% for error in purchase_form.non_field_errors %}
+          <p>{{ error }}</p>
+        {% endfor %}
+      </div>
+    {% endif %}
+    <div>
+      <label for="{{ purchase_form.book_description.id_for_label }}" class="text-xs text-ink-muted">
+        {{ purchase_form.book_description.label }}
+      </label>
+      <textarea
+        id="{{ purchase_form.book_description.id_for_label }}"
+        name="{{ purchase_form.book_description.html_name }}"
+        rows="4"
+        placeholder="Расскажите об издании и его особенностях"
+        class="mt-2 w-full rounded-xl border border-accent/30 bg-white px-4 py-3 text-sm text-ink placeholder:text-ink-muted/70 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+        required>{{ purchase_form.book_description.value|default_if_none:'' }}</textarea>
+      {% if purchase_form.book_description.errors %}
+        {% for error in purchase_form.book_description.errors %}
+          <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+        {% endfor %}
+      {% endif %}
+    </div>
+    <div>
+      <label for="{{ purchase_form.email.id_for_label }}" class="text-xs text-ink-muted">
+        {{ purchase_form.email.label }}
+      </label>
+      <input
+        id="{{ purchase_form.email.id_for_label }}"
+        type="email"
+        name="{{ purchase_form.email.html_name }}"
+        value="{{ purchase_form.email.value|default_if_none:'' }}"
+        placeholder="name@example.com"
+        class="mt-2 w-full rounded-xl border border-accent/30 bg-white px-4 py-2 text-sm text-ink placeholder:text-ink-muted/70 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+        required
+      >
+      {% if purchase_form.email.errors %}
+        {% for error in purchase_form.email.errors %}
+          <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+        {% endfor %}
+      {% endif %}
+    </div>
+    <div>
+      <label for="{{ purchase_form.phone.id_for_label }}" class="text-xs text-ink-muted">
+        {{ purchase_form.phone.label }}
+      </label>
+      <input
+        id="{{ purchase_form.phone.id_for_label }}"
+        type="text"
+        name="{{ purchase_form.phone.html_name }}"
+        value="{{ purchase_form.phone.value|default_if_none:'' }}"
+        placeholder="+7 (900) 000-00-00"
+        class="mt-2 w-full rounded-xl border border-accent/30 bg-white px-4 py-2 text-sm text-ink placeholder:text-ink-muted/70 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+        required
+      >
+      {% if purchase_form.phone.errors %}
+        {% for error in purchase_form.phone.errors %}
+          <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+        {% endfor %}
+      {% endif %}
+    </div>
+    <div>
+      <label for="{{ purchase_form.photos.id_for_label }}" class="text-xs text-ink-muted">
+        {{ purchase_form.photos.label }}
+      </label>
+      <input
+        id="{{ purchase_form.photos.id_for_label }}"
+        type="file"
+        name="{{ purchase_form.photos.html_name }}"
+        multiple
+        accept="image/*"
+        class="mt-2 block w-full rounded-xl border border-dashed border-accent/40 bg-accent-soft/20 px-4 py-3 text-sm text-ink"
+      >
+      <p class="mt-2 text-xs text-ink-muted">Можно прикрепить несколько фотографий обложки и разворотов.</p>
+      {% if purchase_form.photos.errors %}
+        {% for error in purchase_form.photos.errors %}
+          <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+        {% endfor %}
+      {% endif %}
+    </div>
+    <button
+      type="submit"
+      class="w-full rounded-2xl border border-accent-soft bg-accent px-5 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-ink transition hover:bg-accent-soft/80 hover:text-graphite"
+    >
+      Отправить заявку
+    </button>
+  </form>
+</div>

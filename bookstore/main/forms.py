@@ -39,15 +39,10 @@ class ProductReviewForm(forms.ModelForm):
 
 
 class BookPurchaseRequestForm(forms.ModelForm):
-    photos = forms.ImageField(
+    photos = forms.FileField(
         label='Фотографии книги',
         required=False,
-        widget=MultiFileClearableInput(
-            attrs={
-                'multiple': True,
-                'accept': 'image/*',
-            }
-        ),
+        widget=MultiFileClearableInput(attrs={'accept': 'image/*'}),
     )
 
     class Meta:
