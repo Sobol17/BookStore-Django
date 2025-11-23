@@ -1,0 +1,91 @@
+{% load static %}
+
+{% include 'layout/head-metrics.html' %}
+
+<body class="min-h-screen font-sans text-ink antialiased">
+  <div class="min-h-screen bg-paper">
+    {% include 'layout/partials/_header.html' %}
+
+    <main class="mx-auto flex w-full my-container flex-1 flex-col px-4 py-10 sm:px-6 lg:px-8">
+      <div class="grid gap-8 lg:grid-cols-[minmax(0,480px)_1fr]">
+        <section class="order-last rounded-3xl border border-accent-soft/60 bg-gradient-to-br from-coffee to-graphite p-8 text-white shadow-lamplight lg:order-first">
+          <p class="text-xs font-semibold uppercase tracking-[0.1em] text-accent">Личный кабинет</p>
+          <h1 class="mt-4 text-4xl font-serif leading-tight">Добро пожаловать в Dombb</h1>
+          <p class="mt-4 text-base text-white/80">
+            Войдите, чтобы отслеживать заказы, сохранять адреса доставки и возвращаться к избранным изданиям.
+            Мы бережно относимся к вашим данным и используем их только для оформления заказов и уведомлений.
+          </p>
+          <div class="mt-8 space-y-4">
+            <div class="flex items-center gap-3">
+              <span class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 text-accent shrink-0">
+                <i data-lucide="bookmark" class="h-5 w-5"></i>
+              </span>
+              <p class="text-sm text-white/80">Подборки редких книг и подбор персонального куратора</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 text-accent shrink-0">
+                <i data-lucide="mail" class="h-5 w-5"></i>
+              </span>
+              <p class="text-sm text-white/80">Уведомления о новых поступлениях и персональных предложениях</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="auth-card" class="order-first rounded-3xl border border-accent-soft/70 bg-white/95 p-8 shadow-card lg:order-last">
+          <div class="flex flex-col gap-2">
+            <h2 class="text-3xl font-semibold text-ink">Войдите по номеру телефона</h2>
+            <p class="text-sm text-ink-muted">Используйте номер и авторизационный код.</p>
+          </div>
+
+          {% if messages %}
+            <div class="mt-6 space-y-2">
+              {% for message in messages %}
+                <p class="rounded-2xl border border-blush/50 bg-blush/10 px-4 py-2 text-sm font-medium text-blush">
+                  {{ message }}
+                </p>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          {% if form.non_field_errors %}
+            <div class="mt-6 rounded-2xl border border-blush/40 bg-blush/10 px-4 py-3 text-sm text-blush">
+              {% for error in form.non_field_errors %}
+                <p>{{ error }}</p>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          <form method="post" class="mt-8 space-y-6">
+            {% csrf_token %}
+            {% for field in form %}
+              <div class="space-y-2">
+                <label for="{{ field.id_for_label }}" class="text-sm font-medium text-ink">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                  <p class="text-sm text-blush">{{ field.errors|striptags }}</p>
+                {% endif %}
+              </div>
+            {% endfor %}
+
+            <div class="flex flex-col gap-3">
+              <button type="submit" class="rounded-xl bg-accent px-6 py-3 text-sm font-semibold text-graphite transition hover:bg-accent-dark">
+                Войти
+              </button>
+              <a href="{% url 'users:register' %}"
+                 class="inline-flex items-center justify-center rounded-xl border border-accent-soft px-6 py-3 text-sm font-semibold text-ink transition hover:border-accent hover:bg-accent-soft/50">
+                Создать аккаунт
+              </a>
+            </div>
+          </form>
+        </section>
+      </div>
+    </main>
+
+    <section id="modal-root" class="mx-auto w-full my-container px-4 sm:px-6 lg:px-8" hx-target="this" hx-swap="innerHTML"></section>
+
+    {% include 'layout/partials/_footer.html' %}
+  </div>
+
+  {% include 'layout/footer-scripts.html' %}
+</body>
+</html>

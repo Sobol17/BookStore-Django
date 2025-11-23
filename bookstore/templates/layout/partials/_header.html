@@ -51,9 +51,15 @@
             <i data-lucide="shopping-bag" class="h-5 w-5"></i>
             <span id="mobileCart" class="sr-only">Корзина</span>
           </button>
-          <a href="/about" class="inline-flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full transition hover:text-ink" aria-label="Профиль">
-            <i data-lucide="user-round" class="h-5 w-5"></i>
-          </a>
+          {% if request.user.is_authenticated %}
+            <a href="{% url 'users:profile' %}" class="inline-flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full transition hover:text-ink" aria-label="Профиль">
+              <i data-lucide="user-round" class="h-5 w-5"></i>
+            </a>
+          {% else %}
+            <a href="{% url 'users:login' %}" class="inline-flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full transition hover:text-ink" aria-label="Войти">
+              <i data-lucide="user-round" class="h-5 w-5"></i>
+            </a>
+          {% endif %}
         </div>
       </div>
     </div>
@@ -101,12 +107,21 @@
           </span>
           <span id="desktopCart">Корзина</span>
         </div>
-        <a href="/about" class="flex flex-col items-center gap-1 text-xs font-medium text-ink-muted transition hover:text-ink">
-          <span class="flex h-10 w-10 items-center justify-center rounded-full border border-accent-soft text-ink">
-            <i data-lucide="user-round" class="h-5 w-5 text-ink"></i>
-          </span>
-          Войти
-        </a>
+        {% if request.user.is_authenticated %}
+          <a href="{% url 'users:profile' %}" class="flex flex-col items-center gap-1 text-xs font-medium text-ink-muted transition hover:text-ink">
+            <span class="flex h-10 w-10 items-center justify-center rounded-full border border-accent-soft text-ink">
+              <i data-lucide="user-round" class="h-5 w-5 text-ink"></i>
+            </span>
+            Профиль
+          </a>
+        {% else %}
+          <a href="{% url 'users:login' %}" class="flex flex-col items-center gap-1 text-xs font-medium text-ink-muted transition hover:text-ink">
+            <span class="flex h-10 w-10 items-center justify-center rounded-full border border-accent-soft text-ink">
+              <i data-lucide="user-round" class="h-5 w-5 text-ink"></i>
+            </span>
+            Войти
+          </a>
+        {% endif %}
         {% comment %} <a href="{% url 'main:catalog_all' %}" class="flex flex-col items-center gap-1 text-xs font-medium text-ink-muted transition hover:text-ink">
           <span class="flex h-10 w-10 items-center justify-center rounded-full border border-accent-soft text-ink">
             <i data-lucide="package" class="h-5 w-5"></i>

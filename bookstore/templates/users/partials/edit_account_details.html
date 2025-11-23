@@ -1,0 +1,97 @@
+<form
+  method="post"
+  hx-post="{% url 'users:update_account_details' %}"
+  hx-target="#account-details-content"
+  class="space-y-6"
+>
+  {% csrf_token %}
+
+  <div class="grid gap-4 md:grid-cols-2">
+    <div class="space-y-2">
+      <label for="{{ form.first_name.id_for_label }}" class="text-sm font-semibold text-ink">Имя</label>
+      {{ form.first_name }}
+      {% if form.first_name.errors %}
+        <p class="text-sm text-blush">{{ form.first_name.errors|striptags }}</p>
+      {% endif %}
+    </div>
+    <div class="space-y-2">
+      <label for="{{ form.last_name.id_for_label }}" class="text-sm font-semibold text-ink">Фамилия</label>
+      {{ form.last_name }}
+      {% if form.last_name.errors %}
+        <p class="text-sm text-blush">{{ form.last_name.errors|striptags }}</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="grid gap-4 md:grid-cols-2">
+    <div class="space-y-2">
+      <label for="{{ form.phone.id_for_label }}" class="text-sm font-semibold text-ink">Телефон</label>
+      {{ form.phone }}
+      {% if form.phone.errors %}
+        <p class="text-sm text-blush">{{ form.phone.errors|striptags }}</p>
+      {% endif %}
+    </div>
+    <div class="space-y-2">
+      <label for="{{ form.email.id_for_label }}" class="text-sm font-semibold text-ink">Электронная почта</label>
+      {{ form.email }}
+      {% if form.email.errors %}
+        <p class="text-sm text-blush">{{ form.email.errors|striptags }}</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="space-y-2">
+    <label for="{{ form.company.id_for_label }}" class="text-sm font-semibold text-ink">Компания (необязательно)</label>
+    {{ form.company }}
+    {% if form.company.errors %}
+      <p class="text-sm text-blush">{{ form.company.errors|striptags }}</p>
+    {% endif %}
+  </div>
+
+  <div class="space-y-2">
+    <label for="{{ form.address1.id_for_label }}" class="text-sm font-semibold text-ink">Адрес</label>
+    {{ form.address1 }}
+    {% if form.address1.errors %}
+      <p class="text-sm text-blush">{{ form.address1.errors|striptags }}</p>
+    {% endif %}
+  </div>
+
+  <div class="space-y-2">
+    <label for="{{ form.address2.id_for_label }}" class="text-sm font-semibold text-ink">Дополнительный адрес</label>
+    {{ form.address2 }}
+    {% if form.address2.errors %}
+      <p class="text-sm text-blush">{{ form.address2.errors|striptags }}</p>
+    {% endif %}
+  </div>
+
+  <div class="grid gap-4 md:grid-cols-2">
+    <div class="space-y-2">
+      <label for="{{ form.city.id_for_label }}" class="text-sm font-semibold text-ink">Город</label>
+      {{ form.city }}
+      {% if form.city.errors %}
+        <p class="text-sm text-blush">{{ form.city.errors|striptags }}</p>
+      {% endif %}
+    </div>
+    <div class="space-y-2">
+      <label for="{{ form.postal_code.id_for_label }}" class="text-sm font-semibold text-ink">Почтовый индекс</label>
+      {{ form.postal_code }}
+      {% if form.postal_code.errors %}
+        <p class="text-sm text-blush">{{ form.postal_code.errors|striptags }}</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="flex flex-wrap gap-3">
+    <button type="submit" class="inline-flex flex-1 items-center justify-center rounded-2xl bg-accent px-4 py-3 text-sm font-semibold text-graphite transition hover:bg-accent-dark">
+      Сохранить изменения
+    </button>
+    <button
+      type="button"
+      hx-get="{% url 'users:account_details' %}"
+      hx-target="#account-details-content"
+      class="inline-flex flex-1 items-center justify-center rounded-2xl border border-accent-soft px-4 py-3 text-sm font-semibold text-ink transition hover:border-accent hover:bg-accent-soft/50"
+    >
+      Отменить
+    </button>
+  </div>
+</form>

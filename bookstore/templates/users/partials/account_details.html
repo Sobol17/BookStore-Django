@@ -1,0 +1,57 @@
+<div class="space-y-6">
+  <dl class="grid gap-4 md:grid-cols-2">
+    <div class="rounded-2xl border border-accent-soft/70 bg-white/80 p-4">
+      <dt class="text-xs font-semibold uppercase tracking-[0.3em] text-ink-muted">Имя</dt>
+      <dd class="mt-2 text-lg font-semibold text-ink">{{ user.first_name|default:'—' }}</dd>
+    </div>
+    <div class="rounded-2xl border border-accent-soft/70 bg-white/80 p-4">
+      <dt class="text-xs font-semibold uppercase tracking-[0.3em] text-ink-muted">Фамилия</dt>
+      <dd class="mt-2 text-lg font-semibold text-ink">{{ user.last_name|default:'—' }}</dd>
+    </div>
+    <div class="rounded-2xl border border-accent-soft/70 bg-white/80 p-4">
+      <dt class="text-xs font-semibold uppercase tracking-[0.3em] text-ink-muted">Телефон</dt>
+      <dd class="mt-2 text-lg font-semibold text-ink">{{ user.phone|default:'—' }}</dd>
+    </div>
+    <div class="rounded-2xl border border-accent-soft/70 bg-white/80 p-4">
+      <dt class="text-xs font-semibold uppercase tracking-[0.3em] text-ink-muted">Email</dt>
+      <dd class="mt-2 text-lg font-semibold text-ink">{{ user.email|default:'Не указан' }}</dd>
+    </div>
+    <div class="rounded-2xl border border-accent-soft/70 bg-white/80 p-4">
+      <dt class="text-xs font-semibold uppercase tracking-[0.3em] text-ink-muted">Компания</dt>
+      <dd class="mt-2 text-sm text-ink">
+        {{ user.company|default:'Не указано' }}
+      </dd>
+    </div>
+    <div class="rounded-2xl border border-accent-soft/70 bg-white/80 p-4 md:col-span-2">
+      <dt class="text-xs font-semibold uppercase tracking-[0.3em] text-ink-muted">Адрес доставки</dt>
+      <dd class="mt-2 text-sm text-ink">
+        {% if user.address1 or user.address2 or user.city or user.postal_code %}
+          {{ user.address1|default:'' }} {% if user.address2 %}<br>{{ user.address2 }}{% endif %}
+          {% if user.city or user.postal_code %}
+            <br>{{ user.city|default:'' }} {% if user.postal_code %}{{ user.postal_code }}{% endif %}
+          {% endif %}
+        {% else %}
+          Адрес не указан.
+        {% endif %}
+      </dd>
+    </div>
+  </dl>
+
+  <div class="flex flex-wrap gap-3">
+    <button
+      hx-get="{% url 'users:edit_account_details' %}"
+      hx-target="#account-details-content"
+      hx-swap="innerHTML"
+      type="button"
+      class="inline-flex flex-1 items-center justify-center rounded-2xl bg-accent px-4 py-3 text-sm font-semibold text-graphite transition hover:bg-accent-dark"
+    >
+      Редактировать данные
+    </button>
+    <button
+      type="button"
+      class="inline-flex flex-1 items-center justify-center rounded-2xl border border-accent-soft px-4 py-3 text-sm font-semibold text-ink transition hover:border-accent hover:bg-accent-soft/50"
+    >
+      Поделиться адресом позже
+    </button>
+  </div>
+</div>

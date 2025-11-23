@@ -64,6 +64,8 @@ INSTALLED_APPS = [
     'main',
     'pages',
     'cart',
+    'users.apps.UsersConfig',
+    'orders'
 ]
 
 MIDDLEWARE = [
@@ -178,4 +180,6 @@ DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY')
 DEEPSEEK_API_URL = os.getenv('DEEPSEEK_API_URL')
 DEEPSEEK_MODEL = os.getenv('DEEPSEEK_MODEL')
 DEEPSEEK_TIMEOUT = 30
+
+AUTH_USER_MODEL = 'users.CustomUser'
     
