@@ -26,8 +26,8 @@
                 class="text-xs font-semibold text-ink-muted transition hover:text-accent"
                 hx-post="{% url 'cart:remove_item' item.id %}"
                 hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
-                hx-target="#cart-modal"
-                hx-swap="outerHTML"
+                hx-target="#cart-container"
+                hx-swap="innerHTML"
                 hx-trigger="click"
                 hx-on::after-request="console.log('Remove Item {{ item.id }} Request Completed');"
             >
@@ -44,8 +44,8 @@
                     hx-post="{% url 'cart:update_item' item.id %}"
                     hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
                     hx-vals='{"quantity": "{{ item.quantity|add:-1 }}"}'
-                    hx-target="#cart-modal"
-                    hx-swap="outerHTML"
+                    hx-target="#cart-container"
+                    hx-swap="innerHTML"
                     hx-trigger="click"
                     hx-on::after-request="console.log('Update Quantity (-1) Request Completed for Item {{ item.id }}');"
                 >
@@ -59,8 +59,8 @@
                     hx-post="{% url 'cart:update_item' item.id %}"
                     hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
                     hx-vals='{"quantity": "{{ item.quantity|add:1 }}"}'
-                    hx-target="#cart-modal"
-                    hx-swap="outerHTML"
+                    hx-target="#cart-container"
+                    hx-swap="innerHTML"
                     hx-trigger="click"
                     hx-on::after-request="console.log('Update Quantity (+1) Request Completed for Item {{ item.id }}');"
                 >

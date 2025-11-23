@@ -2,6 +2,7 @@
     id="cart-overlay"
     class="fixed inset-0 z-50 flex w-full justify-center bg-black/50 backdrop-blur-sm md:justify-end"
     onclick="hideCartModal()"
+    data-cart-total="{{ cart.total_items }}"
 >
     <div
         id="cart-modal"
@@ -60,11 +61,6 @@
 </div>
 
 <style>
-
-    #cart-overlay {
-        opacity: 0;
-        visibility: hidden;
-    }
     #cart-overlay.open {
         opacity: 1;
         visibility: visible;
@@ -74,40 +70,3 @@
         visibility: hidden;
     }
 </style>
-
-<script>
-    function showCartModal() {
-        const modal = document.getElementById('cart-modal');
-        const overlay = document.getElementById('cart-overlay');
-        if (modal && overlay) {
-            modal.classList.remove('closed');
-            modal.classList.add('open');
-            overlay.classList.remove('closed');
-            overlay.classList.add('open');
-            console.log('Cart modal opened');
-        } else {
-            console.error('Cart modal or overlay not found');
-        }
-    }
-
-    function hideCartModal() {
-        const modal = document.getElementById('cart-modal');
-        const overlay = document.getElementById('cart-overlay');
-         modal.classList.remove('open');
-            modal.classList.add('closed');
-            overlay.classList.remove('open');
-            overlay.classList.add('closed');
-            console.log('Cart modal closed');
-            setTimeout(() => {
-                const container = document.getElementById('cart-container');
-                if (container) {
-                    container.innerHTML = '';
-                }
-            }, 300);
-    }
-
-    showCartModal();
-    if (typeof updateHeaderCartCount === 'function') {
-        updateHeaderCartCount({{ cart.total_items }});
-    }
-</script>

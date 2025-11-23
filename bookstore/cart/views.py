@@ -69,7 +69,7 @@ class AddToCartView(CartMixin,View):
             total_quantity = existing_item.quantity + quantity
             if total_quantity > product.stock_qty:
                 return JsonResponse({
-                    'error': f'Cannot add {quantity} items. Only {product.stock_qty} items available.',
+                    'error': f'Добавлено максимальное количество доступных экземпляров.',
                 })
 
         cart_item = cart.add_product(product, quantity)
@@ -83,7 +83,7 @@ class AddToCartView(CartMixin,View):
             return JsonResponse({
                 'success': True,
                 'total_items': cart.total_items,
-                'message': f'{product.name} is added to cart.',
+                'message': f'{product.name} добавлен в корзину.',
                 'cart_item_id': cart_item.id,
                 'quantity': cart_item.quantity,
             })
@@ -104,19 +104,22 @@ class UpdateCartItemView(CartMixin,View):
             return JsonResponse({'error': 'Invalid quantity.'}, status=400)
 
         removed = False
+        message = ''
         if quantity <= 0:
             cart_item.delete()
             removed = True
             new_quantity = 0
+            message = f'«{product.name}» удалена из корзины.'
         else:
             if quantity > cart_item.product.stock_qty:
                 return JsonResponse({
-                    'error': f'Only {cart_item.product.stock_qty} items available for {cart_item.product.name}.',
+                    'error': f'Добавлено максимальное количество доступных экземпляров.',
                 }, status=400)
 
             cart_item.quantity = quantity
             cart_item.save()
             new_quantity = cart_item.quantity
+            message = f'Количество «{product.name}» обновлено.'
 
         request.session['cart_id'] = cart.id
         request.session.modified = True
@@ -136,6 +139,7 @@ class UpdateCartItemView(CartMixin,View):
                     'cart_item_id': None if removed else cart_item_id,
                     'quantity': new_quantity,
                     'total_items': cart.total_items,
+                    'message': message,
                 }
             })
             return response
@@ -146,6 +150,7 @@ class UpdateCartItemView(CartMixin,View):
             'cart_item_id': cart_item_id,
             'quantity': new_quantity,
             'removed': removed,
+            'message': message,
         }
         return JsonResponse(response_data)
 
@@ -179,6 +184,7 @@ class RemoveCartItemView(CartMixin,View):
                         'cart_item_id': cart_item_id,
                         'quantity': 0,
                         'total_items': cart.total_items,
+                        'message': f'«{product.name}» удалена из корзины.',
                     }
                 })
                 return response
@@ -187,6 +193,7 @@ class RemoveCartItemView(CartMixin,View):
                 'total_items': cart.total_items,
                 'cart_item_id': cart_item_id,
                 'removed': True,
+                'message': f'«{product.name}» удалена из корзины.',
             })
         except CartItem.DoesNotExist:
             return JsonResponse({
