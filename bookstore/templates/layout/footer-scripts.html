@@ -6,4 +6,17 @@
 <script src="https://unpkg.com/lucide@latest"></script>
 
 <script src="{% static 'main_app/js/main.js' %}"></script>
+{% if messages %}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      {% for message in messages %}
+        {% if 'success' in message.tags %}
+          if (typeof window.showNotification === 'function') {
+            window.showNotification("{{ message|escapejs }}");
+          }
+        {% endif %}
+      {% endfor %}
+    });
+  </script>
+{% endif %}
 {% block body_scripts %}{% endblock %}

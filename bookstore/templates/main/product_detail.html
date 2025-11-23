@@ -213,7 +213,7 @@
               <span class="text-sm text-ink-muted line-through">{{ object.formatted_old_price }}</span>
             {% endif %}
           </div>
-          <div class="mt-6 flex flex-col gap-3 sm:flex-row">
+          <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
             <div id="product-cart-action" class="w-full sm:w-auto">
               <div id="product-cart-add" class="{% if product_cart_item %}hidden{% endif %}">
                 <button
@@ -260,6 +260,20 @@
             >
               Сообщить о поступлении
             </button>
+            {% with favorite=favorite_items_map|dict_get:object.id %}
+              <button
+                type="button"
+                class="favorite-toggle inline-flex items-center justify-center rounded-xl border border-accent-soft px-4 py-3 text-sm text-ink transition hover:border-accent hover:bg-accent-soft/60 {% if favorite %}favorite-active{% endif %}"
+                data-favorite-button
+                data-product-id="{{ object.id }}"
+                data-favorite-url="{% url 'favorites:toggle' object.slug %}"
+                data-favorite-active="{% if favorite %}true{% else %}false{% endif %}"
+                aria-label="Добавить в избранное"
+                aria-pressed="{% if favorite %}true{% else %}false{% endif %}"
+              >
+                <i data-lucide="heart" class="h-5 w-5"></i>
+              </button>
+            {% endwith %}
           </div>
           <p class="mt-4 flex items-center gap-2 text-xs text-ink-muted">
             <i data-lucide="clock" class="h-4 w-4"></i>

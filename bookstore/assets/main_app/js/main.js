@@ -97,6 +97,73 @@ document.addEventListener('DOMContentLoaded', () => {
 document.body.addEventListener('htmx:afterSwap', (event) => {
 	initPhoneMasks(event.target);
 });
+
+function updateFavoriteButtons(productId, isFavorite) {
+	const selector = `[data-favorite-button][data-product-id="${productId}"]`;
+	document.querySelectorAll(selector).forEach((button) => {
+		if (isFavorite) {
+			button.classList.add('favorite-active');
+			button.dataset.favoriteActive = 'true';
+			button.setAttribute('aria-pressed', 'true');
+		} else {
+			button.classList.remove('favorite-active');
+			button.dataset.favoriteActive = 'false';
+			button.setAttribute('aria-pressed', 'false');
+		}
+	});
+}
+
+function sendFavoriteToggle(button) {
+	const url = button.dataset.favoriteUrl;
+	const productId = button.dataset.productId;
+	if (!url || !productId || button.dataset.favoriteLoading === 'true') {
+		return;
+	}
+	button.dataset.favoriteLoading = 'true';
+	fetch(url, {
+		method: 'POST',
+		headers: {
+			'X-CSRFToken': window.getCookie ? (window.getCookie('csrftoken') || '') : '',
+		},
+	})
+		.then((response) => {
+			if (!response.ok) {
+				throw new Error('favorite toggle failed');
+			}
+			return response.json();
+		})
+		.then((data) => {
+			if (!data || data.error) {
+				if (typeof window.showNotification === 'function') {
+					window.showNotification(data && data.error ? data.error : 'Не удалось обновить избранное');
+				}
+				return;
+			}
+			updateFavoriteButtons(String(data.product_id), data.is_favorite);
+			if (typeof window.showNotification === 'function' && data.message) {
+				window.showNotification(data.message);
+			}
+			document.body.dispatchEvent(new CustomEvent('favorites-updated', { detail: data }));
+		})
+		.catch(() => {
+			if (typeof window.showNotification === 'function') {
+				window.showNotification('Не удалось обновить избранное');
+			}
+		})
+		.finally(() => {
+			button.dataset.favoriteLoading = 'false';
+		});
+}
+
+document.body.addEventListener('click', (event) => {
+	const toggleButton = event.target.closest('[data-favorite-button]');
+	if (!toggleButton) {
+		return;
+	}
+	event.preventDefault();
+	sendFavoriteToggle(toggleButton);
+});
+
 function initProductSliders() {
 	if (!window.Swiper) {
 	return;

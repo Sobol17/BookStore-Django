@@ -1,0 +1,42 @@
+{% load static %}
+
+{% include 'layout/head-metrics.html' %}
+
+<body class="min-h-screen font-sans text-ink antialiased">
+  <div class="min-h-screen bg-paper">
+    {% include 'layout/partials/_header.html' %}
+
+    <main class="mx-auto flex w-full my-container flex-1 flex-col px-4 py-10 sm:px-6 lg:px-8">
+      <header class="mb-8 space-y-2 text-center sm:text-left">
+        <h1 class="text-3xl font-semibold text-ink">Ваши закладки</h1>
+        <p class="text-sm text-ink-muted">Здесь сохраняются книги, которые вы отметили сердечком. Возвращайтесь к ним в любой момент.</p>
+      </header>
+
+      {% if products %}
+        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {% for product in products %}
+            {% include 'main/partials/_product-card.html' with product=product %}
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="rounded-3xl border border-accent-soft/80 bg-white/90 p-8 text-center">
+          <p class="text-lg font-semibold text-ink">В избранном пока пусто</p>
+          <p class="mt-2 text-sm text-ink-muted">Добавляйте книги из каталога, чтобы быстро возвращаться к ним позже.</p>
+          <a
+            href="{% url 'main:catalog_all' %}"
+            class="mt-6 inline-flex items-center justify-center rounded-2xl border border-accent-soft px-6 py-3 text-sm font-semibold text-ink transition hover:border-accent hover:bg-accent-soft/60"
+          >
+            Перейти в каталог
+          </a>
+        </div>
+      {% endif %}
+    </main>
+
+    <section id="modal-root" class="mx-auto w-full my-container px-4 sm:px-6 lg:px-8" hx-target="this" hx-swap="innerHTML"></section>
+
+    {% include 'layout/partials/_footer.html' %}
+  </div>
+
+  {% include 'layout/footer-scripts.html' %}
+</body>
+</html>

@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     'cart',
     'users.apps.UsersConfig',
     'orders',
+    'favorites.apps.FavoritesConfig',
     'common',
 ]
 
@@ -95,6 +96,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
 
                 'cart.context_processors.cart_processor',
+                'favorites.context_processors.favorites_processor',
             ],
         },
     },

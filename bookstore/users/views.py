@@ -9,6 +9,7 @@ from .forms import CustomUserCreationForm, CustomUserLoginForm, \
 from .models import CustomUser
 from django.contrib import messages
 from main.models import Product
+from favorites.services import merge_session_favorites
 
 
 def register(request):
@@ -17,6 +18,7 @@ def register(request):
         if form.is_valid():
             user = form.save()
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            merge_session_favorites(request, user)
             return redirect('main:index')
     else:
         form = CustomUserCreationForm()
@@ -29,6 +31,8 @@ def login_view(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            merge_session_favorites(request, user)
+            messages.success(request, '✅ Вы успешно вошли в аккаунт')
             return redirect('main:index')
     else:
         form = CustomUserLoginForm()

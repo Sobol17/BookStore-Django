@@ -147,3 +147,18 @@ input[type=number] {
 .autocomplete__item--active {
 	background-color: #eef2ff;
 }
+
+.favorite-toggle svg {
+	transition: color 0.2s ease, fill 0.2s ease;
+}
+
+.favorite-toggle.favorite-active {
+	border-color: #F26D9F;
+	color: #F26D9F;
+	background-color: rgba(242, 109, 159, 0.08);
+}
+
+.favorite-toggle.favorite-active svg {
+	color: #F26D9F;
+	fill: rgba(242, 109, 159, 0.12);
+}

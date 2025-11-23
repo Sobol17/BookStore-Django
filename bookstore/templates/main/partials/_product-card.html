@@ -117,13 +117,20 @@
           </button>
         </div>
       </div>
-      <button
-        type="button"
-        class="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-accent-dark text-graphite transition hover:border-accent hover:bg-accent-soft/60 hover:text-graphite"
-        aria-label="Добавить в закладки"
-      >
-        <i data-lucide="bookmark" class="h-5 w-5"></i>
-      </button>
+      {% with favorite=favorite_items_map|dict_get:product.id %}
+        <button
+          type="button"
+          class="favorite-toggle inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-accent-dark text-graphite transition hover:border-accent hover:bg-accent-soft/60 hover:text-graphite {% if favorite %}favorite-active{% endif %}"
+          data-favorite-button
+          data-product-id="{{ product.id }}"
+          data-favorite-url="{% url 'favorites:toggle' product.slug %}"
+          data-favorite-active="{% if favorite %}true{% else %}false{% endif %}"
+          aria-label="Добавить в избранное"
+          aria-pressed="{% if favorite %}true{% else %}false{% endif %}"
+        >
+          <i data-lucide="bookmark" class="h-5 w-5"></i>
+        </button>
+      {% endwith %}
     </div>
   </div>
 </article>
