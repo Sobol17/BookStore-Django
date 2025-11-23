@@ -1,4 +1,7 @@
 from django import forms
+
+from common.phone import PhoneValidationError, normalize_phone
+
 from .models import ProductReview, BookPurchaseRequest, BookPurchasePhoto
 
 
@@ -63,6 +66,9 @@ class BookPurchaseRequestForm(forms.ModelForm):
             }),
             'phone': forms.TextInput(attrs={
                 'placeholder': '+7 (900) 000-00-00',
+                'data-phone-mask': 'true',
+                'inputmode': 'tel',
+                'autocomplete': 'tel',
             }),
         }
 
@@ -73,6 +79,13 @@ class BookPurchaseRequestForm(forms.ModelForm):
             if content_type and not content_type.startswith('image/'):
                 raise forms.ValidationError('Можно загружать только изображения.')
         return photos
+
+    def clean_phone(self):
+        phone = self.cleaned_data.get('phone')
+        try:
+            return normalize_phone(phone)
+        except PhoneValidationError as exc:
+            raise forms.ValidationError(str(exc))
 
     def save(self, commit=True):
         photos = self.cleaned_data.pop('photos', [])

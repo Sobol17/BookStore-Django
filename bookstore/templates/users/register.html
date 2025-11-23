@@ -62,55 +62,30 @@
           <form method="post" class="mt-8 space-y-6">
             {% csrf_token %}
 
-            <div class="grid gap-4 md:grid-cols-2">
-              <div class="space-y-2">
-                <label for="{{ form.first_name.id_for_label }}" class="text-sm font-medium text-ink">Имя</label>
-                {{ form.first_name }}
-                {% if form.first_name.errors %}
-                  <p class="text-sm text-blush">{{ form.first_name.errors|striptags }}</p>
-                {% endif %}
-              </div>
-              <div class="space-y-2">
-                <label for="{{ form.last_name.id_for_label }}" class="text-sm font-medium text-ink">Фамилия</label>
-                {{ form.last_name }}
-                {% if form.last_name.errors %}
-                  <p class="text-sm text-blush">{{ form.last_name.errors|striptags }}</p>
-                {% endif %}
-              </div>
+            <div class="space-y-2">
+              <label for="{{ form.first_name.id_for_label }}" class="text-sm font-medium text-ink">Имя</label>
+              {{ form.first_name }}
+              {% if form.first_name.errors %}
+                <p class="text-sm text-blush">{{ form.first_name.errors|striptags }}</p>
+              {% endif %}
             </div>
 
-            <div class="grid gap-4 md:grid-cols-2">
-              <div class="space-y-2">
-                <label for="{{ form.phone.id_for_label }}" class="text-sm font-medium text-ink">Телефон</label>
-                {{ form.phone }}
-                {% if form.phone.errors %}
-                  <p class="text-sm text-blush">{{ form.phone.errors|striptags }}</p>
-                {% endif %}
-              </div>
-              <div class="space-y-2">
-                <label for="{{ form.email.id_for_label }}" class="text-sm font-medium text-ink">Электронная почта</label>
-                {{ form.email }}
-                {% if form.email.errors %}
-                  <p class="text-sm text-blush">{{ form.email.errors|striptags }}</p>
-                {% endif %}
-              </div>
+            <div class="space-y-2">
+              <label for="{{ form.phone.id_for_label }}" class="text-sm font-medium text-ink">Номер телефона</label>
+              {{ form.phone }}
+              {% if form.phone.errors %}
+                <p class="text-sm text-blush">{{ form.phone.errors|striptags }}</p>
+              {% endif %}
             </div>
 
-            <div class="grid gap-4 md:grid-cols-2">
-              <div class="space-y-2">
-                <label for="{{ form.password1.id_for_label }}" class="text-sm font-medium text-ink">Пароль</label>
-                {{ form.password1 }}
-                {% if form.password1.errors %}
-                  <p class="text-sm text-blush">{{ form.password1.errors|striptags }}</p>
-                {% endif %}
-              </div>
-              <div class="space-y-2">
-                <label for="{{ form.password2.id_for_label }}" class="text-sm font-medium text-ink">Подтверждение пароля</label>
-                {{ form.password2 }}
-                {% if form.password2.errors %}
-                  <p class="text-sm text-blush">{{ form.password2.errors|striptags }}</p>
-                {% endif %}
-              </div>
+            <div class="space-y-2">
+              <label for="{{ form.sms_code.id_for_label }}" class="text-sm font-medium text-ink">Код из SMS</label>
+              {{ form.sms_code }}
+              {% if form.sms_code.errors %}
+                <p class="text-sm text-blush">{{ form.sms_code.errors|striptags }}</p>
+              {% else %}
+                <p class="text-xs text-ink-muted">Для тестирования используйте код <span class="font-semibold">1234</span>.</p>
+              {% endif %}
             </div>
 
             <p class="text-xs text-ink-muted/80">

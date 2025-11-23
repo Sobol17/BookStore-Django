@@ -6,16 +6,7 @@
   <div class="min-h-screen bg-paper">
     {% include 'layout/partials/_header.html' %}
 
-    <main class="mx-auto flex w-full my-container flex-1 flex-col px-4 py-10 sm:px-6 lg:px-8">
-      <header class="flex flex-col gap-2 text-center">
-        <p class="text-xs font-semibold uppercase tracking-[0.3em] text-ink-muted">Профиль</p>
-        <h1 class="text-3xl font-semibold text-ink">
-          Здравствуйте, {{ request.user.first_name|default:'Гость' }} {{ request.user.last_name }}
-        </h1>
-        <p class="text-sm text-ink-muted">
-          Управляйте адресами доставки, контактами и следите за вдохновляющими подборками.
-        </p>
-      </header>
+    <main class="mx-auto flex w-full my-container flex-1 flex-col px-4 pb-4 sm:px-6 lg:px-8">
 
       {% if messages %}
         <div class="mt-6 space-y-2">
@@ -41,18 +32,19 @@
               {% endif %}
             </div>
             <div class="mt-5 flex flex-col gap-3">
-              <a
-                href="mailto:curator@dombb.ru"
-                class="inline-flex items-center justify-center rounded-2xl border border-accent-soft px-4 py-2 text-sm font-semibold text-ink transition hover:border-accent hover:bg-accent-soft/60"
-              >
-                Написать куратору
-              </a>
-              <a
+            <a
                 href="{% url 'main:catalog_all' %}"
-                class="inline-flex items-center justify-center rounded-2xl bg-accent px-4 py-2 text-sm font-semibold text-graphite transition hover:bg-accent-dark"
+                class="inline-flex items-center justify-center rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-graphite transition hover:bg-accent-dark"
               >
                 К каталогу
               </a>
+              <a
+                href="mailto:curator@dombb.ru"
+                class="inline-flex items-center justify-center rounded-xl border border-accent-soft px-4 py-2 text-sm font-semibold text-ink transition hover:border-accent hover:bg-accent-soft/60"
+              >
+                Связаться с нами
+              </a>
+
             </div>
           </section>
 
@@ -84,7 +76,7 @@
           <section id="account" class="rounded-3xl border border-accent-soft/70 bg-white/95 p-6 shadow-card">
             <div class="flex flex-wrap items-baseline justify-between gap-3">
               <div>
-                <p class="text-xs font-semibold uppercase tracking-[0.3em] text-ink-muted">Контактные данные</p>
+                <p class="text-xs font-semibold text-ink-muted">Контактные данные</p>
                 <h2 class="text-2xl font-semibold text-ink">Адреса и способы связи</h2>
               </div>
               <span class="rounded-full bg-accent-soft/80 px-3 py-1 text-xs font-semibold text-ink">Обновляйте вовремя</span>
@@ -97,8 +89,7 @@
           <section id="orders" class="rounded-3xl border border-accent-soft/70 bg-white/95 p-6 shadow-card">
             <div class="flex flex-wrap items-baseline justify-between gap-3">
               <div>
-                <p class="text-xs font-semibold uppercase tracking-[0.3em] text-ink-muted">История</p>
-                <h2 class="text-2xl font-semibold text-ink">Последние заказы</h2>
+                <h2 class="text-2xl font-semibold text-ink">История заказов</h2>
               </div>
               <span class="rounded-full bg-paper px-3 py-1 text-xs font-semibold text-ink-muted">Скоро появится</span>
             </div>
@@ -110,7 +101,6 @@
           <section class="rounded-3xl border border-accent-soft/70 bg-white/95 p-6 shadow-card">
             <div class="flex flex-wrap items-baseline justify-between gap-3">
               <div>
-                <p class="text-xs font-semibold uppercase tracking-[0.3em] text-ink-muted">Рекомендации</p>
                 <h2 class="text-2xl font-semibold text-ink">Мы отобрали для вас</h2>
               </div>
               <a href="{% url 'main:catalog_all' %}" class="text-sm font-semibold text-ink underline decoration-accent">Перейти в каталог</a>

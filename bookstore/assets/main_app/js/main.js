@@ -6,6 +6,97 @@ document.body.addEventListener('htmx:configRequest', function (event) {
 	event.detail.headers['X-CSRFToken'] = csrf.value;
 	}
 });
+
+function extractPhoneDigits(value) {
+	let digits = (value || '').replace(/\D/g, '');
+	if (!digits) {
+		return '';
+	}
+	if (digits[0] === '7' || digits[0] === '8') {
+		digits = digits.slice(1);
+	}
+	return digits.slice(0, 10);
+}
+
+function formatMaskedPhone(digits) {
+	if (!digits) {
+		return '+7';
+	}
+	const groups = [3, 3, 2, 2];
+	const separators = [' ', ' ', '-', '-'];
+	let formatted = '+7';
+	let index = 0;
+	for (let i = 0; i < groups.length; i += 1) {
+		if (digits.length <= index) {
+			break;
+		}
+		const chunk = digits.slice(index, index + groups[i]);
+		formatted += `${separators[i]}${chunk}`;
+		index += chunk.length;
+	}
+	return formatted;
+}
+
+function applyPhoneMask(input) {
+	if (!input || input.dataset.phoneMaskInitialized === 'true') {
+		return;
+	}
+	const formatValue = () => {
+		const digits = extractPhoneDigits(input.value);
+		if (!digits) {
+			if (document.activeElement === input) {
+				input.value = '+7 ';
+			} else {
+				input.value = '';
+			}
+			return;
+		}
+		input.value = formatMaskedPhone(digits);
+	};
+
+	const handleFocus = () => {
+		if (!input.value.trim()) {
+			input.value = '+7 ';
+		}
+		formatValue();
+		try {
+			const len = input.value.length;
+			input.setSelectionRange(len, len);
+		} catch (err) {
+			// ignore selection errors
+		}
+	};
+
+	const handleBlur = () => {
+		const digits = extractPhoneDigits(input.value);
+		if (!digits) {
+			input.value = '';
+			return;
+		}
+		input.value = formatMaskedPhone(digits);
+	};
+
+	input.addEventListener('input', formatValue);
+	input.addEventListener('focus', handleFocus);
+	input.addEventListener('blur', handleBlur);
+	formatValue();
+	input.dataset.phoneMaskInitialized = 'true';
+}
+
+function initPhoneMasks(root) {
+	const scope = root || document;
+	scope.querySelectorAll('[data-phone-mask="true"]').forEach((input) => {
+		applyPhoneMask(input);
+	});
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+	initPhoneMasks();
+});
+
+document.body.addEventListener('htmx:afterSwap', (event) => {
+	initPhoneMasks(event.target);
+});
 function initProductSliders() {
 	if (!window.Swiper) {
 	return;
