@@ -6,6 +6,164 @@ document.body.addEventListener('htmx:configRequest', function (event) {
 	event.detail.headers['X-CSRFToken'] = csrf.value;
 	}
 });
+
+function extractPhoneDigits(value) {
+	let digits = (value || '').replace(/\D/g, '');
+	if (!digits) {
+		return '';
+	}
+	if (digits[0] === '7' || digits[0] === '8') {
+		digits = digits.slice(1);
+	}
+	return digits.slice(0, 10);
+}
+
+function formatMaskedPhone(digits) {
+	if (!digits) {
+		return '+7';
+	}
+	const groups = [3, 3, 2, 2];
+	const separators = [' ', ' ', '-', '-'];
+	let formatted = '+7';
+	let index = 0;
+	for (let i = 0; i < groups.length; i += 1) {
+		if (digits.length <= index) {
+			break;
+		}
+		const chunk = digits.slice(index, index + groups[i]);
+		formatted += `${separators[i]}${chunk}`;
+		index += chunk.length;
+	}
+	return formatted;
+}
+
+function applyPhoneMask(input) {
+	if (!input || input.dataset.phoneMaskInitialized === 'true') {
+		return;
+	}
+	const formatValue = () => {
+		const digits = extractPhoneDigits(input.value);
+		if (!digits) {
+			if (document.activeElement === input) {
+				input.value = '+7 ';
+			} else {
+				input.value = '';
+			}
+			return;
+		}
+		input.value = formatMaskedPhone(digits);
+	};
+
+	const handleFocus = () => {
+		if (!input.value.trim()) {
+			input.value = '+7 ';
+		}
+		formatValue();
+		try {
+			const len = input.value.length;
+			input.setSelectionRange(len, len);
+		} catch (err) {
+			// ignore selection errors
+		}
+	};
+
+	const handleBlur = () => {
+		const digits = extractPhoneDigits(input.value);
+		if (!digits) {
+			input.value = '';
+			return;
+		}
+		input.value = formatMaskedPhone(digits);
+	};
+
+	input.addEventListener('input', formatValue);
+	input.addEventListener('focus', handleFocus);
+	input.addEventListener('blur', handleBlur);
+	formatValue();
+	input.dataset.phoneMaskInitialized = 'true';
+}
+
+function initPhoneMasks(root) {
+	const scope = root || document;
+	scope.querySelectorAll('[data-phone-mask="true"]').forEach((input) => {
+		applyPhoneMask(input);
+	});
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+	initPhoneMasks();
+});
+
+document.body.addEventListener('htmx:afterSwap', (event) => {
+	initPhoneMasks(event.target);
+});
+
+function updateFavoriteButtons(productId, isFavorite) {
+	const selector = `[data-favorite-button][data-product-id="${productId}"]`;
+	document.querySelectorAll(selector).forEach((button) => {
+		if (isFavorite) {
+			button.classList.add('favorite-active');
+			button.dataset.favoriteActive = 'true';
+			button.setAttribute('aria-pressed', 'true');
+		} else {
+			button.classList.remove('favorite-active');
+			button.dataset.favoriteActive = 'false';
+			button.setAttribute('aria-pressed', 'false');
+		}
+	});
+}
+
+function sendFavoriteToggle(button) {
+	const url = button.dataset.favoriteUrl;
+	const productId = button.dataset.productId;
+	if (!url || !productId || button.dataset.favoriteLoading === 'true') {
+		return;
+	}
+	button.dataset.favoriteLoading = 'true';
+	fetch(url, {
+		method: 'POST',
+		headers: {
+			'X-CSRFToken': window.getCookie ? (window.getCookie('csrftoken') || '') : '',
+		},
+	})
+		.then((response) => {
+			if (!response.ok) {
+				throw new Error('favorite toggle failed');
+			}
+			return response.json();
+		})
+		.then((data) => {
+			if (!data || data.error) {
+				if (typeof window.showNotification === 'function') {
+					window.showNotification(data && data.error ? data.error : 'Не удалось обновить избранное');
+				}
+				return;
+			}
+			updateFavoriteButtons(String(data.product_id), data.is_favorite);
+			if (typeof window.showNotification === 'function' && data.message) {
+				window.showNotification(data.message);
+			}
+			document.body.dispatchEvent(new CustomEvent('favorites-updated', { detail: data }));
+		})
+		.catch(() => {
+			if (typeof window.showNotification === 'function') {
+				window.showNotification('Не удалось обновить избранное');
+			}
+		})
+		.finally(() => {
+			button.dataset.favoriteLoading = 'false';
+		});
+}
+
+document.body.addEventListener('click', (event) => {
+	const toggleButton = event.target.closest('[data-favorite-button]');
+	if (!toggleButton) {
+		return;
+	}
+	event.preventDefault();
+	sendFavoriteToggle(toggleButton);
+});
+
 function initProductSliders() {
 	if (!window.Swiper) {
 	return;
@@ -523,9 +681,9 @@ window.showCartModal = function showCartModal() {
 window.hideCartModal = function hideCartModal() {
 	const overlay = document.getElementById('cart-overlay');
 	const modal = document.getElementById('cart-modal');
-	// if (!overlay || !modal) {
-	// 	return;
-	// }
+	if (!overlay || !modal) {
+		return;
+	}
 	overlay.classList.remove('open');
 	overlay.classList.add('closed');
 	modal.classList.remove('open');
