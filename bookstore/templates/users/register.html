@@ -52,7 +52,7 @@
           {% endif %}
 
           {% if form.non_field_errors %}
-            <div class="mt-6 rounded-2xl border border-blush/40 bg-blush/10 px-4 py-3 text-sm text-blush">
+            <div class="mt-6 rounded-xl border border-blush/40 bg-blush/10 px-4 py-3 text-sm text-blush">
               {% for error in form.non_field_errors %}
                 <p>{{ error }}</p>
               {% endfor %}

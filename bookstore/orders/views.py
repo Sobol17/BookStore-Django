@@ -1,77 +1,74 @@
-from django.conf import settings
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
-from django.http import HttpResponse
-from django.template.response import TemplateResponse
-from django.views.generic import View
-from .forms import OrderForm
-from .models import Order, OrderItem
-from cart.views import CartMixin
-from cart.models import Cart
-from django.shortcuts import get_object_or_404
 from decimal import Decimal
 import logging
+
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import redirect, render
+from django.urls import reverse
+from django.utils.decorators import method_decorator
+from django.views.generic import View
+
+from cart.views import CartMixin
+from .forms import OrderForm
+from .models import Order, OrderItem
 
 logger = logging.getLogger(__name__)
 
 
 @method_decorator(login_required(login_url='/users/login'), name='dispatch')
 class CheckoutView(CartMixin, View):
+    template_name = 'orders/checkout.html'
+
     def get(self, request):
         cart = self.get_cart(request)
-        logger.debug(f"Checkout view: session_key={request.session.session_key}, cart_id={cart.id}, total_items={cart.total_items}, subtotal={cart.subtotal}")
-
-        if cart.total_items == 0:
-            logger.warning("Cart is empty, redirecting to cart page")
-            if request.headers.get('HX-Request'):
-                return TemplateResponse(request, 'orders/empty_cart.html', {'message': 'Your cart is empty'})
-            return redirect('cart:cart_modal')
-
-        total_price = cart.subtotal
-        logger.debug(f"Total price: {total_price}")
-
+        logger.debug(
+            "Checkout GET: session_key=%s cart_id=%s total_items=%s subtotal=%s",
+            request.session.session_key,
+            cart.id,
+            cart.total_items,
+            cart.subtotal,
+        )
         form = OrderForm(user=request.user)
-        context = {
-            'form': form,
-            'cart': cart,
-            'cart_items': cart.items.select_related('product',).order_by('-added_at'),
-            'total_price': total_price,
-        }
-
-        if request.headers.get('HX-Request'):
-            return TemplateResponse(request, 'orders/checkout_content.html', context)
-        return render(request, 'orders/checkout.html', context)
+        context = self._build_context(cart, form)
+        return render(request, self.template_name, context)
 
     def post(self, request):
         cart = self.get_cart(request)
+        form = OrderForm(request.POST, user=request.user)
         payment_provider = request.POST.get('payment_provider')
-        logger.debug(f"Checkout POST: session_key={request.session.session_key}, cart_id={cart.id}, total_items={cart.total_items}, payment_provider={payment_provider}")
+        valid_providers = [choice[0] for choice in Order.PAYMENT_PROVIDER_CHOICES]
+
+        logger.debug(
+            "Checkout POST: session_key=%s cart_id=%s total_items=%s payment_provider=%s",
+            request.session.session_key,
+            cart.id,
+            cart.total_items,
+            payment_provider,
+        )
 
         if cart.total_items == 0:
-            logger.warning("Cart is empty, redirecting to cart page")
-            if request.headers.get('HX-Request'):
-                return TemplateResponse(request, 'orders/empty_cart.html', {'message': 'Your cart is empty'})
-            return redirect('cart:cart_modal')
+            logger.warning("Checkout attempted with empty cart")
+            context = self._build_context(
+                cart,
+                form,
+                extra_context={
+                    'error_message': 'Добавьте товары в корзину, чтобы оформить заказ.',
+                    'selected_payment_provider': payment_provider,
+                }
+            )
+            return render(request, self.template_name, context, status=400)
 
-        if not payment_provider or payment_provider not in ['stripe', 'heleket']:
-            logger.error(f"Invalid or missing payment provider: {payment_provider}")
-            context = {
-                'form': OrderForm(user=request.user),
-                'cart': cart,
-                'cart_items': cart.items.select_related('product').order_by('-added_at'),
-                'total_price': cart.subtotal,
-                'error_message': 'Please select a valid payment provider (Stripe or Heleket).',
-            }
-            if request.headers.get('HX-Request'):
-                return TemplateResponse(request, 'orders/checkout_content.html', context)
-            return render(request, 'orders/checkout.html', context)
-
-        total_price = cart.subtotal
-        form_data = request.POST.copy()
-        if not form_data.get('email'):
-            form_data['email'] = request.user.email
-        form = OrderForm(form_data, user=request.user)
+        if not payment_provider or payment_provider not in valid_providers:
+            logger.error("Invalid payment provider: %s", payment_provider)
+            context = self._build_context(
+                cart,
+                form,
+                extra_context={
+                    'error_message': 'Выберите доступный способ оплаты.',
+                    'selected_payment_provider': payment_provider,
+                }
+            )
+            return render(request, self.template_name, context, status=400)
 
         if form.is_valid():
             order = Order.objects.create(
@@ -85,54 +82,51 @@ class CheckoutView(CartMixin, View):
                 postal_code=form.cleaned_data['postal_code'],
                 phone=form.cleaned_data['phone'],
                 special_instructions='',
-                total_price=total_price,
+                total_price=cart.subtotal,
                 payment_provider=payment_provider,
             )
 
-            for item in cart.items.select_related('product', 'product_size'):
-                logger.debug(f"Processing cart item: product={item.product.name}, size={item.product_size.size.name}, quantity={item.quantity}")
+            for item in cart.items.select_related('product'):
+                logger.debug('Adding item to order: product=%s quantity=%s', item.product.name, item.quantity)
                 OrderItem.objects.create(
                     order=order,
                     product=item.product,
-                    size=item.product_size,
                     quantity=item.quantity,
                     price=item.product.price or Decimal('0.00')
                 )
 
-            try:
-                logger.info(f"Creating payment session for provider: {payment_provider}")
-                if payment_provider == 'youkassa':
-                    logger.debug("Creating Stripe checkout session")
-                    # checkout_session = create_stripe_checkout_session(order, request)
-                    # cart.clear()
-                    # if request.headers.get('HX-Request'):
-                    #     response = HttpResponse(status=200)
-                    #     response['HX-Redirect'] = checkout_session.url
-                    #     logger.info(f"HX-Redirect to Stripe: {checkout_session.url}")
-                    #     return response
-                    # return redirect(checkout_session.url)
-            except Exception as e:
-                logger.error(f"Error creating payment: {str(e)}", exc_info=True)
-                order.delete()
-                context = {
-                    'form': form,
-                    'cart': cart,
-                    'cart_items': cart.items.select_related('product').order_by('-added_at'),
-                    'total_price': total_price,
-                    'error_message': f'Payment processing error: {str(e)}',
-                }
-                if request.headers.get('HX-Request'):
-                    return TemplateResponse(request, 'orders/checkout_content.html', context)
-                return render(request, 'orders/checkout.html', context)
-        else:
-            logger.warning(f"Form validation error: {form.errors}")
-            context = {
-                'form': form,
-                'cart': cart,
-                'cart_items': cart.items.select_related('product',).order_by('-added_at'),
-                'total_price': total_price,
-                'error_message': 'Please correct the errors in the form.',
+            cart.clear_cart_items()
+            messages.success(request, f'Заказ №{order.id} оформлен. Мы свяжемся с вами для подтверждения.')
+            logger.info('Checkout completed successfully for order %s', order.id)
+            detail_url = reverse('users:order_detail', args=[order.id])
+            return redirect(detail_url)
+
+        logger.warning("Checkout form validation error: %s", form.errors)
+        context = self._build_context(
+            cart,
+            form,
+            extra_context={
+                'error_message': 'Проверьте корректность заполнения формы.',
+                'selected_payment_provider': payment_provider,
             }
-            if request.headers.get('HX-Request'):
-                return TemplateResponse(request, 'orders/checkout_content.html', context)
-            return render(request, 'orders/checkout.html', context)
+        )
+        return render(request, self.template_name, context, status=400)
+
+    def _build_context(self, cart, form, extra_context=None):
+        cart_items = list(cart.items.select_related('product').order_by('-added_at'))
+        extra_context = extra_context or {}
+        selected_provider = extra_context.get('selected_payment_provider')
+        if not selected_provider and Order.PAYMENT_PROVIDER_CHOICES:
+            selected_provider = Order.PAYMENT_PROVIDER_CHOICES[0][0]
+        context = {
+            'form': form,
+            'cart': cart,
+            'cart_items': cart_items,
+            'total_price': cart.subtotal,
+            'cart_is_empty': len(cart_items) == 0,
+            'payment_providers': Order.PAYMENT_PROVIDER_CHOICES,
+            'selected_payment_provider': selected_provider,
+        }
+        if extra_context:
+            context.update(extra_context)
+        return context

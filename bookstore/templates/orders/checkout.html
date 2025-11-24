@@ -1,15 +1,225 @@
-{% extends "main/base.html" %}
 {% load static %}
 
-{% block extra_css %}
-    <style>
-        .input-checkout:focus { outline: none; border-color: #000; }
-        .select-checkout:focus { outline: none; border-color: #000; }
-    </style>
-{% endblock extra_css %}
+{% include 'layout/head-metrics.html' %}
 
-{% block content %}
-    <div id="main-content">
-        {% include "orders/checkout_content.html" %}
-    </div>
-{% endblock content %}
+<body class="min-h-screen font-sans text-ink antialiased">
+  <div class="min-h-screen bg-paper">
+    {% include 'layout/partials/_header.html' %}
+
+    <main class="mx-auto flex w-full my-container flex-1 flex-col px-4 py-10 sm:px-6 lg:px-8">
+      <section class="space-y-3 text-center sm:text-left">
+        <h1 class="text-3xl font-semibold text-ink sm:text-4xl">Доставка и оплата</h1>
+        <p class="text-sm text-ink-muted">Укажите контактные данные — куратор уточнит детали и соберёт лучшие варианты упаковки.</p>
+      </section>
+
+      {% if messages %}
+        <div class="mt-6 space-y-2">
+          {% for message in messages %}
+            <p class="rounded-2xl border border-accent-soft/70 bg-white/90 px-4 py-2 text-sm font-medium text-ink {% if message.tags %}message-{{ message.tags }}{% endif %}">
+              {{ message }}
+            </p>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      {% if error_message %}
+        <p class="mt-6 rounded-2xl border border-blush/50 bg-blush/10 px-4 py-3 text-sm font-medium text-blush">{{ error_message }}</p>
+      {% endif %}
+
+      {% if form.non_field_errors %}
+        <div class="mt-6 space-y-2">
+          {% for error in form.non_field_errors %}
+            <p class="rounded-2xl border border-blush/50 bg-blush/10 px-4 py-2 text-sm font-medium text-blush">{{ error }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_380px] items-start">
+        <section class="space-y-6">
+          <form method="post" class="space-y-6">
+            {% csrf_token %}
+
+            <div class="!mt-0 space-y-6 rounded-2xl border border-accent-soft/70 bg-white/95 p-6 shadow-card">
+              <header class="space-y-1">
+                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-ink-muted">Контакты</p>
+                <h2 class="text-xl font-semibold text-ink">Получатель заказа</h2>
+              </header>
+
+              <div class="grid gap-4 sm:grid-cols-2">
+                <div class="space-y-2">
+                  <label for="{{ form.first_name.id_for_label }}" class="text-sm font-semibold text-ink">Имя</label>
+                  {{ form.first_name }}
+                  {% for error in form.first_name.errors %}
+                    <p class="text-xs font-medium text-blush">{{ error }}</p>
+                  {% endfor %}
+                </div>
+                <div class="space-y-2">
+                  <label for="{{ form.last_name.id_for_label }}" class="text-sm font-semibold text-ink">Фамилия</label>
+                  {{ form.last_name }}
+                  {% for error in form.last_name.errors %}
+                    <p class="text-xs font-medium text-blush">{{ error }}</p>
+                  {% endfor %}
+                </div>
+                <div class="space-y-2">
+                  <label for="{{ form.phone.id_for_label }}" class="text-sm font-semibold text-ink">Телефон</label>
+                  {{ form.phone }}
+                  {% for error in form.phone.errors %}
+                    <p class="text-xs font-medium text-blush">{{ error }}</p>
+                  {% endfor %}
+                </div>
+                <div class="space-y-2">
+                  <label for="{{ form.email.id_for_label }}" class="text-sm font-semibold text-ink">Email</label>
+                  {{ form.email }}
+                  {% for error in form.email.errors %}
+                    <p class="text-xs font-medium text-blush">{{ error }}</p>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+
+            <div class="space-y-6 rounded-2xl border border-accent-soft/70 bg-white/95 p-6 shadow-card">
+              <header class="space-y-1">
+                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-ink-muted">Доставка</p>
+                <h2 class="text-xl font-semibold text-ink">Адрес получения</h2>
+              </header>
+
+              <div class="space-y-4">
+                <div class="space-y-2">
+                  <label for="{{ form.address1.id_for_label }}" class="text-sm font-semibold text-ink">Адрес</label>
+                  {{ form.address1 }}
+                  {% for error in form.address1.errors %}
+                    <p class="text-xs font-medium text-blush">{{ error }}</p>
+                  {% endfor %}
+                </div>
+                <div class="space-y-2">
+                  <label for="{{ form.address2.id_for_label }}" class="text-sm font-semibold text-ink">Квартира, подъезд (необязательно)</label>
+                  {{ form.address2 }}
+                  {% for error in form.address2.errors %}
+                    <p class="text-xs font-medium text-blush">{{ error }}</p>
+                  {% endfor %}
+                </div>
+                <div class="grid gap-4 sm:grid-cols-2">
+                  <div class="space-y-2">
+                    <label for="{{ form.city.id_for_label }}" class="text-sm font-semibold text-ink">Город</label>
+                    {{ form.city }}
+                    {% for error in form.city.errors %}
+                      <p class="text-xs font-medium text-blush">{{ error }}</p>
+                    {% endfor %}
+                  </div>
+                  <div class="space-y-2">
+                    <label for="{{ form.postal_code.id_for_label }}" class="text-sm font-semibold text-ink">Почтовый индекс</label>
+                    {{ form.postal_code }}
+                    {% for error in form.postal_code.errors %}
+                      <p class="text-xs font-medium text-blush">{{ error }}</p>
+                    {% endfor %}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="space-y-6 rounded-2xl border border-accent-soft/70 bg-white/95 p-6 shadow-card">
+              <header class="space-y-1">
+                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-ink-muted">Оплата</p>
+                <h2 class="text-xl font-semibold text-ink">Выберите способ</h2>
+              </header>
+
+              <div class="space-y-3">
+                {% for value, label in payment_providers %}
+                  <label class="flex items-center gap-3 rounded-2xl border px-4 py-3 text-sm font-semibold transition {% if value == selected_payment_provider %}border-accent bg-accent-soft/30 text-ink{% else %}border-accent-soft text-ink{% endif %}">
+                    <input
+                      type="radio"
+                      name="payment_provider"
+                      value="{{ value }}"
+                      class="sr-only"
+                      {% if value == selected_payment_provider %}checked{% endif %}
+                    >
+                    <span>{{ label }}</span>
+                    <span class="ml-auto text-xs font-normal text-ink-muted">Безопасная онлайн-оплата</span>
+                  </label>
+                {% empty %}
+                  <p class="text-sm text-ink-muted">Способы оплаты временно недоступны. Свяжитесь с куратором.</p>
+                {% endfor %}
+              </div>
+            </div>
+
+            <div class="grid gap-4 sm:grid-cols-2">
+              <button
+                type="submit"
+                class="inline-flex w-full items-center justify-center rounded-2xl bg-ink px-6 py-3 text-sm font-semibold text-white transition hover:bg-ink/90 {% if cart_is_empty %}pointer-events-none opacity-50{% endif %}"
+                {% if cart_is_empty %}disabled{% endif %}
+              >
+                Подтвердить заказ
+              </button>
+              <a
+                href="{% url 'main:catalog_all' %}"
+                class="inline-flex bg-white w-full items-center justify-center rounded-2xl border border-accent-soft px-6 py-3 text-sm font-semibold text-ink transition hover:border-accent hover:bg-accent-soft/60"
+              >
+                Вернуться в каталог
+              </a>
+            </div>
+          </form>
+        </section>
+
+        <aside class="space-y-6 rounded-2xl border border-accent-soft/70 bg-white/95 p-6 shadow-card">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-[0.2em] text-ink-muted">Состав заказа</p>
+              <h2 class="text-xl font-semibold text-ink">{{ cart.total_items }} шт.</h2>
+            </div>
+            <span class="rounded-full bg-accent-soft/60 px-3 py-1 text-xs font-semibold text-ink">Обновляется автоматически</span>
+          </div>
+
+          {% if cart_items %}
+            <div class="space-y-4">
+              {% for item in cart_items %}
+                <article class="flex gap-4">
+                  <div class="relative h-16 w-16 overflow-hidden rounded-2xl border border-accent-soft/70 bg-paper">
+                    <img src="{{ item.product.main_image.url }}" alt="{{ item.product.name }}" class="h-full w-full object-cover">
+                    <span class="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-ink text-xs font-semibold text-white">{{ item.quantity }}</span>
+                  </div>
+                  <div class="flex-1 text-sm">
+                    <p class="font-semibold text-ink">{{ item.product.name }}</p>
+                    {% if item.product.authors %}
+                      <p class="text-xs text-ink-muted">{{ item.product.authors }}</p>
+                    {% endif %}
+                  </div>
+                  <p class="text-sm font-semibold text-ink">{{ item.product.price|floatformat:0 }} {{ item.product.currency|default:'₽' }}</p>
+                </article>
+              {% endfor %}
+            </div>
+
+            {% with first_item=cart_items|first %}
+              {% with currency=first_item.product.currency|default:'₽' %}
+                <dl class="mt-6 space-y-3 text-sm text-ink">
+                  <div class="flex items-center justify-between">
+                    <dt class="text-ink-muted">Сумма</dt>
+                    <dd class="font-semibold">{{ total_price|floatformat:0 }} {{ currency }}</dd>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <dt class="text-ink-muted">Доставка</dt>
+                    <dd class="text-ink-muted">Уточним после подтверждения</dd>
+                  </div>
+                  <div class="flex items-center justify-between border-t border-accent-soft/60 pt-3 text-base font-semibold">
+                    <dt>Итого</dt>
+                    <dd>{{ total_price|floatformat:0 }} {{ currency }}</dd>
+                  </div>
+                </dl>
+              {% endwith %}
+            {% endwith %}
+          {% else %}
+            <div class="rounded-2xl border border-dashed border-accent-soft px-4 py-6 text-center text-sm text-ink-muted">
+              Корзина пуста. Добавьте книги, чтобы увидеть расчёт стоимости.
+            </div>
+          {% endif %}
+        </aside>
+      </div>
+    </main>
+
+    <section id="modal-root" class="mx-auto w-full my-container px-4 sm:px-6 lg:px-8" hx-target="this" hx-swap="innerHTML"></section>
+
+    {% include 'layout/partials/_footer.html' %}
+  </div>
+
+  {% include 'layout/footer-scripts.html' %}
+</body>
+</html>

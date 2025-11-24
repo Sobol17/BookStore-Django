@@ -36,6 +36,11 @@ class Order(models.Model):
     def __str__(self):
         return f"Заказ {self.id} от {self.first_name} {self.phone}"
 
+    @property
+    def formatted_address(self):
+        parts = [self.address1, self.address2, self.city, self.postal_code]
+        return ', '.join([part for part in parts if part])
+
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')

@@ -10,6 +10,7 @@ from .models import CustomUser
 from django.contrib import messages
 from main.models import Product
 from favorites.services import merge_session_favorites
+from orders.models import Order
 
 
 def register(request):
@@ -53,10 +54,17 @@ def profile_view(request):
 
     recommended_products = Product.objects.all().order_by('id')[:3]
 
+    last_order = (
+        Order.objects.filter(user=request.user)
+        .order_by('-created_at')
+        .first()
+    )
+
     return TemplateResponse(request, 'users/profile.html', {
         'form': form,
         'user': request.user,
-        'recommended_products': recommended_products
+        'recommended_products': recommended_products,
+        'last_order': last_order,
     })
 
 
@@ -99,3 +107,25 @@ def logout_view(request):
     if request.headers.get('HX-Request'):
         return HttpResponse(headers={'HX-Redirect': reverse('main:index')})
     return redirect('main:index')
+@login_required(login_url='/users/login')
+def order_history(request):
+    orders = (
+        Order.objects.filter(user=request.user)
+        .prefetch_related('items__product')
+        .order_by('-created_at')
+    )
+    return TemplateResponse(request, 'users/order_history.html', {
+        'orders': orders,
+    })
+
+
+@login_required(login_url='/users/login')
+def order_detail(request, order_id):
+    order = get_object_or_404(
+        Order.objects.prefetch_related('items__product'),
+        id=order_id,
+        user=request.user,
+    )
+    return TemplateResponse(request, 'users/order_detail.html', {
+        'order': order,
+    })

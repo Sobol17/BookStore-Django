@@ -2,21 +2,21 @@ from django import forms
 from django.utils.html import strip_tags
 
 
-FIELD_STYLES = 'input text-sm font-medium text-ink placeholder:text-ink-muted/70 bg-white/90 border border-accent-soft focus:border-accent focus:ring-2 focus:ring-accent/60'
+FIELD_STYLES = 'w-full rounded-xl border border-accent-soft/80 bg-white/95 px-4 py-3 text-sm font-medium text-ink placeholder:text-ink-muted focus:border-accent focus:ring-2 focus:ring-accent/40'
 
 
 class OrderForm(forms.Form):
     first_name = forms.CharField(
         max_length=50,
         widget=forms.TextInput(attrs={
-            'class': 'w-full px-4 py-3 border border-black rounded-none text-black placeholder-gray-500 focus:outline-none focus:border-black',
+            'class': FIELD_STYLES,
             'placeholder': 'Имя'
         })
     )
     last_name = forms.CharField(
         max_length=50,
         widget=forms.TextInput(attrs={
-            'class': 'w-full px-4 py-3 border border-black rounded-none text-black placeholder-gray-500 focus:outline-none focus:border-black',
+            'class': FIELD_STYLES,
             'placeholder': 'Фамилия'
         })
     )
@@ -34,32 +34,34 @@ class OrderForm(forms.Form):
         )
     )
     email = forms.EmailField(
+        required=False,
         widget=forms.EmailInput(attrs={
-            'class': 'w-full px-4 py-3 border border-black rounded-none text-black placeholder-gray-500 focus:outline-none focus:border-black',
-            'placeholder': 'Email (optional)',
+            'class': FIELD_STYLES,
+            'placeholder': 'Email',
+            'autocomplete': 'email',
         })
     )
     address1 = forms.CharField(
         max_length=255,
         required=False,
         widget=forms.TextInput(attrs={
-            'class': 'w-full px-4 py-3 border border-black rounded-none text-black placeholder-gray-500 focus:outline-none focus:border-black pr-10',
-            'placeholder': 'Адресс'
+            'class': FIELD_STYLES,
+            'placeholder': 'Адрес'
         })
     )
     address2 = forms.CharField(
         max_length=255,
         required=False,
         widget=forms.TextInput(attrs={
-            'class': 'w-full px-4 py-3 border border-black rounded-none text-black placeholder-gray-500 focus:outline-none focus:border-black',
-            'placeholder': 'Адресс доп.'
+            'class': FIELD_STYLES,
+            'placeholder': 'Квартира, офис (необязательно)'
         })
     )
     city = forms.CharField(
         max_length=100,
         required=False,
         widget=forms.TextInput(attrs={
-            'class': 'w-full px-4 py-3 border border-black rounded-none text-black placeholder-gray-500 focus:outline-none focus:border-black',
+            'class': FIELD_STYLES,
             'placeholder': 'Город'
         })
     )
@@ -67,8 +69,8 @@ class OrderForm(forms.Form):
         max_length=20,
         required=False,
         widget=forms.TextInput(attrs={
-            'class': 'w-full px-4 py-3 border border-black rounded-none text-black placeholder-gray-500 focus:outline-none focus:border-black',
-            'placeholder': 'Postal Code'
+            'class': FIELD_STYLES,
+            'placeholder': 'Почтовый индекс'
         })
     )
 

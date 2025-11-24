@@ -1,0 +1,27 @@
+{% load static %}
+
+{% include 'layout/head-metrics.html' %}
+
+<body class="min-h-screen font-sans text-ink antialiased">
+  <div class="min-h-screen bg-paper">
+    {% include 'layout/partials/_header.html' %}
+
+    <main class="mx-auto flex w-full my-container flex-1 flex-col px-4 py-10 sm:px-6 lg:px-8">
+      <header class="mb-8 flex flex-wrap items-start justify-between gap-4">
+        <div class="space-y-2">
+          <h1 class="text-3xl font-semibold text-ink sm:text-4xl">История заказов</h1>
+          <p class="text-sm text-ink-muted">Здесь вы можете посмотреть историю ваших заказов</p>
+        </div>
+      </header>
+
+      {% include 'users/partials/order_history.html' with orders=orders %}
+    </main>
+
+    <section id="modal-root" class="mx-auto w-full my-container px-4 sm:px-6 lg:px-8" hx-target="this" hx-swap="innerHTML"></section>
+
+    {% include 'layout/partials/_footer.html' %}
+  </div>
+
+  {% include 'layout/footer-scripts.html' %}
+</body>
+</html>

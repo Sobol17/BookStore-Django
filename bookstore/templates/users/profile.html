@@ -20,7 +20,7 @@
 
       <div class="mt-10 grid gap-8 lg:grid-cols-[320px_1fr]">
         <aside class="space-y-6">
-          <section class="rounded-3xl border border-accent-soft/70 bg-white/95 p-6 shadow-card">
+          <section class="rounded-2xl border border-accent-soft/70 bg-white/95 p-6">
             <div class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-accent-soft text-3xl font-semibold text-ink">
               {{ request.user.first_name|default:request.user.phone|default:'?'|slice:':1'|upper }}
             </div>
@@ -48,7 +48,7 @@
             </div>
           </section>
 
-          <nav class="rounded-3xl border border-accent-soft/70 bg-white/95 p-4 shadow-card" aria-label="Навигация по профилю">
+          <nav class="rounded-2xl border border-accent-soft/70 bg-white/95 p-2" aria-label="Навигация по профилю">
             <ul class="space-y-2">
               <li>
                 <a href="#account" class="flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold text-ink transition hover:bg-accent-soft/60">
@@ -57,7 +57,7 @@
                 </a>
               </li>
               <li>
-                <a href="#orders" class="flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold text-ink transition hover:bg-accent-soft/60">
+                <a href="{% url 'users:order_history' %}" class="flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-semibold text-ink transition hover:bg-accent-soft/60">
                   <span>История заказов</span>
                   <i data-lucide="bookmark" class="h-4 w-4"></i>
                 </a>
@@ -73,7 +73,7 @@
         </aside>
 
         <section class="space-y-8" id="profile-main-content">
-          <section id="account" class="rounded-3xl border border-accent-soft/70 bg-white/95 p-6 shadow-card">
+          <section id="account" class="rounded-2xl border border-accent-soft/70 bg-white/95 p-6">
             <div class="flex flex-wrap items-baseline justify-between gap-3">
               <div>
                 <p class="text-xs font-semibold text-ink-muted">Контактные данные</p>
@@ -86,37 +86,55 @@
             </div>
           </section>
 
-          <section id="orders" class="rounded-3xl border border-accent-soft/70 bg-white/95 p-6 shadow-card">
+          <section id="orders" class="rounded-2xl border border-accent-soft/70 bg-white/95 p-6">
             <div class="flex flex-wrap items-baseline justify-between gap-3">
               <div>
                 <h2 class="text-2xl font-semibold text-ink">История заказов</h2>
+                <p class="text-sm text-ink-muted">Подробности доступные на отдельной странице.</p>
               </div>
-              <span class="rounded-full bg-paper px-3 py-1 text-xs font-semibold text-ink-muted">Скоро появится</span>
+              <a href="{% url 'users:order_history' %}" class="rounded-2xl border border-accent-soft px-4 py-2 text-sm font-semibold text-ink transition hover:border-accent hover:bg-accent-soft/60">
+                Открыть историю
+              </a>
             </div>
-            <div class="mt-6">
-              {% include 'users/partials/order_history.html' %}
-            </div>
-          </section>
 
-          <section class="rounded-3xl border border-accent-soft/70 bg-white/95 p-6 shadow-card">
-            <div class="flex flex-wrap items-baseline justify-between gap-3">
-              <div>
-                <h2 class="text-2xl font-semibold text-ink">Мы отобрали для вас</h2>
-              </div>
-              <a href="{% url 'main:catalog_all' %}" class="text-sm font-semibold text-ink underline decoration-accent">Перейти в каталог</a>
-            </div>
-            <div class="mt-6 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-              {% for product in recommended_products %}
-                {% include 'main/partials/_product-card.html' with product=product %}
-              {% empty %}
-                <p class="text-sm text-ink-muted">
-                  Мы готовим персональные рекомендации. Пока вы можете изучить <a href="{% url 'main:catalog_all' %}" class="text-ink underline decoration-accent">основной каталог</a>.
-                </p>
-              {% endfor %}
+            <div class="mt-6">
+              {% if last_order %}
+                <div class="flex flex-wrap justify-between gap-4 rounded-2xl border border-accent-soft/80 bg-white/90 p-5">
+                  <div>
+                    <p class="text-xs font-semibold uppercase tracking-[0.3em] text-ink-muted">Последний заказ</p>
+                    <p class="mt-1 text-2xl font-semibold text-ink">№{{ last_order.id }}</p>
+                    <p class="text-sm text-ink-muted">от {{ last_order.created_at|date:"d E Y, H:i" }}</p>
+                  </div>
+                  <div class="text-right">
+                    <p class="text-sm text-ink-muted">Сумма</p>
+                    <p class="text-xl font-semibold text-ink">{{ last_order.total_price }} ₽</p>
+                    <span class="mt-2 inline-flex rounded-full bg-accent-soft/70 px-3 py-1 text-xs font-semibold text-ink">{{ last_order.get_status_display|default:last_order.status }}</span>
+                  </div>
+                  <div class="flex w-full flex-wrap gap-3">
+                    <a href="{% url 'users:order_detail' last_order.id %}" class="inline-flex flex-1 items-center justify-center rounded-2xl bg-ink px-4 py-3 text-sm font-semibold text-white transition hover:bg-ink/90">
+                      Посмотреть детали
+                    </a>
+                    <a href="{% url 'users:order_history' %}" class="inline-flex flex-1 items-center justify-center rounded-2xl border border-accent-soft px-4 py-3 text-sm font-semibold text-ink transition hover:border-accent hover:bg-accent-soft/60">
+                      Все заказы
+                    </a>
+                  </div>
+                </div>
+              {% else %}
+                <div class="rounded-2xl border border-accent-soft/70 bg-paper/60 p-6 text-center">
+                  <p class="text-lg font-semibold text-ink">История заказов ещё пустая</p>
+                  <p class="mt-2 text-sm text-ink-muted">После оформления покупки здесь появится ссылку на подробности.</p>
+                  <a href="{% url 'main:catalog_all' %}" class="mt-4 inline-flex items-center justify-center rounded-xl bg-accent px-5 py-2 text-sm font-semibold text-graphite transition hover:bg-accent-dark">
+                    Найти книгу в каталоге
+                  </a>
+                </div>
+              {% endif %}
             </div>
           </section>
         </section>
       </div>
+        <div class="mt-2 md:mt-4">
+         {% include 'main/partials/_product-slider.html' with products=recommended_products title='Мы отобрали для вас' link=catalog_link compact=True %}
+        </div>
     </main>
 
     <section id="modal-root" class="mx-auto w-full my-container px-4 sm:px-6 lg:px-8" hx-target="this" hx-swap="innerHTML"></section>
