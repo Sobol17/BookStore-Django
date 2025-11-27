@@ -2,15 +2,47 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.template.response import TemplateResponse
 from .forms import CustomUserCreationForm, CustomUserLoginForm, \
-    CustomUserUpdateForm
+    CustomUserUpdateForm, STATIC_SMS_CODE
 from .models import CustomUser
 from django.contrib import messages
 from main.models import Product
 from favorites.services import merge_session_favorites
 from orders.models import Order
+from django.views.decorators.http import require_POST
+from common.phone import normalize_phone, PhoneValidationError
+
+
+@require_POST
+def request_sms_code(request):
+    phone_input = request.POST.get('phone', '')
+    flow = request.POST.get('flow', 'login')
+    try:
+        normalized_phone = normalize_phone(phone_input)
+    except PhoneValidationError as exc:
+        return JsonResponse({'ok': False, 'message': str(exc)}, status=400)
+
+    if flow == 'register':
+        if CustomUser.objects.filter(phone=normalized_phone).exists():
+            return JsonResponse(
+                {'ok': False, 'message': 'Номер телефона уже зарегистрирован'},
+                status=409,
+            )
+    elif flow == 'login':
+        if not CustomUser.objects.filter(phone=normalized_phone).exists():
+            return JsonResponse(
+                {'ok': False, 'message': 'Пользователь с таким телефоном не найден'},
+                status=404,
+            )
+
+    return JsonResponse({
+        'ok': True,
+        'message': f'Код отправлен. Для тестирования используйте {STATIC_SMS_CODE}.',
+        'phone': normalized_phone,
+        'code_hint': STATIC_SMS_CODE,
+    })
 
 
 def register(request):
@@ -21,6 +53,8 @@ def register(request):
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             merge_session_favorites(request, user)
             return redirect('main:index')
+        elif form.errors.get('sms_code'):
+            messages.error(request, 'Код неверный')
     else:
         form = CustomUserCreationForm()
     return render(request, 'users/register.html', {'form': form})
@@ -35,6 +69,10 @@ def login_view(request):
             merge_session_favorites(request, user)
             messages.success(request, '✅ Вы успешно вошли в аккаунт')
             return redirect('main:index')
+        else:
+            error_texts = [str(err).lower() for err in form.non_field_errors()]
+            if 'password' in form.errors or any('код' in err for err in error_texts):
+                messages.error(request, 'Код неверный')
     else:
         form = CustomUserLoginForm()
     return render(request, 'users/login.html', {'form': form})

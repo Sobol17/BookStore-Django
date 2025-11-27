@@ -17,7 +17,11 @@ class CustomUserCreationForm(forms.ModelForm):
         label='Код из SMS',
         max_length=4,
         widget=forms.TextInput(
-            attrs={'class': FIELD_STYLES, 'placeholder': 'Введите код 1234'}
+            attrs={
+                'class': FIELD_STYLES,
+                'placeholder': 'Введите код 1234',
+                'data-code-input': 'true',
+            }
         )
     )
 
@@ -32,6 +36,7 @@ class CustomUserCreationForm(forms.ModelForm):
                 attrs={
                     'class': FIELD_STYLES,
                     'placeholder': 'Телефон',
+                    'data-phone-input': 'true',
                     'data-phone-mask': 'true',
                     'inputmode': 'tel',
                     'autocomplete': 'tel',
@@ -71,6 +76,7 @@ class CustomUserLoginForm(AuthenticationForm):
             attrs={
                 'class': FIELD_STYLES,
                 'placeholder': 'Телефон',
+                'data-phone-input': 'true',
                 'data-phone-mask': 'true',
                 'inputmode': 'tel',
                 'autocomplete': 'tel',
@@ -80,7 +86,11 @@ class CustomUserLoginForm(AuthenticationForm):
     password = forms.CharField(
         label="Код из SMS",
         widget=forms.PasswordInput(
-            attrs={'class': FIELD_STYLES, 'placeholder': 'Введите код 1234'}
+            attrs={
+                'class': FIELD_STYLES,
+                'placeholder': 'Введите код 1234',
+                'data-code-input': 'true',
+            }
         )
     )
 

@@ -1,0 +1,160 @@
+<script>
+(() => {
+  if (window.initTwoStepAuthForms) {
+    document.addEventListener('DOMContentLoaded', window.initTwoStepAuthForms);
+    return;
+  }
+
+  function updatePhonePreview(form) {
+    const preview = form.querySelector('[data-phone-preview]');
+    const phoneInput = form.querySelector('[data-phone-input]');
+    if (preview && phoneInput) {
+      preview.textContent = phoneInput.value || '';
+    }
+  }
+
+  function setAlert(node, message, variant = 'info') {
+    if (!node) {
+      return;
+    }
+    node.classList.remove('hidden', 'border-blush/50', 'bg-blush/10', 'text-blush', 'border-mint/60', 'bg-mint/10', 'text-ink');
+    if (!message) {
+      node.classList.add('hidden');
+      node.textContent = '';
+      return;
+    }
+    node.textContent = message;
+    if (variant === 'error') {
+      node.classList.add('border-blush/50', 'bg-blush/10', 'text-blush');
+    } else {
+      node.classList.add('border-mint/60', 'bg-mint/10', 'text-ink');
+    }
+  }
+
+  function setStep(form, step) {
+    const target = step === 2 ? 2 : 1;
+    form.dataset.currentStep = String(target);
+    form.querySelectorAll('[data-step-section]').forEach((section) => {
+      const matches = section.dataset.stepSection === String(target);
+      section.classList.toggle('hidden', !matches);
+    });
+    const phoneInput = form.querySelector('[data-phone-input]');
+    if (phoneInput) {
+      if (target === 2) {
+        phoneInput.setAttribute('readonly', 'readonly');
+      } else {
+        phoneInput.removeAttribute('readonly');
+      }
+    }
+    updatePhonePreview(form);
+    if (target === 2) {
+      const codeInput = form.querySelector('[data-code-input]');
+      if (codeInput && typeof codeInput.focus === 'function') {
+        codeInput.focus();
+      }
+    }
+  }
+
+  function sendCode(form) {
+    const requestUrl = form.dataset.requestUrl;
+    const flow = form.dataset.flow || '';
+    const alertNode = form.querySelector('[data-step-alert]');
+    const phoneInput = form.querySelector('[data-phone-input]');
+    const sendButton = form.querySelector('[data-send-code]');
+    if (!phoneInput) {
+      return;
+    }
+
+    const phone = (phoneInput.value || '').trim();
+    if (!phone) {
+      setAlert(alertNode, 'Введите номер телефона', 'error');
+      phoneInput.focus();
+      return;
+    }
+
+    if (!requestUrl) {
+      setAlert(alertNode, 'Код отправлен. Используйте 1234 для тестирования.', 'success');
+      setStep(form, 2);
+      return;
+    }
+
+    if (sendButton) {
+      sendButton.disabled = true;
+      sendButton.dataset.loading = 'true';
+    }
+
+    const formData = new FormData();
+    formData.append('phone', phone);
+    if (flow) {
+      formData.append('flow', flow);
+    }
+
+    fetch(requestUrl, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-CSRFToken': window.getCookie ? (window.getCookie('csrftoken') || '') : '',
+      },
+    })
+      .then(async (response) => {
+        const data = await response.json().catch(() => ({}));
+        return { ok: response.ok, data };
+      })
+      .then(({ ok, data }) => {
+        if (ok) {
+          if (data && data.phone && phoneInput) {
+            phoneInput.value = data.phone;
+          }
+          updatePhonePreview(form);
+          setAlert(alertNode, (data && data.message) || 'Код отправлен.', 'success');
+          setStep(form, 2);
+        } else {
+          setAlert(alertNode, (data && data.message) || 'Не удалось отправить код', 'error');
+        }
+      })
+      .catch(() => {
+        setAlert(alertNode, 'Не удалось отправить код. Попробуйте ещё раз.', 'error');
+      })
+      .finally(() => {
+        if (sendButton) {
+          sendButton.disabled = false;
+          sendButton.dataset.loading = 'false';
+        }
+      });
+  }
+
+  function initTwoStepAuthForms() {
+    document.querySelectorAll('[data-two-step-form]').forEach((form) => {
+      const initialStep = Number(form.dataset.initialStep || '1');
+      updatePhonePreview(form);
+      setStep(form, initialStep > 1 ? 2 : 1);
+
+      const sendButton = form.querySelector('[data-send-code]');
+      if (sendButton) {
+        sendButton.addEventListener('click', () => sendCode(form));
+      }
+
+      const changeButton = form.querySelector('[data-change-phone]');
+      if (changeButton) {
+        changeButton.addEventListener('click', (event) => {
+          event.preventDefault();
+          setAlert(form.querySelector('[data-step-alert]'), '', 'info');
+          setStep(form, 1);
+          const phoneInput = form.querySelector('[data-phone-input]');
+          if (phoneInput) {
+            phoneInput.focus();
+          }
+        });
+      }
+
+      const phoneInput = form.querySelector('[data-phone-input]');
+      if (phoneInput) {
+        phoneInput.addEventListener('input', () => updatePhonePreview(form));
+      }
+    });
+  }
+
+  window.initTwoStepAuthForms = initTwoStepAuthForms;
+  document.addEventListener('DOMContentLoaded', initTwoStepAuthForms);
+})();
+</script>

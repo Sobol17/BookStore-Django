@@ -7,7 +7,7 @@
     {% include 'layout/partials/_header.html' %}
 
     <main class="mx-auto flex w-full my-container flex-1 flex-col px-4 py-10 sm:px-6 lg:px-8">
-      <div class="grid gap-8 lg:grid-cols-[minmax(0,480px)_1fr]">
+      <div class="grid gap-8 lg:grid-cols-[1fr_1fr] items-start">
         <section class="order-last rounded-3xl border border-accent-soft/60 bg-gradient-to-br from-coffee to-graphite p-8 text-white shadow-lamplight lg:order-first">
           <p class="text-xs font-semibold uppercase tracking-[0.1em] text-accent">Личный кабинет</p>
           <h1 class="mt-4 text-4xl font-serif leading-tight">Добро пожаловать в Dombb</h1>
@@ -55,28 +55,66 @@
             </div>
           {% endif %}
 
-          <form method="post" class="mt-8 space-y-6">
+          <form method="post"
+                class="mt-8 space-y-6"
+                data-two-step-form
+                data-request-url="{% url 'users:request_sms_code' %}"
+                data-flow="login"
+                data-initial-step="{% if form.is_bound %}2{% else %}1{% endif %}">
             {% csrf_token %}
-            {% for field in form %}
+
+            <div data-step-alert class="hidden rounded-xl border px-4 py-3 text-sm"></div>
+
+            <div class="space-y-6" data-step-section="1">
               <div class="space-y-2">
-                <label for="{{ field.id_for_label }}" class="text-sm font-medium text-ink">{{ field.label }}</label>
-                {{ field }}
-                {% if field.errors %}
-                  <p class="text-sm text-blush">{{ field.errors|striptags }}</p>
+                <label for="{{ form.username.id_for_label }}" class="text-sm font-medium text-ink block">Телефон</label>
+                {{ form.username }}
+                {% if form.username.errors %}
+                  <p class="text-sm text-blush">{{ form.username.errors|striptags }}</p>
+                {% else %}
+                  <p class="text-xs text-ink-muted">Укажите номер, на который пришлём код авторизации.</p>
                 {% endif %}
               </div>
-            {% endfor %}
 
-            <p class="text-xs text-ink-muted">Для тестирования введите код <span class="font-semibold">1234</span>.</p>
+              <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <button type="button" data-send-code class="basis-1/2 inline-flex items-center justify-center rounded-xl bg-accent px-6 py-3 text-sm font-semibold text-graphite transition hover:bg-accent-dark">
+                  Получить код
+                </button>
+                <a href="{% url 'users:register' %}"
+                   class="basis-1/2 inline-flex items-center justify-center rounded-xl border border-accent-soft px-6 py-3 text-sm font-semibold text-ink transition hover:border-accent hover:bg-accent-soft/50">
+                  Зарегистрироваться
+                </a>
+              </div>
+              <p class="text-xs text-ink-muted">После подтверждения перейдёте к вводу кода.</p>
+            </div>
 
-            <div class="flex flex-col gap-3">
-              <button type="submit" class="rounded-xl bg-accent px-6 py-3 text-sm font-semibold text-graphite transition hover:bg-accent-dark">
-                Войти
-              </button>
-              <a href="{% url 'users:register' %}"
-                 class="inline-flex items-center justify-center rounded-xl border border-accent-soft px-6 py-3 text-sm font-semibold text-ink transition hover:border-accent hover:bg-accent-soft/50">
-                Создать аккаунт
-              </a>
+            <div class="space-y-6 {% if form.is_bound %}{% else %}hidden{% endif %}" data-step-section="2">
+              <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-accent-soft/40 px-4 py-3 text-sm text-ink">
+                <p>Введите код, отправленный на <span class="font-semibold" data-phone-preview></span></p>
+                <button type="button" data-change-phone class="text-xs font-semibold text-accent underline decoration-2 underline-offset-4">
+                  Изменить номер
+                </button>
+              </div>
+
+              <div class="space-y-2">
+                <label for="{{ form.password.id_for_label }}" class="text-sm font-medium text-ink block">Код из SMS</label>
+                {{ form.password }}
+                {% if form.password.errors %}
+                  <p class="text-sm text-blush">{{ form.password.errors|striptags }}</p>
+                {% endif %}
+              </div>
+
+              <p class="text-xs text-ink-muted">Для тестирования введите код <span class="font-semibold">1234</span>.</p>
+
+              <div class="flex flex-col gap-3">
+                <button type="submit" class="rounded-xl bg-accent px-6 py-3 text-sm font-semibold text-graphite transition hover:bg-accent-dark">
+                  Войти
+                </button>
+                <a href="{% url 'users:register' %}"
+                   class="inline-flex items-center justify-center rounded-xl border border-accent-soft px-6 py-3 text-sm font-semibold text-ink transition hover:border-accent hover:bg-accent-soft/50">
+                  Зарегистрироваться
+                </a>
+              </div>
             </div>
           </form>
         </section>
@@ -89,5 +127,6 @@
   </div>
 
   {% include 'layout/footer-scripts.html' %}
+  {% include 'users/partials/two_step_script.html' %}
 </body>
 </html>
