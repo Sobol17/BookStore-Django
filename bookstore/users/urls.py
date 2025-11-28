@@ -2,7 +2,9 @@ from django.urls import path
 from .views import (
     register,
     login_view,
+    request_email_link,
     request_sms_code,
+    email_link_confirm,
     profile_view,
     account_details,
     edit_account_details,
@@ -17,6 +19,8 @@ app_name = 'users'
 urlpatterns = [
     path('register/', register, name='register'),
     path('login/', login_view, name='login'),
+    path('login/email/', email_link_confirm, name='email_link_confirm'),
+    path('request-email/', request_email_link, name='request_email_link'),
     path('request-sms/', request_sms_code, name='request_sms_code'),
     path('profile/', profile_view, name='profile'),
     path('account-details/', account_details, name='account_details'),

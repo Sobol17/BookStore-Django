@@ -71,15 +71,40 @@
             class="mt-2 w-full rounded-xl border border-accent/30 bg-white px-4 py-2 text-sm text-ink placeholder:text-ink-muted/70 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
           >
         </div>
-        <div>
-          <label for="modal-author" class="text-xs uppercase tracking-[0.3em] text-ink-muted">Автор</label>
-          <input
-            id="modal-author"
-            name="author"
-            type="text"
-            value="{{ filter_params.author }}"
-            class="mt-2 w-full rounded-xl border border-accent/30 bg-white px-4 py-2 text-sm text-ink placeholder:text-ink-muted/70 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
-          >
+        <div class="space-y-2" data-author-filter>
+          <div class="flex items-center justify-between">
+            <label class="text-xs uppercase tracking-[0.3em] text-ink-muted">Автор</label>
+            {% if selected_authors %}
+              <span class="rounded-full bg-accent-soft px-2 py-0.5 text-[10px] font-semibold text-ink">{{ selected_authors|length }}</span>
+            {% endif %}
+          </div>
+          <div class="relative">
+            <input
+              type="text"
+              placeholder="Найти"
+              class="w-full rounded-xl border border-accent/30 bg-white px-4 py-2 text-sm text-ink placeholder:text-ink-muted/70 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
+              data-author-search
+              autocomplete="off"
+            >
+            <i data-lucide="search" class="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted"></i>
+          </div>
+          <div class="max-h-64 space-y-2 overflow-y-auto" data-author-list data-collapsed="false">
+            {% for author in authors %}
+              <label class="flex items-start gap-2 text-sm text-ink">
+                <input
+                  type="checkbox"
+                  name="author"
+                  value="{{ author }}"
+                  class="mt-1 h-4 w-4 rounded border-accent-soft text-accent focus:ring-accent"
+                  {% if author in selected_authors %}checked{% endif %}
+                  data-author-name="{{ author|lower }}"
+                >
+                <span class="leading-tight">{{ author }}</span>
+              </label>
+            {% empty %}
+              <p class="text-sm text-ink-muted">Авторы не найдены.</p>
+            {% endfor %}
+          </div>
         </div>
       </div>
 

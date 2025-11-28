@@ -35,6 +35,7 @@ from .services import (
     apply_catalog_sorting,
     build_sorting_options,
     extract_hx_flags,
+    extract_selected_authors,
     CATALOG_SORT_OPTIONS,
 )
 
@@ -110,6 +111,56 @@ class IndexView(TemplateView):
         return TemplateResponse(request, self.template_name, context)
 
 
+class BookPurchaseView(TemplateView):
+    template_name = 'main/book_purchase.html'
+    form_class = BookPurchaseRequestForm
+
+    def get_context_data(self, **kwargs):
+        purchase_form = kwargs.pop('purchase_form', None)
+        purchase_form_success = kwargs.pop('purchase_form_success', None)
+        context = super().get_context_data(**kwargs)
+        if purchase_form is None:
+            purchase_form = self.form_class()
+        context['purchase_form'] = purchase_form
+        if purchase_form_success is None:
+            purchase_form_success = self.request.GET.get('purchase_submitted') == '1'
+        context['purchase_form_success'] = purchase_form_success
+        return context
+
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        return TemplateResponse(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            if request.headers.get('HX-Request'):
+                context = self.get_context_data(
+                    purchase_form=self.form_class(),
+                    purchase_form_success=True,
+                )
+                return TemplateResponse(
+                    request,
+                    'main/partials/_book_purchase_form.html',
+                    context,
+                )
+            redirect_url = f"{reverse('main:book_purchase')}?purchase_submitted=1"
+            return HttpResponseRedirect(redirect_url)
+        context = self.get_context_data(
+            purchase_form=form,
+            purchase_form_success=False,
+        )
+        if request.headers.get('HX-Request'):
+            return TemplateResponse(
+                request,
+                'main/partials/_book_purchase_form.html',
+                context,
+                status=400,
+            )
+        return TemplateResponse(request, self.template_name, context)
+
+
 class CatalogView(TemplateView):
     template_name = 'main/base.html'
 
@@ -119,11 +170,13 @@ class CatalogView(TemplateView):
         category_slug = kwargs.get('category_slug')
         categories = get_categories_with_products()
         products = get_published_products_queryset()
+        base_products = products
         current_category = None
         if category_slug:
             current_category = get_object_or_404(categories, slug=category_slug)
             products = products.filter(category=current_category)
-        products, filter_params, search_query, price_bounds = apply_catalog_filters(
+            base_products = base_products.filter(category=current_category)
+        products, filter_params, search_query, price_bounds, year_bounds = apply_catalog_filters(
             products,
             self.request.GET,
         )
@@ -136,6 +189,20 @@ class CatalogView(TemplateView):
         genres = Genre.objects.filter(category=current_category) if current_category else Genre.objects.all()
         genres = list(genres)
         all_genres = list(Genre.objects.select_related('category').all())
+        params_without_author = self.request.GET.copy()
+        params_without_author.setlist('author', [])
+        params_without_author['author'] = ''
+        authors_filtered, _, _, _, _ = apply_catalog_filters(
+            base_products,
+            params_without_author,
+        )
+        authors_list = list(
+            authors_filtered.exclude(authors='')
+            .values_list('authors', flat=True)
+            .distinct()
+            .order_by('authors')
+        )
+        selected_authors = extract_selected_authors(self.request.GET)
         paginator = Paginator(products, 15)
         page_obj = paginator.get_page(self.request.GET.get('page'))
         pagination = build_pagination(self.request, page_obj)
@@ -152,6 +219,7 @@ class CatalogView(TemplateView):
             'current_category_label': current_category.name if current_category else None,
             'filter_params': filter_params,
             'price_bounds': price_bounds,
+            'year_bounds': year_bounds,
             'genres': genres,
             'genre_filters': genre_filters,
             'genre_reset_url': genre_reset_url,
@@ -159,6 +227,8 @@ class CatalogView(TemplateView):
             'active_genres': active_genres,
             'all_genres': all_genres,
             'search_query': search_query,
+            'authors': authors_list,
+            'selected_authors': selected_authors,
             'is_catalog_page': True,
             'is_paginated': paginator.num_pages > 1,
             'page_obj': page_obj,
@@ -415,7 +485,7 @@ class AuthorSuggestView(View):
         context = super().get_context_data(**kwargs)
         query = self.request.GET.get('q', '').strip()
         products_queryset = get_published_products_queryset()
-        filtered_products, _, search_query, _ = apply_catalog_filters(
+        filtered_products, _, search_query, _, _ = apply_catalog_filters(
             products_queryset,
             self.request.GET,
         )

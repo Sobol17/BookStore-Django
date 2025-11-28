@@ -7,21 +7,33 @@ from django.http import QueryDict
 CATALOG_FILTERS = {
     'min_price': lambda queryset, value: queryset.filter(price__gte=value),
     'max_price': lambda queryset, value: queryset.filter(price__lte=value),
+    'min_year': lambda queryset, value: queryset.filter(year__gte=value),
+    'max_year': lambda queryset, value: queryset.filter(year__lte=value),
     'year': lambda queryset, value: queryset.filter(year=value),
-    'author': lambda queryset, value: queryset.filter(authors__icontains=value),
 }
+
+PRICE_PRESETS = [
+    {'key': 'lt_1500', 'label': 'до 1500 ₽', 'min': None, 'max': 1500},
+    {'key': '1500_3000', 'label': '1500–3000 ₽', 'min': 1500, 'max': 3000},
+    {'key': 'gt_3000', 'label': '3000 ₽ и дороже', 'min': 3000, 'max': None},
+]
+YEAR_ROUND_TO = 10
 
 CATALOG_SORT_OPTIONS = {
     'popular': {
         'label': 'По популярности',
         'order_by': '-created_at',
     },
+    'new': {
+        'label': 'Новинки',
+        'order_by': 'new',
+    },
     'price_asc': {
-        'label': 'Цена: по возрастанию',
+        'label': 'Дешевле',
         'order_by': 'price',
     },
     'price_desc': {
-        'label': 'Цена: по убыванию',
+        'label': 'Дороже',
         'order_by': '-price',
     },
 }
@@ -47,6 +59,23 @@ def extract_selected_genres(params: QueryDict) -> List[str]:
             clean_slug = slug.strip()
             if clean_slug and clean_slug not in selected:
                 selected.append(clean_slug)
+    return selected
+
+
+def extract_selected_authors(params: QueryDict) -> List[str]:
+    raw_values = params.getlist('author')
+    if not raw_values:
+        single_value = params.get('author')
+        if single_value:
+            raw_values = [single_value]
+    selected: List[str] = []
+    for raw in raw_values:
+        if not raw:
+            continue
+        for name in raw.split(','):
+            clean_name = name.strip()
+            if clean_name and clean_name not in selected:
+                selected.append(clean_name)
     return selected
 
 
@@ -108,14 +137,64 @@ def build_price_bounds(queryset: QuerySet) -> Dict[str, int]:
     }
 
 
+def build_year_bounds(queryset: QuerySet) -> Dict[str, int]:
+    aggregates = queryset.aggregate(
+        min_year=Min('year'),
+        max_year=Max('year'),
+    )
+    min_value = aggregates.get('min_year')
+    max_value = aggregates.get('max_year')
+    try:
+        min_value = int(min_value)
+    except (TypeError, ValueError):
+        min_value = 0
+    try:
+        max_value = int(max_value)
+    except (TypeError, ValueError):
+        max_value = min_value
+    if max_value < min_value:
+        max_value = min_value
+    if max_value == min_value:
+        max_value = min_value + 1
+    return {'min': min_value, 'max': max_value}
+
+
+def build_year_presets(bounds: Dict[str, int]) -> List[Dict[str, int]]:
+    import datetime
+
+    min_year = bounds.get('min', 0) or 0
+    max_year = bounds.get('max', min_year + 1) or (min_year + 1)
+    current_year = datetime.date.today().year
+
+    # align start to the closest lower decade
+    start_year = (min_year // YEAR_ROUND_TO) * YEAR_ROUND_TO if YEAR_ROUND_TO else min_year
+    if start_year <= 0:
+        start_year = 1900
+
+    presets: List[Dict[str, int]] = []
+    cursor = start_year
+    while cursor <= current_year:
+        upper = cursor + YEAR_ROUND_TO
+        label_end = upper if upper < current_year else current_year
+        presets.append({
+            'key': f'year_{cursor}_{label_end}',
+            'label': f'{cursor}–{label_end}',
+            'min': cursor,
+            'max': label_end,
+        })
+        cursor = upper
+
+    return presets
+
+
 def apply_catalog_filters(
     products: QuerySet,
     params: QueryDict,
-) -> Tuple[QuerySet, Dict[str, str], str, Dict[str, int]]:
+) -> Tuple[QuerySet, Dict[str, str], str, Dict[str, int], Dict[str, int]]:
     """
     Применяет поисковый запрос и набор фильтров из QueryDict к переданному queryset.
     Возвращает обновлённый queryset, словарь текущих параметров фильтра, строку поиска
-    и вычисленные границы цен для текущего набора товаров.
+    и вычисленные границы цен/годов для текущего набора товаров.
     """
     query = params.get('q')
     if query:
@@ -125,11 +204,20 @@ def apply_catalog_filters(
             | Q(publisher__icontains=query)
         )
 
-    filter_params: Dict[str, str] = {}
+    filter_params: Dict[str, str] = {
+        'min_price': '',
+        'max_price': '',
+        'price_range': params.get('price_range', ''),
+        'min_year': '',
+        'max_year': '',
+        'year_range': params.get('year_range', ''),
+        'author': '',
+    }
     price_keys = {'min_price', 'max_price'}
+    year_keys = {'min_year', 'max_year'}
     multi_keys = {'genre'}
     for key, filter_func in CATALOG_FILTERS.items():
-        if key in price_keys or key in multi_keys:
+        if key in price_keys or key in multi_keys or key in year_keys:
             continue
         value = params.get(key)
         if value:
@@ -145,19 +233,64 @@ def apply_catalog_filters(
     else:
         filter_params['genre'] = ''
 
-    price_bounds = build_price_bounds(products)
+    selected_authors = extract_selected_authors(params)
+    if selected_authors:
+        products = products.filter(authors__in=selected_authors)
+        filter_params['author'] = ','.join(selected_authors)
+    else:
+        filter_params['author'] = ''
 
-    for key in ('min_price', 'max_price'):
-        filter_func = CATALOG_FILTERS[key]
-        value = params.get(key)
-        if value:
-            products = filter_func(products, value)
-            filter_params[key] = value
-        else:
-            filter_params[key] = ''
+    price_bounds = build_price_bounds(products)
+    price_bounds['presets'] = PRICE_PRESETS
+    year_bounds = build_year_bounds(products)
+    year_bounds['presets'] = build_year_presets(year_bounds)
+
+    price_range = params.get('price_range')
+    if price_range:
+        filter_params['price_range'] = price_range
+    if price_range:
+        preset = next((p for p in PRICE_PRESETS if p['key'] == price_range), None)
+        if preset:
+            if preset['min'] is not None:
+                products = CATALOG_FILTERS['min_price'](products, preset['min'])
+                filter_params['min_price'] = str(preset['min'])
+            if preset['max'] is not None:
+                products = CATALOG_FILTERS['max_price'](products, preset['max'])
+                filter_params['max_price'] = str(preset['max'])
+    if not price_range:
+        for key in ('min_price', 'max_price'):
+            filter_func = CATALOG_FILTERS[key]
+            value = params.get(key)
+            if value:
+                products = filter_func(products, value)
+                filter_params[key] = value
+            else:
+                filter_params[key] = ''
+
+    year_range = params.get('year_range')
+    if year_range:
+        filter_params['year_range'] = year_range
+    if year_range:
+        preset = next((p for p in year_bounds['presets'] if p['key'] == year_range), None)
+        if preset:
+            if preset['min'] is not None:
+                products = CATALOG_FILTERS['min_year'](products, preset['min'])
+                filter_params['min_year'] = str(preset['min'])
+            if preset['max'] is not None:
+                products = CATALOG_FILTERS['max_year'](products, preset['max'])
+                filter_params['max_year'] = str(preset['max'])
+    if not year_range:
+        for key in ('min_year', 'max_year'):
+            filter_func = CATALOG_FILTERS[key]
+            value = params.get(key)
+            if value:
+                products = filter_func(products, value)
+                filter_params[key] = value
+            else:
+                filter_params[key] = ''
 
     filter_params['q'] = query or ''
-    return products, filter_params, query or '', price_bounds
+    return products, filter_params, query or '', price_bounds, year_bounds
 
 def apply_catalog_sorting(products: QuerySet, sort_key: str) -> Tuple[QuerySet, str]:
     """

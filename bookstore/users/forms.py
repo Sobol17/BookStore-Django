@@ -13,6 +13,17 @@ STATIC_SMS_CODE = '1234'
 
 
 class CustomUserCreationForm(forms.ModelForm):
+    email = forms.EmailField(
+        label='Email',
+        required=False,
+        widget=forms.EmailInput(
+            attrs={
+                'class': FIELD_STYLES,
+                'placeholder': 'Электронная почта',
+                'autocomplete': 'email',
+            }
+        ),
+    )
     sms_code = forms.CharField(
         label='Код из SMS',
         max_length=4,
@@ -27,7 +38,7 @@ class CustomUserCreationForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ('first_name', 'phone')
+        fields = ('first_name', 'phone', 'email')
         widgets = {
             'first_name': forms.TextInput(
                 attrs={'class': FIELD_STYLES, 'placeholder': 'Имя'}
@@ -54,6 +65,14 @@ class CustomUserCreationForm(forms.ModelForm):
             raise forms.ValidationError('Номер телефона уже зарегистрирован')
         return normalized
 
+    def clean_email(self):
+        email = (self.cleaned_data.get('email') or '').strip().lower()
+        if not email:
+            return ''
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError('Пользователь с таким email уже существует')
+        return email
+
     def clean_sms_code(self):
         code = self.cleaned_data.get('sms_code')
         if code != STATIC_SMS_CODE:
@@ -62,6 +81,7 @@ class CustomUserCreationForm(forms.ModelForm):
 
     def save(self, commit=True):
         user = super().save(commit=False)
+        user.email = self.cleaned_data.get('email') or None
         user.set_password(self.cleaned_data['sms_code'])
         if commit:
             user.save()
@@ -110,6 +130,22 @@ class CustomUserLoginForm(AuthenticationForm):
             elif not self.user_cache.is_active:
                 raise forms.ValidationError('Аккаунт деактивирован')
         return self.cleaned_data
+
+
+class EmailLoginRequestForm(forms.Form):
+    email = forms.EmailField(
+        label='Email',
+        widget=forms.EmailInput(
+            attrs={
+                'class': FIELD_STYLES,
+                'placeholder': 'name@example.com',
+                'autocomplete': 'email',
+            }
+        ),
+    )
+
+    def clean_email(self):
+        return (self.cleaned_data.get('email') or '').strip().lower()
 
 
 class CustomUserUpdateForm(forms.ModelForm):

@@ -1,7 +1,7 @@
 {% load static %}
-<header class="px-4 pt-6 sm:px-6 lg:px-8" x-data="{ mobileOpen: false, mobileSearchOpen: false }">
-  <div class="mx-auto w-full my-container rounded-[1.5rem] bg-white/95 px-4 md:px-8 py-6 ring-1 ring-accent-soft/70 backdrop-blur-sm">
-    <div class="flex flex-wrap items-center gap-4">
+<header class="sticky top-0 z-40 px-4 pt-3 sm:px-6 lg:px-8" x-data="{ mobileOpen: false, mobileSearchOpen: false }" data-sticky-header>
+  <div class="mx-auto w-full my-container rounded-[1.5rem] bg-white/95 px-4 md:px-8 py-6 ring-1 ring-accent-soft/70 backdrop-blur-sm shadow-sm transition-all duration-200">
+    <div class="flex flex-wrap items-center gap-4 pb-5" data-header-top>
 
       {% comment %} <div class="hidden md:flex items-center gap-2 text-sm text-ink-muted">
         <i data-lucide="map-pin" class="h-4 w-4 text-accent"></i>
@@ -15,7 +15,7 @@
         <a href="/about" class="transition hover:text-ink">Связаться</a>
       </nav>
     </div>
-    <div class="flex items-center gap-3 md:hidden">
+    <div class="flex items-center gap-3 md:hidden mb-5">
       <a href="{% url 'main:index' %}" class="flex flex-col leading-tight text-ink">
         <span class="text-[0.43rem] font-semibold text-accent-dark">Букинистика</span>
         <span class="text-xl font-black tracking-[0.05em]">DOMBB</span>
@@ -63,7 +63,7 @@
         </div>
       </div>
     </div>
-    <div class="mt-5 hidden gap-3 md:flex md:items-center">
+    <div class="hidden gap-3 md:flex md:items-center">
       <a href="{% url 'main:index' %}" class="flex-col leading-tight text-ink hidden md:flex">
         <span class="text-[0.83rem] font-semibold text-accent-dark">Букинистика</span>
         <span class="text-2xl font-black tracking-[0.05em]">DOMBB</span>
@@ -297,4 +297,30 @@ function openCart() {
         swap: 'innerHTML'
     });
 }
+
+function initStickyHeader() {
+    if (window.__stickyHeaderBound) return;
+    window.__stickyHeaderBound = true;
+    const header = document.querySelector('[data-sticky-header]');
+    if (!header) return;
+    const topRow = header.querySelector('[data-header-top]');
+    const container = header.querySelector('.my-container');
+
+    const apply = () => {
+        const isSticky = window.scrollY > 10;
+        header.classList.toggle('is-sticky', isSticky);
+        if (container) {
+            container.classList.toggle('shadow-md', isSticky);
+            container.classList.toggle('ring-accent-soft/90', isSticky);
+        }
+        if (topRow) {
+            topRow.classList.toggle('hidden', isSticky);
+        }
+    };
+
+    apply();
+    window.addEventListener('scroll', apply, { passive: true });
+}
+
+document.addEventListener('DOMContentLoaded', initStickyHeader);
 </script>

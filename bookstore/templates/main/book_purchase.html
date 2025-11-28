@@ -1,0 +1,84 @@
+{% load static %}
+
+{% include 'layout/head-metrics.html' %}
+
+<body class="min-h-screen font-sans text-ink antialiased">
+  <div class="min-h-screen bg-paper">
+    {% include 'layout/partials/_header.html' %}
+
+    <main class="mx-auto flex w-full my-container flex-1 flex-col px-4 py-10 sm:px-6 lg:px-8 space-y-8">
+      <section class="rounded-3xl border border-accent-soft/60 bg-white px-6 py-8 lg:px-10 lg:py-12">
+        <div class="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
+          <div class="space-y-4">
+            <h1 class="text-3xl font-semibold text-ink sm:text-4xl">Мы можем купить книги у вас</h1>
+            <p class="text-base text-ink-muted">
+              Покупаем редкие и коллекционные издания у частных владельцев. Пришлите описание и фото — куратор оценит экземпляр и предложит удобный формат сделки.
+            </p>
+            <ul class="space-y-3 text-sm text-ink">
+              <li class="flex items-start gap-3">
+                <span class="mt-1 h-2 w-2 shrink-0 rounded-full bg-graphite"></span>
+                Предварительная оценка в течение одного рабочего дня.
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="mt-1 h-2 w-2 shrink-0 rounded-full bg-graphite"></span>
+                Гибкие способы передачи: лично, курьером или почтой.
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="mt-1 h-2 w-2 shrink-0 rounded-full bg-graphite"></span>
+                Безопасные расчёты и бережная упаковка.
+              </li>
+            </ul>
+            <div class="space-y-2 rounded-2xl border border-accent-soft/60 bg-accent-soft/30 p-4">
+              <p class="text-sm font-semibold text-ink">Что не принимаем</p>
+              <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                <a href="/media/products/main/Harry_Potter_and_the_Prisoner_of_Azkaban__movie.jpg" class="overflow-hidden rounded-xl border border-accent-soft bg-white" data-fancybox="rejects" data-caption="Пример: массовый тираж фильма">
+                  <img src="/media/products/main/Harry_Potter_and_the_Prisoner_of_Azkaban__movie.jpg" alt="Пример книги, которую не принимаем" class="h-32 w-full object-contain">
+                </a>
+                <a href="/media/products/main/images.webp" class="overflow-hidden rounded-xl border border-accent-soft bg-white" data-fancybox="rejects" data-caption="Пример: современное переиздание">
+                  <img src="/media/products/main/images.webp" alt="Пример книги, которую не принимаем" class="h-32 w-full object-contain">
+                </a>
+                <a href="/media/products/main/__sHddjVV.jpeg" class="overflow-hidden rounded-xl border border-accent-soft bg-white" data-fancybox="rejects" data-caption="Пример: учебные/массовые издания">
+                  <img src="/media/products/main/__sHddjVV.jpeg" alt="Пример книги, которую не принимаем" class="h-32 w-full object-contain">
+                </a>
+              </div>
+              <p class="text-xs text-ink-muted">Учебники, репринты и массовые тиражи не рассматриваем.</p>
+            </div>
+            <div class="flex items-center gap-3 text-sm text-ink">
+              <span class="text-xs uppercase tracking-[0.2em] text-ink-muted">Связаться напрямую</span>
+              <div class="flex items-center gap-2">
+                <a href="https://t.me/dombb" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-accent-soft text-ink transition hover:border-accent hover:bg-accent-soft" aria-label="Telegram">
+                  <i data-lucide="send" class="h-5 w-5"></i>
+                </a>
+                <a href="https://wa.me/79999999999" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-accent-soft text-ink transition hover:border-accent hover:bg-accent-soft" aria-label="WhatsApp">
+                  <i data-lucide="message-circle" class="h-5 w-5"></i>
+                </a>
+                <a href="https://vk.com/dombb" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-accent-soft text-ink transition hover:border-accent hover:bg-accent-soft" aria-label="VK">
+                  <i data-lucide="link" class="h-5 w-5"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+          {% include 'main/partials/_book_purchase_form.html' %}
+        </div>
+      </section>
+    </main>
+
+    <section id="modal-root" class="mx-auto w-full my-container px-4 sm:px-6 lg:px-8" hx-target="this" hx-swap="innerHTML"></section>
+
+    {% include 'layout/partials/_footer.html' %}
+  </div>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css">
+  <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.Fancybox) {
+        window.Fancybox.bind('[data-fancybox="rejects"]', {
+          groupAll: true,
+        });
+      }
+    });
+  </script>
+  {% include 'layout/footer-scripts.html' %}
+</body>
+</html>

@@ -7,7 +7,7 @@
           <span class="text-2xl font-black tracking-[0.05em]">DOMBB</span>
         </a>
         <p class="text-sm text-ink-muted">
-          Букинистический магазин редких и антикварных изданий. С 2025 года подбираем книги с характером и историей.
+          Букинистический магазин редких и антикварных изданий. Работаем с 2005 года.
         </p>
       </div>
       <div class="space-y-3">
@@ -24,7 +24,8 @@
         <nav class="flex flex-col gap-2 text-sm text-ink-muted" hx-boost="true">
           <a href="{% url 'main:index' %}" class="transition hover:text-ink">Главная</a>
           <a href="{% url 'main:catalog_all' %}" class="transition hover:text-ink">Каталог</a>
-          <a href="#about" class="transition hover:text-ink">О коллекции</a>
+          <a href="{% url 'main:book_purchase' %}" class="transition hover:text-ink">Продать книгу</a>
+          <a href="{% url 'main:book_purchase' %}" class="transition hover:text-ink">Покупка ваших книг</a>
           <a href="#contacts" class="transition hover:text-ink">Связаться</a>
         </nav>
       </div>
@@ -33,6 +34,17 @@
         <p class="text-sm flex gap-x-2 items-center text-ink-muted"><i data-lucide="phone" class="h-5 w-5"></i> <a class='hover:underline' href="tel:+7 (999) 999-99-99">+7 (999) 999-99-99</a></p>
         <p class="text-sm flex gap-x-2 items-center text-ink-muted"><i data-lucide="mail" class="h-5 w-5"></i> <a class='hover:underline' href="mailto:mail@dombb.ru">mail@dombb.ru</a></p>
         <p class="text-sm flex gap-x-2 items-center text-ink-muted"><i data-lucide="clock" class="h-5 w-5"></i> пн‑сб 11:00 – 19:00</p>
+        <div class="flex items-center gap-3 pt-2 text-ink">
+          <a href="https://t.me/dombb" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-accent-soft text-ink transition hover:border-accent hover:bg-accent-soft" aria-label="Telegram">
+            <i data-lucide="send" class="h-5 w-5"></i>
+          </a>
+          <a href="https://wa.me/79999999999" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-accent-soft text-ink transition hover:border-accent hover:bg-accent-soft" aria-label="WhatsApp">
+            <i data-lucide="message-circle" class="h-5 w-5"></i>
+          </a>
+          <a href="https://vk.com/dombb" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-accent-soft text-ink transition hover:border-accent hover:bg-accent-soft" aria-label="VK">
+            <i data-lucide="link" class="h-5 w-5"></i>
+          </a>
+        </div>
       </div>
     </div>
     <div class="mt-12 flex flex-col items-start gap-4 border-t border-gray py-4 text-sm sm:flex-row sm:items-center sm:justify-between text-ink-muted">

@@ -185,4 +185,9 @@ DEEPSEEK_MODEL = os.getenv('DEEPSEEK_MODEL')
 DEEPSEEK_TIMEOUT = 30
 
 AUTH_USER_MODEL = 'users.CustomUser'
+
+# Email auth links
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'no-reply@bookstore.local')
+EMAIL_LINK_MAX_AGE = int(os.getenv('EMAIL_LINK_MAX_AGE', '1800'))
     

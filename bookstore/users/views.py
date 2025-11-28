@@ -1,10 +1,15 @@
+from urllib.parse import urlencode
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from django.http import HttpResponse, JsonResponse
 from django.template.response import TemplateResponse
-from .forms import CustomUserCreationForm, CustomUserLoginForm, \
+from django.core import signing
+from django.core.mail import send_mail
+from django.conf import settings
+from .forms import CustomUserCreationForm, CustomUserLoginForm, EmailLoginRequestForm, \
     CustomUserUpdateForm, STATIC_SMS_CODE
 from .models import CustomUser
 from django.contrib import messages
@@ -45,22 +50,143 @@ def request_sms_code(request):
     })
 
 
+@require_POST
+def request_email_link(request):
+    flow = request.POST.get('flow', 'login')
+    redirect_name = 'users:register' if flow == 'register' else 'users:login'
+    template_name = 'users/register.html' if flow == 'register' else 'users/login.html'
+    email_form = EmailLoginRequestForm(request.POST)
+
+    phone_form = CustomUserLoginForm(request=request)
+    register_form = CustomUserCreationForm()
+
+    if email_form.is_valid():
+        email = email_form.cleaned_data['email']
+        if flow == 'login':
+            user = CustomUser.objects.filter(email=email).first()
+            if not user:
+                messages.error(request, 'Пользователь с таким email не найден')
+                return redirect(redirect_name)
+            if not user.is_active:
+                messages.error(request, 'Аккаунт деактивирован')
+                return redirect(redirect_name)
+        else:
+            if CustomUser.objects.filter(email=email).exists():
+                messages.error(request, 'Email уже используется. Попробуйте войти.')
+                return redirect('users:login')
+
+        token = signing.dumps({'email': email, 'flow': flow})
+        confirm_url = request.build_absolute_uri(
+            reverse('users:email_link_confirm') + f'?{urlencode({"token": token})}'
+        )
+        subject = 'Ссылка для входа в аккаунт'
+        if flow == 'register':
+            subject = 'Подтверждение email для регистрации'
+        message = (
+            'Чтобы подтвердить email и продолжить, перейдите по ссылке:\n'
+            f'{confirm_url}\n\n'
+            'Если вы не запрашивали ссылку, просто игнорируйте это письмо.'
+        )
+        try:
+            send_mail(
+                subject,
+                message,
+                getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@bookstore.local'),
+                [email],
+                fail_silently=False,
+            )
+            messages.success(request, 'Мы отправили ссылку на вашу почту. Проверьте email, чтобы продолжить.')
+        except Exception:
+            messages.error(request, 'Не удалось отправить письмо. Попробуйте позже.')
+        return redirect(redirect_name)
+
+    context = {
+        'email_form': email_form,
+    }
+    if flow == 'register':
+        context['form'] = register_form
+    else:
+        context['form'] = phone_form
+    return render(request, template_name, context)
+
+
+def email_link_confirm(request):
+    token = request.GET.get('token') or ''
+    if not token:
+        messages.error(request, 'Ссылка недействительна или устарела')
+        return redirect('users:login')
+
+    try:
+        data = signing.loads(token, max_age=getattr(settings, 'EMAIL_LINK_MAX_AGE', 1800))
+    except signing.SignatureExpired:
+        messages.error(request, 'Ссылка устарела, запросите новую')
+        return redirect('users:login')
+    except signing.BadSignature:
+        messages.error(request, 'Ссылка недействительна')
+        return redirect('users:login')
+
+    email = data.get('email')
+    flow = data.get('flow', 'login')
+    if not email:
+        messages.error(request, 'Некорректная ссылка')
+        return redirect('users:login')
+
+    if flow == 'register':
+        if CustomUser.objects.filter(email=email).exists():
+            messages.error(request, 'Такой email уже использован. Попробуйте войти.')
+            return redirect('users:login')
+        request.session['verified_email'] = email
+        messages.success(request, 'Email подтверждён. Завершите регистрацию.')
+        return redirect('users:register')
+
+    user = CustomUser.objects.filter(email=email).first()
+    if not user:
+        messages.error(request, 'Пользователь с таким email не найден')
+        return redirect('users:login')
+    if not user.is_active:
+        messages.error(request, 'Аккаунт деактивирован')
+        return redirect('users:login')
+
+    login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+    merge_session_favorites(request, user)
+    messages.success(request, '✅ Вход по email выполнен')
+    return redirect('main:index')
+
+
 def register(request):
+    verified_email = request.session.get('verified_email')
+    email_form = EmailLoginRequestForm()
     if request.method == 'POST':
-        form = CustomUserCreationForm(request.POST)
+        data = request.POST.copy()
+        if verified_email:
+            data['email'] = verified_email
+        form = CustomUserCreationForm(data)
+        if verified_email and 'email' in form.fields:
+            form.fields['email'].widget.attrs['readonly'] = 'readonly'
         if form.is_valid():
             user = form.save()
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             merge_session_favorites(request, user)
+            request.session.pop('verified_email', None)
             return redirect('main:index')
         elif form.errors.get('sms_code'):
             messages.error(request, 'Код неверный')
     else:
-        form = CustomUserCreationForm()
-    return render(request, 'users/register.html', {'form': form})
+        initial = {}
+        if verified_email:
+            initial['email'] = verified_email
+        form = CustomUserCreationForm(initial=initial)
+        if verified_email and 'email' in form.fields:
+            form.fields['email'].widget.attrs['readonly'] = 'readonly'
+    return render(request, 'users/register.html', {
+        'form': form,
+        'email_form': email_form,
+        'verified_email': verified_email,
+    })
 
 
 def login_view(request):
+    email_form = EmailLoginRequestForm()
     if request.method == 'POST':
         form = CustomUserLoginForm(request=request, data=request.POST)
         if form.is_valid():
@@ -75,7 +201,7 @@ def login_view(request):
                 messages.error(request, 'Код неверный')
     else:
         form = CustomUserLoginForm()
-    return render(request, 'users/login.html', {'form': form})
+    return render(request, 'users/login.html', {'form': form, 'email_form': email_form})
 
 
 @login_required(login_url='/users/login')

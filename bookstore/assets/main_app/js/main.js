@@ -774,7 +774,6 @@ window.addProductCardToCart = function addProductCardToCart(productId) {
 			}
 			showProductCardQuantity(cards, data.cart_item_id, data.quantity || 1);
 			window.showNotification(data.message || 'Товар добавлен в корзину');
-			refreshCartModal();
 		})
 		.catch((error) => {
 			console.error('Error adding to cart', error);

@@ -1,4 +1,4 @@
-<aside class="space-y-6 rounded-3xl border border-accent-soft/60 bg-white p-6 self-start">
+<aside class="space-y-6 rounded-3xl border border-accent-soft/60 bg-white p-6 self-start w-[275px]">
   <h2 class="text-xl font-semibold text-ink">Фильтры</h2>
   <form
     action="."
@@ -12,136 +12,144 @@
   >
     <input type="hidden" name="sort" value="{{ current_sort|default:'popular' }}">
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
-      {% with slider_floor=price_bounds.min|default:0 slider_ceiling=price_bounds.max|default:200000 slider_step=price_bounds.step|default:100 %}
-        {% with slider_start=filter_params.min_price|default:slider_floor slider_end=filter_params.max_price|default:slider_ceiling %}
-          <div class="sm:col-span-2 lg:col-span-1 space-y-4">
-            <span class="range-filter__title">Цена, ₽</span>
-            <div
-              class="range-filter space-y-3"
-              x-data="window.rangeSlider({
-                min: {{ slider_floor }},
-                max: {{ slider_ceiling }},
-                from: {{ slider_start }},
-                to: {{ slider_end }},
-                step: {{ slider_step }}
-              })"
-              x-init="init($refs)"
-            >
-              <input type="hidden" name="min_price" :value="getLowerValue()">
-              <input type="hidden" name="max_price" :value="getUpperValue()">
-              <div
-                class="range-slider"
-                x-ref="slider"
-                @mouseleave="dragEnd"
-                @mousemove.window="drag($event)"
-                @touchmove.window.prevent="drag($event)"
-                @mouseup.window="dragEnd"
-                @touchend.window="dragEnd"
-              >
-                <div class="range-slider__track"></div>
-                <div
-                  class="range-slider__selection"
-                  :style="`width:${getWidth()}; left:${getMinPos()};`"
-                  aria-hidden="true"
-                ></div>
-                <div
-                  class="range-slider__handle"
-                  role="slider"
-                  tabindex="0"
-                  aria-label="Минимальная цена"
-                  :aria-valuemin="min"
-                  :aria-valuemax="max"
-                  :aria-valuenow="from"
-                  @mousedown.prevent="startDrag('from', $event)"
-                  @touchstart.prevent="startDrag('from', $event)"
-                  @keydown="handleKey($event, 'from')"
-                  :style="`left:${getFromPos()};`"
-                ></div>
-                <div
-                  class="range-slider__handle"
-                  role="slider"
-                  tabindex="0"
-                  aria-label="Максимальная цена"
-                  :aria-valuemin="min"
-                  :aria-valuemax="max"
-                  :aria-valuenow="to"
-                  @mousedown.prevent="startDrag('to', $event)"
-                  @touchstart.prevent="startDrag('to', $event)"
-                  @keydown="handleKey($event, 'to')"
-                  :style="`left:${getToPos()};`"
-                ></div>
-              </div>
-              <div class="range-display">
-                <span class="range-display__value">
-                  от <span x-text="formatValue(getLowerValue())"></span>
-                </span>
-                <span class="range-display__value text-right">
-                  до <span x-text="formatValue(getUpperValue())"></span>
-                </span>
-              </div>
-            </div>
-          </div>
-        {% endwith %}
-      {% endwith %}
-      <div>
-        <label for="year" class="text-sm font-semibold text-ink mb-1 block">Год издания</label>
-        <input
-          id="year"
-          name="year"
-          type="number"
-          placeholder="Введите год издания"
-          value="{{ filter_params.year }}"
-          class="input"
-        >
-      </div>
-      <div
-        x-data="authorAutocomplete('{{ filter_params.author|default:''|escapejs }}', '{% url 'main:author_suggest' %}')"
-        class="space-y-1"
-      >
-        <label for="author" class="text-sm font-semibold text-ink mb-1 block">Автор</label>
-        <div class="autocomplete" @click.away="closePanel()">
-          <input
-            id="author"
-            name="author"
-            type="text"
-            placeholder="Введите имя автора"
-            x-model="value"
-            @focus="openPanel()"
-            @input="handleInput"
-            @keydown.arrow-down.prevent="moveHighlight(1)"
-            @keydown.arrow-up.prevent="moveHighlight(-1)"
-            @keydown.enter.prevent="selectHighlighted()"
-            @keydown.escape="closePanel()"
-            value="{{ filter_params.author }}"
-            class="input"
-            autocomplete="off"
-            spellcheck="false"
-            aria-autocomplete="list"
-            :aria-expanded="open && suggestions.length ? 'true' : 'false'"
-            aria-controls="author-suggestions"
-          >
-          <div
-            id="author-suggestions"
-            class="autocomplete__panel"
-            x-show="open && suggestions.length"
-            x-cloak
-            role="listbox"
-          >
-            <template x-for="(item, index) in suggestions" :key="item">
-              <button
-                type="button"
-                class="autocomplete__item"
-                :class="{'autocomplete__item--active': index === highlightedIndex}"
-                @mousedown.prevent="select(item)"
-                @mouseenter="highlightedIndex = index"
-                role="option"
-                :aria-selected="index === highlightedIndex"
-              >
-                <span x-text="item"></span>
-              </button>
-            </template>
-          </div>
+      <div class="sm:col-span-2 lg:col-span-1 space-y-3">
+        <div class="flex items-center gap-2">
+          <span class="text-sm font-semibold text-ink">Цена</span>
+          <i data-lucide="info" class="h-4 w-4 text-ink-muted"></i>
         </div>
+        <div class="grid grid-cols-2 gap-3">
+          <input
+            type="number"
+            name="min_price"
+            inputmode="numeric"
+            min="0"
+            placeholder="{{ price_bounds.min }}"
+            value="{{ filter_params.min_price }}"
+            class="input"
+          >
+          <input
+            type="number"
+            name="max_price"
+            inputmode="numeric"
+            min="0"
+            placeholder="{{ price_bounds.max }}"
+            value="{{ filter_params.max_price }}"
+            class="input"
+          >
+        </div>
+        <div class="space-y-2">
+          {% for preset in price_bounds.presets %}
+            <label class="flex items-center gap-2 rounded-xl border border-accent-soft/60 px-3 py-2 text-sm font-medium text-ink transition hover:border-accent hover:bg-accent-soft/40">
+              <input
+                type="radio"
+                name="price_range"
+                value="{{ preset.key }}"
+                class="h-4 w-4 focus:ring-accent"
+                {% if filter_params.price_range == preset.key %}checked{% endif %}
+              >
+              <span>{{ preset.label }}</span>
+            </label>
+          {% endfor %}
+          <label class="flex items-center gap-2 rounded-xl border border-accent-soft/60 px-3 py-2 text-sm font-medium text-ink transition hover:border-accent hover:bg-accent-soft/40">
+            <input
+              type="radio"
+              name="price_range"
+              value=""
+              class="h-4 w-4 text-accent focus:ring-accent"
+              {% if not filter_params.price_range %}checked{% endif %}
+            >
+            <span>Неважно</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="space-y-3">
+        <div class="flex items-center gap-2">
+          <span class="text-sm font-semibold text-ink">Год издания</span>
+          <i data-lucide="info" class="h-4 w-4 text-ink-muted"></i>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <input
+            type="number"
+            name="min_year"
+            inputmode="numeric"
+            placeholder="{{ year_bounds.min }}"
+            value="{{ filter_params.min_year }}"
+            class="input"
+          >
+          <input
+            type="number"
+            name="max_year"
+            inputmode="numeric"
+            placeholder="{{ year_bounds.max }}"
+            value="{{ filter_params.max_year }}"
+            class="input"
+          >
+        </div>
+        <div class="space-y-2">
+          {% for preset in year_bounds.presets %}
+            <label class="flex items-center gap-2 rounded-xl border border-accent-soft/60 px-3 py-2 text-sm font-medium text-ink transition hover:border-accent hover:bg-accent-soft/40">
+              <input
+                type="radio"
+                name="year_range"
+                value="{{ preset.key }}"
+                class="h-4 w-4 text-accent focus:ring-accent"
+                {% if filter_params.year_range == preset.key %}checked{% endif %}
+              >
+              <span>{{ preset.label }}</span>
+            </label>
+          {% endfor %}
+          <label class="flex items-center gap-2 rounded-xl border border-accent-soft/60 px-3 py-2 text-sm font-medium text-ink transition hover:border-accent hover:bg-accent-soft/40">
+            <input
+              type="radio"
+              name="year_range"
+              value=""
+              class="h-4 w-4 text-accent focus:ring-accent"
+              {% if not filter_params.year_range %}checked{% endif %}
+            >
+            <span>Неважно</span>
+          </label>
+        </div>
+      </div>
+      <div class="space-y-3" data-author-filter>
+        <div class="flex items-center justify-between">
+          <span class="text-sm font-semibold text-ink">Автор</span>
+          {% if selected_authors %}
+            <span class="rounded-full bg-accent-soft px-2 py-0.5 text-xs font-semibold text-ink">{{ selected_authors|length }}</span>
+          {% endif %}
+        </div>
+        <div class="relative">
+          <input
+            type="text"
+            placeholder="Найти"
+            class="input"
+            data-author-search
+            autocomplete="off"
+          >
+          <i data-lucide="search" class="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted"></i>
+        </div>
+        <div class="max-h-48 overflow-hidden space-y-2 transition-[max-height]" data-author-list data-collapsed="true">
+          {% for author in authors %}
+            <label class="flex items-start gap-2 text-sm text-ink">
+              <input
+                type="checkbox"
+                name="author"
+                value="{{ author }}"
+                class="mt-1 h-4 w-4 rounded border-accent-soft text-accent focus:ring-accent"
+                {% if author in selected_authors %}checked{% endif %}
+                data-author-name="{{ author|lower }}"
+              >
+              <span class="leading-tight">{{ author }}</span>
+            </label>
+          {% empty %}
+            <p class="text-sm text-ink-muted">Авторы не найдены.</p>
+          {% endfor %}
+        </div>
+        {% if authors|length > 5 %}
+          <button type="button" class="text-sm font-semibold text-accent transition hover:text-graphite" data-author-toggle>
+            Посмотреть все
+          </button>
+        {% endif %}
       </div>
     </div>
     <div class="flex flex-wrap gap-3">
@@ -165,3 +173,54 @@
     </div>
   </form>
 </aside>
+
+<script>
+(() => {
+  if (window.initAuthorFilters) {
+    document.addEventListener('DOMContentLoaded', window.initAuthorFilters);
+    document.body.addEventListener('htmx:afterSwap', window.initAuthorFilters);
+    return;
+  }
+
+  function initAuthorFilters() {
+    document.querySelectorAll('[data-author-filter]').forEach((root) => {
+      const searchInput = root.querySelector('[data-author-search]');
+      const list = root.querySelector('[data-author-list]');
+      const toggle = root.querySelector('[data-author-toggle]');
+      const checkboxInputs = list ? Array.from(list.querySelectorAll('[data-author-name]')) : [];
+
+      const applyFilter = () => {
+        const term = (searchInput && searchInput.value || '').trim().toLowerCase();
+        checkboxInputs.forEach((input) => {
+          const row = input.closest('label');
+          const matches = !term || input.dataset.authorName.includes(term);
+          if (row) {
+            row.style.display = matches ? '' : 'none';
+          }
+        });
+      };
+
+      if (searchInput) {
+        searchInput.addEventListener('input', applyFilter);
+      }
+
+      if (toggle && list) {
+        const collapsedClass = 'max-h-48';
+        const expandedClass = 'max-h-96';
+        const setState = (collapsed) => {
+          list.dataset.collapsed = collapsed ? 'true' : 'false';
+          list.classList.toggle(collapsedClass, collapsed);
+          list.classList.toggle(expandedClass, !collapsed);
+          toggle.textContent = collapsed ? 'Посмотреть все' : 'Свернуть';
+        };
+        setState(true);
+        toggle.addEventListener('click', () => setState(list.dataset.collapsed === 'false'));
+      }
+    });
+  }
+
+  window.initAuthorFilters = initAuthorFilters;
+  document.addEventListener('DOMContentLoaded', initAuthorFilters);
+  document.body.addEventListener('htmx:afterSwap', initAuthorFilters);
+})();
+</script>
