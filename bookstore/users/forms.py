@@ -9,10 +9,21 @@ User = get_user_model()
 
 
 FIELD_STYLES = 'input text-sm font-medium text-ink placeholder:text-ink-muted/70 bg-white/90 border border-accent-soft focus:border-accent focus:ring-2 focus:ring-accent/60'
+SELECT_STYLES = 'w-full rounded-xl border border-accent/40 bg-white px-4 py-2 text-sm font-semibold text-ink transition focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30'
 STATIC_SMS_CODE = '1234'
 
 
 class CustomUserCreationForm(forms.ModelForm):
+    CONFIRM_CHOICES = (
+        ('email', 'Подтвердить через Email'),
+        ('phone', 'Подтвердить через Телефон'),
+    )
+    confirm_method = forms.ChoiceField(
+        choices=CONFIRM_CHOICES,
+        initial='email',
+        widget=forms.Select(attrs={'class': SELECT_STYLES}),
+        label='Способ подтверждения',
+    )
     email = forms.EmailField(
         label='Email',
         required=False,
@@ -25,6 +36,7 @@ class CustomUserCreationForm(forms.ModelForm):
         ),
     )
     sms_code = forms.CharField(
+        required=False,
         label='Код из SMS',
         max_length=4,
         widget=forms.TextInput(
@@ -38,7 +50,7 @@ class CustomUserCreationForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ('first_name', 'phone', 'email')
+        fields = ('first_name', 'phone', 'email', 'confirm_method')
         widgets = {
             'first_name': forms.TextInput(
                 attrs={'class': FIELD_STYLES, 'placeholder': 'Имя'}
@@ -74,9 +86,12 @@ class CustomUserCreationForm(forms.ModelForm):
         return email
 
     def clean_sms_code(self):
+        # SMS код требуется только если выбран телефон
+        method = self.cleaned_data.get('confirm_method')
         code = self.cleaned_data.get('sms_code')
-        if code != STATIC_SMS_CODE:
-            raise forms.ValidationError('Неверный код подтверждения')
+        if method == 'phone':
+            if code != STATIC_SMS_CODE:
+                raise forms.ValidationError('Неверный код подтверждения')
         return code
 
     def save(self, commit=True):

@@ -28,7 +28,7 @@
                 <p class="mt-2 text-sm text-white/75">Храните несколько адресов и переключайте их в один клик при оформлении.</p>
               </article>
               <article class="rounded-2xl border border-white/20 bg-white/5 p-5">
-                <p class="text-sm font-semibold uppercase tracking-[0.1em] text-accent">03</p>
+                <p class="text-sm font-semibold uppercase tracking-[0.1ем] text-accent">03</p>
                 <h3 class="mt-3 text-xl font-semibold">Контроль заказов</h3>
                 <p class="mt-2 text-sm text-white/75">Проверяйте статусы заказов и повторяйте заказы из истории.</p>
               </article>
@@ -39,7 +39,7 @@
         <section id="register-card" class="rounded-3xl border border-accent-soft/70 bg-white/95 p-8 shadow-card">
           <p class="text-xs font-semibold uppercase text-ink-muted">Регистрация</p>
           <h1 class="mt-3 text-3xl font-semibold text-ink">Создайте профиль</h1>
-          <p class="mt-2 text-sm text-ink-muted">Приоритет — подтверждение email. Затем можно завершить регистрацию по телефону.</p>
+          <p class="mt-2 text-sm text-ink-muted">Заполните данные и выберите способ подтверждения: email или телефон.</p>
 
           {% if messages %}
             <div class="mt-6 space-y-2">
@@ -55,112 +55,41 @@
 
           <div class="mt-8 space-y-8">
             <div class="rounded-2xl border border-accent-soft/70 bg-accent-soft/20 p-5 md:p-6">
-              <div class="flex items-center justify-between gap-3">
-                <div>
-                  <p class="text-xs font-semibold uppercase tracking-[0.08em] text-accent">Шаг 1</p>
-                  <h3 class="text-xl font-semibold text-ink">Подтвердите email</h3>
-                  <p class="text-sm text-ink-muted">Отправим верификационную ссылку. После подтверждения продолжите регистрацию.</p>
-                </div>
-                <i data-lucide="mail-open" class="hidden h-9 w-9 text-accent md:block"></i>
-              </div>
-              <form method="post" action="{% url 'users:request_email_link' %}" class="mt-4 space-y-4">
+              <h3 class="text-xl font-semibold text-ink">Регистрация</h3>
+              <form method="post" action="{% url 'users:register' %}" class="mt-4 space-y-4">
                 {% csrf_token %}
-                <input type="hidden" name="flow" value="register">
                 <div class="space-y-2">
-                  <label for="{{ email_form.email.id_for_label }}" class="text-sm font-medium text-ink block">Email</label>
-                  {{ email_form.email }}
-                  {% if email_form.email.errors %}
-                    <p class="text-sm text-blush">{{ email_form.email.errors|striptags }}</p>
-                  {% else %}
-                    <p class="text-xs text-ink-muted">Ссылка действует 30 минут. После клика вернёт вас к форме.</p>
+                  <label for="{{ form.first_name.id_for_label }}" class="text-sm font-medium text-ink block">Имя</label>
+                  {{ form.first_name }}
+                  {% if form.first_name.errors %}
+                    <p class="text-sm text-blush">{{ form.first_name.errors|striptags }}</p>
                   {% endif %}
                 </div>
-                <button type="submit" class="inline-flex w-full items-center justify-center rounded-xl bg-accent px-6 py-3 text-sm font-semibold text-graphite transition hover:bg-accent-dark">
-                  Отправить ссылку
-                </button>
-              </form>
-            </div>
-
-            <div class="rounded-2xl border border-accent-soft/70 bg-white p-5 md:p-6">
-              <div class="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p class="text-xs font-semibold uppercase tracking-[0.08em] text-ink-muted">Шаг 2</p>
-                  <h3 class="text-xl font-semibold text-ink">Завершите по телефону</h3>
-                  <p class="text-sm text-ink-muted">Используем SMS-код для подтверждения номера. Это резервный способ входа.</p>
+                <div class="space-y-2">
+                  <label for="{{ form.phone.id_for_label }}" class="text-sm font-medium text-ink block">Телефон</label>
+                  {{ form.phone }}
+                  {% if form.phone.errors %}
+                    <p class="text-sm text-blush">{{ form.phone.errors|striptags }}</p>
+                  {% else %}
+                    <p class="text-xs text-ink-muted">Для подтверждения по телефону потребуется код 1234.</p>
+                  {% endif %}
                 </div>
-                {% if verified_email %}
-                  <span class="inline-flex items-center gap-2 rounded-full bg-mint/30 px-3 py-1 text-xs font-semibold text-graphite">
-                    <i data-lucide="badge-check" class="h-4 w-4"></i> {{ verified_email }}
-                  </span>
-                {% endif %}
-              </div>
-
-              {% if form.non_field_errors %}
-                <div class="mt-4 rounded-xl border border-blush/40 bg-blush/10 px-4 py-3 text-sm text-blush">
-                  {% for error in form.non_field_errors %}
-                    <p>{{ error }}</p>
-                  {% endfor %}
+                <div class="space-y-2">
+                  <label for="{{ form.email.id_for_label }}" class="text-sm font-medium text-ink block">Email</label>
+                  {{ form.email }}
+                  {% if form.email.errors %}
+                    <p class="text-sm text-blush">{{ form.email.errors|striptags }}</p>
+                  {% else %}
+                    <p class="text-xs text-ink-muted">Для подтверждения по email отправим ссылку.</p>
+                  {% endif %}
                 </div>
-              {% endif %}
-
-              <form method="post"
-                    class="mt-6 space-y-6"
-                    data-two-step-form
-                    data-request-url="{% url 'users:request_sms_code' %}"
-                    data-flow="register"
-                    data-initial-step="{% if form.is_bound %}2{% else %}1{% endif %}">
-                {% csrf_token %}
-
-                <div data-step-alert class="hidden rounded-xl border px-4 py-3 text-sm"></div>
-
-                <div class="space-y-6" data-step-section="1">
-                  <div class="space-y-2">
-                    <label for="{{ form.phone.id_for_label }}" class="text-sm font-medium text-ink">Номер телефона</label>
-                    {{ form.phone }}
-                    {% if form.phone.errors %}
-                      <p class="text-sm text-blush">{{ form.phone.errors|striptags }}</p>
-                    {% else %}
-                      <p class="text-xs text-ink-muted">Отправим код подтверждения на указанный номер.</p>
-                    {% endif %}
-                  </div>
-
-                  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <button type="button" data-send-code class="basis-full inline-flex items-center justify-center rounded-xl bg-ink text-white px-6 py-3 text-sm font-semibold transition hover:bg-ink/90">
-                      Получить код
-                    </button>
-                  </div>
+                <div class="space-y-2">
+                  <label class="text-sm font-medium text-ink block">Способ подтверждения</label>
+                  {{ form.confirm_method }}
                 </div>
-
-                <div class="space-y-6 {% if form.is_bound %}{% else %}hidden{% endif %}" data-step-section="2">
-                  <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-accent-soft/40 px-4 py-3 text-sm text-ink">
-                    <p>Мы отправили код на <span class="font-semibold" data-phone-preview></span></p>
-                    <button type="button" data-change-phone class="text-xs font-semibold text-accent underline decoration-2 underline-offset-4">
-                      Изменить номер
-                    </button>
-                  </div>
-
+                <div class="space-y-3" data-sms-section>
                   <div class="space-y-2">
-                    <label for="{{ form.email.id_for_label }}" class="text-sm font-medium text-ink block">Email</label>
-                    {{ form.email }}
-                    {% if form.email.errors %}
-                      <p class="text-sm text-blush">{{ form.email.errors|striptags }}</p>
-                    {% elif verified_email %}
-                      <p class="text-xs text-ink-muted">Email подтверждён ссылкой.</p>
-                    {% else %}
-                      <p class="text-xs text-ink-muted">Укажите почту для входа по email.</p>
-                    {% endif %}
-                  </div>
-
-                  <div class="space-y-2">
-                    <label for="{{ form.first_name.id_for_label }}" class="text-sm font-medium text-ink block">Имя</label>
-                    {{ form.first_name }}
-                    {% if form.first_name.errors %}
-                      <p class="text-sm text-blush">{{ form.first_name.errors|striptags }}</p>
-                    {% endif %}
-                  </div>
-
-                  <div class="space-y-2">
-                    <label for="{{ form.sms_code.id_for_label }}" class="text-sm font-medium text-ink">Код из SMS</label>
+                    <label for="{{ form.sms_code.id_for_label }}" class="text-sm font-medium text-ink block">Код из SMS</label>
                     {{ form.sms_code }}
                     {% if form.sms_code.errors %}
                       <p class="text-sm text-blush">{{ form.sms_code.errors|striptags }}</p>
@@ -168,19 +97,17 @@
                       <p class="text-xs text-ink-muted">Для тестирования используйте код <span class="font-semibold">1234</span>.</p>
                     {% endif %}
                   </div>
-
-                  <p class="text-xs text-ink-muted/80">
-                    Отправляя форму, вы подтверждаете своё согласие с <a href="/privacy" class="text-ink underline decoration-accent">политикой конфиденциальности</a> и условиями сервиса.
-                  </p>
-
-                  <div class="flex flex-col gap-3">
-                    <button type="submit" class="rounded-xl bg-accent px-6 py-3 text-sm font-semibold text-graphite transition hover:bg-accent-dark">
-                      Создать аккаунт
-                    </button>
-                    <a href="{% url 'users:login' %}" class="inline-flex items-center justify-center rounded-xl border border-accent-soft px-6 py-3 text-sm font-semibold text-ink transition hover:border-accent hover:bg-accent-soft/50">
-                      Уже есть аккаунт? Войти
-                    </a>
+                  <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <button type="button" data-send-sms class="inline-flex items-center justify-center rounded-xl bg-ink px-5 py-2 text-sm font-semibold text-white transition hover:bg-ink/90">Отправить код</button>
+                    <p class="text-xs text-ink-muted" data-sms-status>Введите телефон и отправьте код для подтверждения.</p>
                   </div>
+                </div>
+                <p class="text-xs text-ink-muted/80">
+                  Отправляя форму, вы подтверждаете своё согласие с <a href="/privacy" class="text-ink underline decoration-accent">политикой конфиденциальности</a> и условиями сервиса.
+                </p>
+                <div class="flex flex-col gap-3">
+                  <button type="submit" class="rounded-xl bg-accent px-6 py-3 text-sm font-semibold text-graphite transition hover:bg-accent-dark">Создать аккаунт</button>
+                  <a href="{% url 'users:login' %}" class="inline-flex items-center justify-center rounded-xl border border-accent-soft px-6 py-3 text-sm font-semibold text-ink transition hover:border-accent hover:bg-accent-soft/50">Уже есть аккаунт? Войти</a>
                 </div>
               </form>
             </div>
@@ -195,6 +122,104 @@
   </div>
 
   {% include 'layout/footer-scripts.html' %}
-  {% include 'users/partials/two_step_script.html' %}
+  <script>
+    (function() {
+      var confirmSelect;
+      var smsSection;
+      var sendButton;
+      var statusEl;
+      var phoneInput;
+      var formEl;
+
+      function initElements() {
+        confirmSelect = document.querySelector('select[name="confirm_method"]');
+        smsSection = document.querySelector('[data-sms-section]');
+        sendButton = document.querySelector('[data-send-sms]');
+        statusEl = document.querySelector('[data-sms-status]');
+        phoneInput = document.querySelector('input[name="phone"]');
+        formEl = document.querySelector('#register-card form');
+      }
+
+      function toggleSmsSection() {
+        if (!smsSection) return;
+        var method = confirmSelect ? confirmSelect.value : 'email';
+        smsSection.style.display = method === 'phone' ? '' : 'none';
+      }
+
+      function setStatus(message, variant) {
+        if (!statusEl) return;
+        statusEl.textContent = message;
+        statusEl.classList.remove('text-ink-muted', 'text-blush', 'text-mint');
+        if (variant === 'error') {
+          statusEl.classList.add('text-blush');
+        } else if (variant === 'success') {
+          statusEl.classList.add('text-mint');
+        } else {
+          statusEl.classList.add('text-ink-muted');
+        }
+      }
+
+      function requestSmsCode() {
+        if (!confirmSelect || confirmSelect.value !== 'phone') {
+          setStatus('Выберите подтверждение по телефону.', 'error');
+          return;
+        }
+        if (!phoneInput || !phoneInput.value.trim()) {
+          setStatus('Укажите номер телефона.', 'error');
+          return;
+        }
+        if (!formEl) return;
+        var csrfInput = formEl.querySelector('input[name="csrfmiddlewaretoken"]');
+        if (!csrfInput) return;
+
+        sendButton.disabled = true;
+        setStatus('Отправляем код...', 'info');
+
+        var body = new URLSearchParams({
+          phone: phoneInput.value,
+          flow: 'register'
+        });
+
+        fetch("{% url 'users:request_sms_code' %}", {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': csrfInput.value,
+          },
+          body: body.toString(),
+        })
+          .then(function(response) {
+            return response.json().then(function(data) {
+              return { ok: response.ok, data: data };
+            });
+          })
+          .then(function(result) {
+            if (result.ok && result.data && result.data.ok) {
+              setStatus(result.data.message || 'Код отправлен. Для тестирования используйте 1234.', 'success');
+            } else {
+              var message = (result.data && result.data.message) || 'Не удалось отправить код.';
+              setStatus(message, 'error');
+            }
+          })
+          .catch(function() {
+            setStatus('Не удалось отправить код. Попробуйте позже.', 'error');
+          })
+          .finally(function() {
+            sendButton.disabled = false;
+          });
+      }
+
+      document.addEventListener('DOMContentLoaded', function() {
+        initElements();
+        if (confirmSelect) {
+          confirmSelect.addEventListener('change', toggleSmsSection);
+        }
+        if (sendButton) {
+          sendButton.addEventListener('click', requestSmsCode);
+        }
+        toggleSmsSection();
+      });
+    })();
+  </script>
 </body>
 </html>

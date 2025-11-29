@@ -148,9 +148,24 @@ def email_link_confirm(request):
         if CustomUser.objects.filter(email=email).exists():
             messages.error(request, 'Такой email уже использован. Попробуйте войти.')
             return redirect('users:login')
-        request.session['verified_email'] = email
-        messages.success(request, 'Email подтверждён. Завершите регистрацию.')
-        return redirect('users:register')
+        pending = request.session.get('pending_registration') or {}
+        first_name = pending.get('first_name')
+        phone = pending.get('phone')
+        if not first_name or not phone:
+            messages.error(request, 'Не удалось завершить регистрацию. Повторите попытку.')
+            return redirect('users:register')
+        user = CustomUser.objects.create(
+            first_name=first_name,
+            phone=phone,
+            email=email,
+        )
+        user.set_password(STATIC_SMS_CODE)
+        user.save()
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+        merge_session_favorites(request, user)
+        request.session.pop('pending_registration', None)
+        messages.success(request, 'Email подтверждён. Регистрация завершена.')
+        return redirect('main:index')
 
     user = CustomUser.objects.filter(email=email).first()
     if not user:
@@ -167,34 +182,56 @@ def email_link_confirm(request):
 
 
 def register(request):
-    verified_email = request.session.get('verified_email')
-    email_form = EmailLoginRequestForm()
     if request.method == 'POST':
         data = request.POST.copy()
-        if verified_email:
-            data['email'] = verified_email
         form = CustomUserCreationForm(data)
-        if verified_email and 'email' in form.fields:
-            form.fields['email'].widget.attrs['readonly'] = 'readonly'
         if form.is_valid():
-            user = form.save()
-            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-            merge_session_favorites(request, user)
-            request.session.pop('verified_email', None)
-            return redirect('main:index')
-        elif form.errors.get('sms_code'):
-            messages.error(request, 'Код неверный')
+            method = form.cleaned_data.get('confirm_method')
+            if method == 'email':
+                email = form.cleaned_data.get('email')
+                if not email:
+                    messages.error(request, 'Укажите email для подтверждения')
+                else:
+                    token = signing.dumps({'email': email, 'flow': 'register'})
+                    confirm_url = request.build_absolute_uri(
+                        reverse('users:email_link_confirm') + f'?{urlencode({"token": token})}'
+                    )
+                    subject = 'Подтверждение email для регистрации'
+                    message = (
+                        'Чтобы подтвердить email и завершить регистрацию, перейдите по ссылке:\n'
+                        f'{confirm_url}\n\n'
+                        'Если вы не запрашивали ссылку, просто игнорируйте это письмо.'
+                    )
+                    try:
+                        send_mail(
+                            subject,
+                            message,
+                            getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@bookstore.local'),
+                            [email],
+                            fail_silently=False,
+                        )
+                        request.session['pending_registration'] = {
+                            'first_name': form.cleaned_data.get('first_name'),
+                            'phone': form.cleaned_data.get('phone'),
+                            'email': email,
+                        }
+                        messages.success(request, 'Мы отправили ссылку на вашу почту. Проверьте email, чтобы завершить регистрацию.')
+                        form = CustomUserCreationForm()
+                    except Exception:
+                        messages.error(request, 'Не удалось отправить письмо. Попробуйте позже.')
+            else:
+                if form.errors.get('sms_code'):
+                    messages.error(request, 'Код неверный')
+                else:
+                    user = form.save()
+                    login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+                    merge_session_favorites(request, user)
+                    return redirect('main:index')
     else:
-        initial = {}
-        if verified_email:
-            initial['email'] = verified_email
-        form = CustomUserCreationForm(initial=initial)
-        if verified_email and 'email' in form.fields:
-            form.fields['email'].widget.attrs['readonly'] = 'readonly'
+        form = CustomUserCreationForm()
+
     return render(request, 'users/register.html', {
         'form': form,
-        'email_form': email_form,
-        'verified_email': verified_email,
     })
 
 
