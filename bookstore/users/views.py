@@ -8,6 +8,7 @@ from django.http import HttpResponse, JsonResponse
 from django.template.response import TemplateResponse
 from django.core import signing
 from django.core.mail import send_mail
+import logging
 from django.conf import settings
 from .forms import CustomUserCreationForm, CustomUserLoginForm, EmailLoginRequestForm, \
     CustomUserUpdateForm, STATIC_SMS_CODE
@@ -96,7 +97,19 @@ def request_email_link(request):
                 fail_silently=False,
             )
             messages.success(request, 'Мы отправили ссылку на вашу почту. Проверьте email, чтобы продолжить.')
-        except Exception:
+        except Exception as exc:
+            logger = logging.getLogger(__name__)
+            # Log the exception with key email settings to help diagnose prod SMTP issues
+            logger.exception(
+                'Email send failed: %s | backend=%s host=%s port=%s use_tls=%s use_ssl=%s from=%s',
+                exc,
+                getattr(settings, 'EMAIL_BACKEND', None),
+                getattr(settings, 'EMAIL_HOST', None),
+                getattr(settings, 'EMAIL_PORT', None),
+                getattr(settings, 'EMAIL_USE_TLS', None),
+                getattr(settings, 'EMAIL_USE_SSL', None),
+                getattr(settings, 'DEFAULT_FROM_EMAIL', None),
+            )
             messages.error(request, 'Не удалось отправить письмо. Попробуйте позже.')
         return redirect(redirect_name)
 
