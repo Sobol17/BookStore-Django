@@ -175,34 +175,38 @@
               Авторы: {{ object.authors }}
             </p>
           {% endif %}
-          <div class="mt-2 md:mt-4 flex flex-wrap items-center gap-3 text-sm text-ink-muted">
-            <div class="flex items-center gap-1 text-lg leading-none">
-              {% for star in rating_stars %}
-                {% if star == 'full' %}
-                  <span class="text-accent">★</span>
-                {% elif star == 'half' %}
-                  <span class="bg-gradient-to-r from-accent to-accent-dark bg-clip-text text-transparent">★</span>
-                {% else %}
-                  <span class="text-ink-muted/40">★</span>
-                {% endif %}
-              {% endfor %}
-            </div>
-            {% if rating_value %}
-              <span class="font-semibold text-ink">{{ rating_value|floatformat:1 }}</span>
-            {% endif %}
-            {% if reviews_count %}
-              <span>
-                {% if reviews_count == 1 %}
-                  1 отзыв
-                {% elif reviews_count < 5 %}
-                  {{ reviews_count }} отзыва
-                {% else %}
-                  {{ reviews_count }} отзывов
-                {% endif %}
-              </span>
-            {% else %}
-              <span>Отзывов пока нет</span>
-            {% endif %}
+          <div class="mt-2 md:mt-4 text-sm text-ink-muted">
+            {% with total_reviews=reviews_count|default:reviews_total %}
+              {% if total_reviews %}
+                <div class="flex flex-wrap items-center gap-3">
+                  <div class="flex items-center gap-1 text-lg leading-none">
+                    {% for star in rating_stars %}
+                      {% if star == 'full' %}
+                        <span class="text-amber-500">★</span>
+                      {% elif star == 'half' %}
+                        <span class="bg-gradient-to-r from-accent to-accent-dark bg-clip-text text-transparent">★</span>
+                      {% else %}
+                        <span class="text-ink-muted/40">★</span>
+                      {% endif %}
+                    {% endfor %}
+                  </div>
+                  {% if rating_value %}
+                    <span class="font-semibold text-graphite">{{ rating_value|floatformat:1 }}</span>
+                  {% endif %}
+                  <span>
+                    {% if total_reviews == 1 %}
+                      1 отзыв
+                    {% elif total_reviews < 5 %}
+                      {{ total_reviews }} отзыва
+                    {% else %}
+                      {{ total_reviews }} отзывов
+                    {% endif %}
+                  </span>
+                </div>
+              {% else %}
+                <span>Отзывов пока нет</span>
+              {% endif %}
+            {% endwith %}
           </div>
         </div>
 
@@ -252,15 +256,6 @@
                 </div>
               </div>
             </div>
-            <button
-              type="button"
-              class="w-full rounded-xl border border-accent px-6 py-3 text-xs font-semibold text-graphite transition hover:bg-accent-soft sm:w-auto"
-              hx-get="{% url 'main:product_stock_notify' object.slug %}"
-              hx-target="#modal-root"
-              hx-swap="innerHTML"
-            >
-              Сообщить о поступлении
-            </button>
             {% with favorite=favorite_items_map|dict_get:object.id %}
               <button
                 type="button"
@@ -276,6 +271,15 @@
               </button>
             {% endwith %}
           </div>
+        <button
+          type="button"
+          class="mt-4 w-full rounded-xl border border-accent px-6 py-3 text-xs font-semibold text-graphite transition hover:bg-accent-soft sm:w-auto"
+          hx-get="{% url 'main:product_stock_notify' object.slug %}"
+          hx-target="#modal-root"
+          hx-swap="innerHTML"
+        >
+          Сообщить о поступлении
+        </button>
           <p class="mt-4 flex items-center gap-2 text-xs text-ink-muted">
             <i data-lucide="clock" class="h-4 w-4"></i>
             Отправим заказ в течение 3 рабочих дней

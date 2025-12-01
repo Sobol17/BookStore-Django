@@ -78,27 +78,29 @@
         <p class="text-xs font-semibold text-ink-muted">{{ product.genre }}</p>
       {% endif %}
 
-      <div class="mt-2 flex items-center gap-2 text-xs text-ink">
-        <div class="flex items-center gap-0.5">
-          {% for _ in "12345"|make_list %}
-            {% if product.reviews_total and forloop.counter <= product.reviews_average %}
-              <svg class="h-3.5 w-3.5 text-amber-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                <path d="M10 1.5l2.472 5.012 5.528.804-4 3.898.944 5.506L10 14.77l-4.944 2.95.944-5.506-4-3.898 5.528-.804z" />
-              </svg>
-            {% else %}
-              <svg class="h-3.5 w-3.5 text-ink-muted/60" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                <path d="M10 1.5l2.472 5.012 5.528.804-4 3.898.944 5.506L10 14.77l-4.944 2.95.944-5.506-4-3.898 5.528-.804z" />
-              </svg>
-            {% endif %}
-          {% endfor %}
-        </div>
-        <span class="text-ink-muted">
-          {% if product.reviews_total %}
-            {{ product.reviews_total }} отзыв{{ product.reviews_total|pluralize:"ов" }}
-          {% else %}
-            0 отзывов
-          {% endif %}
-        </span>
+      <div class="mt-2 text-xs text-ink">
+        {% if product.reviews_total %}
+          <div class="flex items-center gap-2">
+            <div class="flex items-center gap-0.5">
+              {% for _ in "12345"|make_list %}
+                {% if forloop.counter <= product.reviews_average %}
+                  <svg class="h-3.5 w-3.5 text-amber-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path d="M10 1.5l2.472 5.012 5.528.804-4 3.898.944 5.506L10 14.77l-4.944 2.95.944-5.506-4-3.898 5.528-.804z" />
+                  </svg>
+                {% else %}
+                  <svg class="h-3.5 w-3.5 text-ink-muted/60" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path d="M10 1.5l2.472 5.012 5.528.804-4 3.898.944 5.506L10 14.77l-4.944 2.95.944-5.506-4-3.898 5.528-.804z" />
+                  </svg>
+                {% endif %}
+              {% endfor %}
+            </div>
+            <span class="text-ink-muted">
+              {{ product.reviews_total }} отзыв{{ product.reviews_total|pluralize:"ов" }}
+            </span>
+          </div>
+        {% else %}
+          <span class="text-ink-muted">Отзывов пока нет</span>
+        {% endif %}
       </div>
     </div>
   </a>

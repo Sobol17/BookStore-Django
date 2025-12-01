@@ -265,6 +265,7 @@ class ProductDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         product = self.get_object()
+        reviews_context = build_product_reviews_context(product)
         context['categories'] = get_categories_with_products()
         context['related_products'] = get_related_products(product, limit=8)
         gallery_images = []
@@ -285,6 +286,10 @@ class ProductDetailView(DetailView):
             getattr(product, 'reviews_count', None)
             or getattr(product, 'review_count', None)
         )
+        if rating_value is None and reviews_context.get('reviews_average'):
+            rating_value = reviews_context['reviews_average']
+        if reviews_count is None:
+            reviews_count = reviews_context.get('reviews_total')
         if rating_value is not None:
             try:
                 rating_value = float(rating_value)
@@ -334,7 +339,7 @@ class ProductDetailView(DetailView):
         cart_item = cart.items.filter(product=product).first()
         context['product_cart_item'] = cart_item
         context['product_cart_quantity'] = cart_item.quantity if cart_item else 0
-        context.update(build_product_reviews_context(product))
+        context.update(reviews_context)
         return context
     
     def get(self, request, *args, **kwargs):
