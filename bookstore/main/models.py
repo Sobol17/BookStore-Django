@@ -1,12 +1,12 @@
 from django.db import models
 from django.utils import timezone
-from django.utils.text import slugify
+from common.slugs import slugify_translit
 from .enums import ProductConditionChoices, ProductCollections
 
 
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
-    slug = models.SlugField(unique=True, blank=True)
+    slug = models.SlugField(max_length=150, unique=True, blank=True)
     image = models.ImageField(upload_to='categories/', blank=True)
     meta_title = models.CharField(max_length=255, blank=True)
     meta_description = models.CharField(max_length=300, blank=True)
@@ -15,7 +15,7 @@ class Category(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.name)
+            self.slug = slugify_translit(self.name)
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -29,7 +29,7 @@ class Genre(models.Model):
         related_name='genres',
     )
     name = models.CharField(max_length=100)
-    slug = models.SlugField()
+    slug = models.SlugField(max_length=150)
     position = models.PositiveIntegerField(default=0)
     image = models.ImageField(upload_to='genres/', blank=True, null=True)
 
@@ -39,7 +39,7 @@ class Genre(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.name)
+            self.slug = slugify_translit(self.name)
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -52,6 +52,24 @@ class Product(models.Model):
         null=True,
         blank=True,
         db_index=True,
+    )
+    sku = models.CharField(
+        max_length=64,
+        unique=True,
+        null=True,
+        blank=True,
+    )
+    offer_id = models.CharField(
+        max_length=64,
+        unique=True,
+        null=True,
+        blank=True,
+    )
+    erp_product_id = models.CharField(
+        max_length=64,
+        unique=True,
+        null=True,
+        blank=True,
     )
     category = models.ForeignKey(
         Category,
@@ -68,12 +86,14 @@ class Product(models.Model):
         blank=True,
     )
     name = models.CharField(max_length=255)
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField(max_length=150, unique=True)
     authors = models.CharField(max_length=255, blank=True)
     publisher = models.CharField(max_length=255, blank=True)
     year = models.PositiveIntegerField(null=True, blank=True)
-    main_image = models.ImageField(upload_to='products/main')
+    main_image = models.ImageField(upload_to='products/main', blank=True)
+    external_image_url = models.URLField(blank=True)
     isbn = models.CharField(max_length=32, blank=True)
+    barcode = models.CharField(max_length=64, blank=True)
     description = models.TextField(blank=True)
     condition = models.CharField(
         max_length=16,
@@ -92,7 +112,11 @@ class Product(models.Model):
     in_stock = models.BooleanField(default=True)
     stock_qty = models.PositiveIntegerField(default=1)
     weight_g = models.PositiveIntegerField(default=300)
+    dimensions_cm = models.JSONField(default=list, blank=True)
     is_published = models.BooleanField(default=True)
+    vat_rate = models.PositiveIntegerField(null=True, blank=True)
+    attributes = models.JSONField(default=dict, blank=True)
+    external_images = models.JSONField(default=list, blank=True)
     meta_title = models.CharField(max_length=255, blank=True)
     meta_description = models.CharField(max_length=300, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
@@ -102,7 +126,7 @@ class Product(models.Model):
         if self.genre:
             self.category = self.genre.category
         if not self.slug:
-            self.slug = slugify(self.name)
+            self.slug = slugify_translit(self.name)
         super().save(*args, **kwargs)
         
     def _format_amount(self, amount):
@@ -124,6 +148,82 @@ class Product(models.Model):
         if self.old_price is None:
             return ''
         return self._format_amount(self.old_price)
+
+    @property
+    def primary_image_url(self):
+        if self.main_image:
+            return self.main_image.url
+        if self.external_image_url:
+            return self.external_image_url
+        for image in self.external_images_sorted:
+            url = image.get('url')
+            if url:
+                return url
+        return ''
+
+    @property
+    def external_images_sorted(self):
+        images = self.external_images if isinstance(self.external_images, list) else []
+        cleaned = []
+        for image in images:
+            if not isinstance(image, dict):
+                continue
+            url = image.get('url')
+            if not url:
+                continue
+            position = image.get('position', image.get('order', 0))
+            try:
+                position_value = int(position)
+            except (TypeError, ValueError):
+                position_value = 0
+            cleaned.append({
+                'url': url,
+                'position': position_value,
+                'alt': image.get('alt') or image.get('name'),
+            })
+        cleaned.sort(key=lambda item: item['position'])
+        return cleaned
+
+    @property
+    def gallery_images(self):
+        images = []
+        seen = set()
+
+        def add_image(url, alt_text):
+            if not url or url in seen:
+                return
+            images.append({
+                'url': url,
+                'alt': alt_text or self.name,
+            })
+            seen.add(url)
+
+        add_image(self.primary_image_url, f'Обложка: {self.name}')
+        for image in self.external_images_sorted:
+            add_image(image.get('url'), image.get('alt'))
+        return images
+
+    @property
+    def dimensions_display(self):
+        if not isinstance(self.dimensions_cm, (list, tuple)):
+            return ''
+        values = []
+        for value in self.dimensions_cm:
+            try:
+                number = float(value)
+            except (TypeError, ValueError):
+                continue
+            if number.is_integer():
+                values.append(str(int(number)))
+            else:
+                values.append(str(number).rstrip('0').rstrip('.'))
+        if not values:
+            return ''
+        if len(values) >= 3:
+            return f"{values[0]} × {values[1]} × {values[2]} см"
+        if len(values) == 2:
+            return f"{values[0]} × {values[1]} см"
+        return f"{values[0]} см"
 
     def __str__(self):
         return self.name
@@ -147,16 +247,6 @@ class ProductReview(models.Model):
     def __str__(self):
         return f'{self.author_name}: {self.rating}'
     
-
-class ProductImage(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
-    image = models.ImageField(upload_to='products/extra')
-    alt_text = models.CharField(max_length=255, blank=True)
-    position = models.PositiveIntegerField(default=0)
-
-    def __str__(self):
-        return f"Изображение {self.product.name} позиция {self.position}"
-
 
 class BookPurchaseRequest(models.Model):
     email = models.EmailField()
@@ -202,3 +292,13 @@ class DeepSeekPrompt(models.Model):
             'делай акцент на идеях и стиле произведения. Не пересказывай сюжет подробно и уложись примерно в 1200 символов.\n')
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
+
+
+class ErpProductSyncState(models.Model):
+    last_synced_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        if self.last_synced_at:
+            return f'ERP sync at {self.last_synced_at:%Y-%m-%d %H:%M:%S}'
+        return 'ERP sync state'

@@ -7,5 +7,5 @@ app_name = 'favorites'
 
 urlpatterns = [
     path('', FavoriteListView.as_view(), name='list'),
-    path('toggle/<slug:slug>/', ToggleFavoriteView.as_view(), name='toggle'),
+    path('toggle/<uslug:slug>/', ToggleFavoriteView.as_view(), name='toggle'),
 ]

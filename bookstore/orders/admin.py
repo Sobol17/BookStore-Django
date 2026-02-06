@@ -12,10 +12,12 @@ class OrderItemInline(admin.TabularInline):
     can_delete = False
 
     def image_preview(self, obj):
-        if obj.product.main_image:
+        image_url = obj.product.primary_image_url if obj.product else ''
+        if image_url:
             return mark_safe(
-                f'<img src="{obj.product.main_image.url}" style="max-height: 100px; "max-width: 100px; object-fit: cover;" />')
-        return mark_safe('<span style="color: gray;"> No Image</span>')
+                f'<img src="{image_url}" style="max-height: 100px; max-width: 100px; object-fit: cover;" />'
+            )
+        return mark_safe('<span style="color: gray;">No image</span>')
 
     image_preview.short_description = 'Image'
 

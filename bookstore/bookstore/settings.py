@@ -30,7 +30,7 @@ TEMPLATES_DIR = BASE_DIR / 'templates'
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'dev-sobol.ru', 'www.dev-sobol.ru']
 
@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'ckeditor',
+    'api',
     'main',
     'pages',
     'cart',
@@ -198,6 +199,19 @@ EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'False') == 'True'
 EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', 'False') == 'True'
+
+# Internet shop API integration
+INTERNET_SHOP_API_KEY = os.getenv('INTERNET_SHOP_API_KEY', '')
+INTERNET_SHOP_DEFAULT_WAREHOUSE = os.getenv('INTERNET_SHOP_WAREHOUSE_CODE', 'main')
+INTERNET_SHOP_PAGE_SIZE = int(os.getenv('INTERNET_SHOP_PAGE_SIZE', '50'))
+
+# ERP outbound integration
+ERP_API_BASE_URL = os.getenv('ERP_API_BASE_URL', 'https://erp.dombb.ru/api/v1/')
+ERP_API_KEY = os.getenv('ERP_API_KEY', '') or INTERNET_SHOP_API_KEY
+ERP_API_TIMEOUT = int(os.getenv('ERP_API_TIMEOUT', '15'))
+ERP_PRODUCTS_PAGE_SIZE = int(os.getenv('ERP_PRODUCTS_PAGE_SIZE', '1000'))
+ERP_DEFAULT_CURRENCY = os.getenv('ERP_DEFAULT_CURRENCY', 'RUB')
+ERP_INTEGRATION_ENABLED = os.getenv('ERP_INTEGRATION_ENABLED', os.getenv('INTERNET_SHOP_ENABLED', 'True')) == 'True'
 
 # Mail logging
 LOGGING = {

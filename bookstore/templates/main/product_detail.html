@@ -121,16 +121,34 @@
           {% endif %}
         </div>
         <dl class="mt-4 grid gap-4 text-sm text-ink-muted sm:grid-cols-2">
+          {% if object.authors %}
+            <div>
+              <dt class="font-semibold text-ink">Автор</dt>
+              <dd class="mt-1">{{ object.authors }}</dd>
+            </div>
+          {% endif %}
           {% if object.condition %}
             <div>
               <dt class="font-semibold text-ink">Состояние</dt>
               <dd class="mt-1">{{ object.get_condition_display }}</dd>
             </div>
           {% endif %}
+          {% if object.sku or object.offer_id %}
+            <div>
+              <dt class="font-semibold text-ink">Артикул</dt>
+              <dd class="mt-1">{{ object.sku|default:object.offer_id }}</dd>
+            </div>
+          {% endif %}
           {% if object.isbn %}
             <div>
               <dt class="font-semibold text-ink">ISBN</dt>
               <dd class="mt-1">{{ object.isbn }}</dd>
+            </div>
+          {% endif %}
+          {% if object.barcode %}
+            <div>
+              <dt class="font-semibold text-ink">Штрихкод</dt>
+              <dd class="mt-1">{{ object.barcode }}</dd>
             </div>
           {% endif %}
           {% if object.year %}
@@ -145,6 +163,12 @@
               <dd class="mt-1">{{ object.publisher }}</dd>
             </div>
           {% endif %}
+          {% if object.category %}
+            <div>
+              <dt class="font-semibold text-ink">Категория</dt>
+              <dd class="mt-1">{{ object.category.name }}</dd>
+            </div>
+          {% endif %}
           {% if object.genre %}
             <div>
               <dt class="font-semibold text-ink">Жанр</dt>
@@ -155,6 +179,12 @@
             <div>
               <dt class="font-semibold text-ink">Вес</dt>
               <dd class="mt-1">{{ object.weight_g }} г</dd>
+            </div>
+          {% endif %}
+          {% if object.dimensions_display %}
+            <div>
+              <dt class="font-semibold text-ink">Габариты</dt>
+              <dd class="mt-1">{{ object.dimensions_display }}</dd>
             </div>
           {% endif %}
         </dl>

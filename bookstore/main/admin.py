@@ -1,9 +1,9 @@
 from django.contrib import admin
+from django.utils.html import format_html, format_html_join
 from .models import (
     Category,
     Genre,
     Product,
-    ProductImage,
     Banner,
     ProductReview,
     DeepSeekPrompt,
@@ -16,11 +16,6 @@ class BannerAdmin(admin.ModelAdmin):
     list_display = ('title', 'image', 'link', 'is_active', 'created_at', 'updated_at')
     list_filter = ('is_active', 'title')
     search_fields = ('title', 'link')
-
-
-class ProductImageInline(admin.TabularInline):
-    model = ProductImage
-    extra = 1
 
 
 class BookPurchasePhotoInline(admin.TabularInline):
@@ -43,7 +38,30 @@ class ProductAdmin(admin.ModelAdmin):
     search_fields = ('name', 'authors', 'publisher', 'isbn')
     prepopulated_fields = {'slug': ('name',)}
     autocomplete_fields = ('category', 'genre')
-    inlines = [ProductImageInline, ProductReviewInline]
+    inlines = [ProductReviewInline]
+    readonly_fields = ('external_images_preview',)
+
+    def external_images_preview(self, obj):
+        images = obj.external_images or []
+        urls = []
+        if isinstance(images, list):
+            for image in images:
+                if not isinstance(image, dict):
+                    continue
+                url = image.get('url')
+                if url:
+                    urls.append(url)
+        if not urls and obj.external_image_url:
+            urls.append(obj.external_image_url)
+        if not urls:
+            return '—'
+        return format_html_join(
+            '',
+            '<img src="{}" style="height: 80px; margin: 2px; border: 1px solid #ddd; border-radius: 4px;" />',
+            ((url,) for url in urls),
+        )
+
+    external_images_preview.short_description = 'ERP изображения'
 
 
 class CategoryAdmin(admin.ModelAdmin):

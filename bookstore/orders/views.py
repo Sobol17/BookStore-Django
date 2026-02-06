@@ -3,12 +3,14 @@ import logging
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.generic import View
 
 from cart.views import CartMixin
+from integrations.erp import push_order_to_erp
 from .forms import OrderForm
 from .models import Order, OrderItem
 
@@ -71,31 +73,35 @@ class CheckoutView(CartMixin, View):
             return render(request, self.template_name, context, status=400)
 
         if form.is_valid():
-            order = Order.objects.create(
-                user=request.user,
-                first_name=form.cleaned_data['first_name'],
-                last_name=form.cleaned_data['last_name'],
-                email=form.cleaned_data['email'],
-                address1=form.cleaned_data['address1'],
-                address2=form.cleaned_data['address2'],
-                city=form.cleaned_data['city'],
-                postal_code=form.cleaned_data['postal_code'],
-                phone=form.cleaned_data['phone'],
-                special_instructions='',
-                total_price=cart.subtotal,
-                payment_provider=payment_provider,
-            )
-
-            for item in cart.items.select_related('product'):
-                logger.debug('Adding item to order: product=%s quantity=%s', item.product.name, item.quantity)
-                OrderItem.objects.create(
-                    order=order,
-                    product=item.product,
-                    quantity=item.quantity,
-                    price=item.product.price or Decimal('0.00')
+            with transaction.atomic():
+                order = Order.objects.create(
+                    user=request.user,
+                    first_name=form.cleaned_data['first_name'],
+                    last_name=form.cleaned_data['last_name'],
+                    email=form.cleaned_data['email'],
+                    address1=form.cleaned_data['address1'],
+                    address2=form.cleaned_data['address2'],
+                    city=form.cleaned_data['city'],
+                    postal_code=form.cleaned_data['postal_code'],
+                    phone=form.cleaned_data['phone'],
+                    special_instructions='',
+                    total_price=cart.subtotal,
+                    payment_provider=payment_provider,
                 )
 
-            cart.clear_cart_items()
+                for item in cart.items.select_related('product'):
+                    logger.debug('Adding item to order: product=%s quantity=%s', item.product.name, item.quantity)
+                    OrderItem.objects.create(
+                        order=order,
+                        product=item.product,
+                        quantity=item.quantity,
+                        price=item.product.price or Decimal('0.00')
+                    )
+
+                cart.clear_cart_items()
+
+                transaction.on_commit(lambda order_id=order.id: push_order_to_erp(order_id))
+
             messages.success(request, f'Заказ №{order.id} оформлен. Мы свяжемся с вами для подтверждения.')
             logger.info('Checkout completed successfully for order %s', order.id)
             detail_url = reverse('users:order_detail', args=[order.id])

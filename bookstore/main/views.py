@@ -16,15 +16,13 @@ from .deepseek import (
     DeepSeekConfigurationError,
     DeepSeekReviewService,
 )
-from .enums import ProductCollections
-
 from cart.models import Cart
 
 from .models import Genre, Product, Banner
 from .forms import ProductReviewForm, BookPurchaseRequestForm
 from .selectors import (
     get_categories_with_products,
-    get_products_collection,
+    get_actual_products,
     get_published_products_queryset,
     get_related_products,
 )
@@ -66,7 +64,7 @@ class IndexView(TemplateView):
         context['categories'] = get_categories_with_products()
         context['current_category'] = None
         context['is_catalog_page'] = False
-        context['new_products'] = get_products_collection(ProductCollections.NEW)
+        context['new_products'] = get_actual_products(20)
         context['new_products_link'] = reverse('main:catalog_all')
         context['banners'] = Banner.objects.filter(is_active=True).order_by('-created_at')
         if purchase_form is None:
@@ -268,18 +266,7 @@ class ProductDetailView(DetailView):
         reviews_context = build_product_reviews_context(product)
         context['categories'] = get_categories_with_products()
         context['related_products'] = get_related_products(product, limit=8)
-        gallery_images = []
-        if product.main_image:
-            gallery_images.append({
-                'url': product.main_image.url,
-                'alt': f'Обложка: {product.name}',
-            })
-        for image in product.images.order_by('position', 'id'):
-            gallery_images.append({
-                'url': image.image.url,
-                'alt': image.alt_text or product.name,
-            })
-        context['gallery_images'] = gallery_images
+        context['gallery_images'] = product.gallery_images
         context['seo_text'] = getattr(product, 'seo_text', None) or product.meta_description or product.description
         rating_value = getattr(product, 'rating', None)
         reviews_count = (

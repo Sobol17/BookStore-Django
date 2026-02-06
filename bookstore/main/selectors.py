@@ -51,4 +51,12 @@ def get_products_collection(collection, limit=8):
         is_published=True
     ).order_by('-created_at')
     return with_review_stats(queryset)[:limit]
+
+
+def get_actual_products(limit=20):
+    queryset = Product.objects.filter(
+        is_published=True,
+        in_stock=True,
+    ).order_by('-updated_at')
+    return with_review_stats(queryset)[:limit]
     

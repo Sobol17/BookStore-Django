@@ -5,5 +5,5 @@ from .views import PageDetailView
 app_name = 'pages'
 
 urlpatterns = [
-	path('<slug:slug>/', PageDetailView.as_view(), name='page'),
+	path('<uslug:slug>/', PageDetailView.as_view(), name='page'),
 ]

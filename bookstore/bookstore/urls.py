@@ -1,11 +1,16 @@
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, register_converter
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 
+from common.converters import UnicodeSlugConverter
+
+register_converter(UnicodeSlugConverter, 'uslug')
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/v1/', include(('api.urls', 'api'), namespace='api')),
     path('cart/', include('cart.urls', namespace='cart')),
     path('favorites/', include('favorites.urls', namespace='favorites')),
     path('users/', include('users.urls', namespace='users')),
