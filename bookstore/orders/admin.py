@@ -1,3 +1,4 @@
+from django import forms
 from django.contrib import admin
 from django.utils.safestring import mark_safe
 from .models import Order, OrderItem
@@ -32,9 +33,29 @@ class OrderItemInline(admin.TabularInline):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
+    class OrderAdminForm(forms.ModelForm):
+        erp_exported_django = forms.BooleanField(
+            required=False,
+            disabled=True,
+            label='Выгружен в ERP (Джанго)',
+        )
+
+        class Meta:
+            model = Order
+            fields = '__all__'
+
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.fields['erp_exported_django'].initial = bool(
+                self.instance and self.instance.erp_acknowledged_at
+            )
+
+    form = OrderAdminForm
+
     list_display = ('id', 'user', 'email',
                     'total_price', 'payment_provider',
-                    'status', 'created_at', 'updated_at')
+                    'status', 'erp_exported_django_status',
+                    'created_at', 'updated_at')
     list_filter = ('status', 'first_name', 'last_name')
     search_fields = ('email', 'first_name', 'last_name')
     date_hierarchy = 'created_at'
@@ -48,13 +69,17 @@ class OrderAdmin(admin.ModelAdmin):
                        'phone', 'special_instructions', 'total_price')
         }),
         ('Payment and Status', {
-            'fields': ('status', 'payment_provider', 'youkassa_payment_intent_id',)
+            'fields': ('status', 'payment_provider', 'youkassa_payment_intent_id', 'erp_exported_django')
         }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at'),
             'classes': ('collapse',)
         }),
     )
+
+    @admin.display(boolean=True, description='Выгружен в ERP (Джанго)')
+    def erp_exported_django_status(self, obj):
+        return bool(obj.erp_acknowledged_at)
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
