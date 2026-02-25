@@ -186,7 +186,7 @@ class CatalogView(TemplateView):
 
         genres = Genre.objects.filter(category=current_category) if current_category else Genre.objects.all()
         genres = list(genres)
-        all_genres = list(Genre.objects.select_related('category').all())
+        all_genres = list(Genre.objects.select_related('category').all()[:10])
         params_without_author = self.request.GET.copy()
         params_without_author.setlist('author', [])
         params_without_author['author'] = ''

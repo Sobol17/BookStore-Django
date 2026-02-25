@@ -22,6 +22,11 @@
 
   <div class="">
     <div class="swiper js-banner-thumbs banner-thumbs--preinit" id="slider-{{ slider_uid }}-thumbs">
+      <div class="banner-thumbs-skeleton" aria-hidden="true">
+        {% for _ in "1234567"|make_list %}
+          <div class="banner-thumbs-skeleton__tile"></div>
+        {% endfor %}
+      </div>
       <div class="swiper-wrapper">
         {% for banner in banners %}
           <div class="swiper-slide">

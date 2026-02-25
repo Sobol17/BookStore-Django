@@ -10,9 +10,9 @@
 
       <nav class="hidden items-center gap-6 text-sm text-ink-muted xl:flex">
         <a href="{% url 'main:index' %}" class="transition hover:text-ink {% if not is_catalog_page and not object %}text-ink{% endif %}">Главная</a>
-        <a href="{% url 'main:catalog_all' %}" class="transition hover:text-ink {% if is_catalog_page %}text-ink{% endif %}">Закупка книг</a>
+        <a href="/sell-books" class="transition hover:text-ink {% if is_catalog_page %}text-ink{% endif %}">Закупка книг</a>
         <a href="/about" class="transition hover:text-ink">О магазине</a>
-        <a href="/about" class="transition hover:text-ink">Связаться</a>
+        <a href="/contacts" class="transition hover:text-ink">Связаться</a>
       </nav>
     </div>
     <div class="flex items-center gap-3 md:hidden mb-5">

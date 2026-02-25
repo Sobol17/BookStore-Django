@@ -6,14 +6,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>
     Dombb —
-    {% if object %}
-      {{ object.name }}
+    {% if seo_title %}
+      {{ seo_title }}
+    {% elif object %}
+      {% if object.name %}
+        {{ object.name }}
+      {% elif object.title %}
+        {{ object.title }}
+      {% else %}
+        Атмосфера букинистики
+      {% endif %}
     {% elif is_catalog_page %}
       Каталог редких книг
     {% else %}
       Атмосфера букинистики
     {% endif %}
   </title>
+  <meta name="description" content="{% if seo_description %}{{ seo_description }}{% elif object.meta_description %}{{ object.meta_description }}{% elif object.description %}{{ object.description|striptags|truncatechars:170 }}{% elif object.content %}{{ object.content|striptags|truncatechars:170 }}{% elif is_catalog_page %}Каталог букинистических книг, винила и коллекционных изданий в магазине Dombb.{% else %}Букинистический интернет-магазин Dombb: редкие книги, винил и коллекционные издания.{% endif %}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link

@@ -13,7 +13,7 @@
   <a href="{% url 'main:product_detail' product.slug %}" class="flex flex-col gap-2 flex-1">
     {% with gallery_images=product.gallery_images %}
     {% with total_images=gallery_images|length|default:1 %}
-    <div class="relative aspect-[1] overflow-hidden rounded-xl border border-accent-soft/70 bg-accent-soft/50">
+    <div class="relative aspect-[4/5] overflow-hidden rounded-xl border border-accent-soft/70 bg-accent-soft/50 sm:aspect-[3/4]">
       <div class="h-full w-full relative">
         {% if gallery_images %}
           {% for image in gallery_images %}
@@ -62,7 +62,7 @@
     {% endwith %}
     {% endwith %}
 
-    <div class="flex flex-col gap-1 px-2 flex-1">
+    <div class="flex flex-col gap-1 flex-1">
       <h3 class="text-md mb-2 font-semibold leading-snug text-ink text-ellipsis line-clamp-2 min-h-[2.75rem]">{{ product.name }}</h3>
 
       {% if product.authors %}
@@ -101,13 +101,13 @@
   </a>
 
   <div class="mt-auto">
-    <div class="flex items-baseline gap-2 px-2">
+    <div class="flex items-baseline gap-2">
       <span class="text-xl font-semibold text-ink">{{ product.formatted_price }}</span>
       {% if product.old_price %}
         <span class="text-sm text-ink-muted line-through">{{ product.formatted_old_price }}</span>
       {% endif %}
     </div>
-    <div class="mt-1 flex items-center gap-3 px-2">
+    <div class="mt-1 flex items-center gap-3">
       <div class="flex-1 {% if cart_item %}hidden{% endif %}" data-card-add>
         <button
           type="button"

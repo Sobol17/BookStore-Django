@@ -178,3 +178,55 @@ input[type=number] {
 .js-banner-thumbs.banner-thumbs--preinit .swiper-slide {
 	width: auto !important;
 }
+
+.js-banner-thumbs {
+	position: relative;
+	min-height: 74px;
+}
+
+@media (min-width: 768px) {
+	.js-banner-thumbs {
+		min-height: 104px;
+	}
+}
+
+.js-banner-thumbs .banner-thumbs-skeleton {
+	display: none;
+}
+
+.js-banner-thumbs.banner-thumbs--preinit .banner-thumbs-skeleton {
+	position: absolute;
+	inset: 0;
+	z-index: 4;
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 12px;
+	pointer-events: none;
+}
+
+@media (min-width: 1280px) {
+	.js-banner-thumbs.banner-thumbs--preinit .banner-thumbs-skeleton {
+		grid-template-columns: repeat(7, minmax(0, 1fr));
+	}
+}
+
+.banner-thumbs-skeleton__tile {
+	height: 68px;
+	border-radius: 12px;
+	border: 1px solid rgba(139, 227, 245, 0.45);
+	background: linear-gradient(110deg, rgba(139, 227, 245, 0.15) 8%, rgba(139, 227, 245, 0.38) 18%, rgba(139, 227, 245, 0.15) 33%);
+	background-size: 220% 100%;
+	animation: bannerThumbsShimmer 1.2s linear infinite;
+}
+
+@media (min-width: 768px) {
+	.banner-thumbs-skeleton__tile {
+		height: 98px;
+	}
+}
+
+@keyframes bannerThumbsShimmer {
+	to {
+		background-position-x: -220%;
+	}
+}
