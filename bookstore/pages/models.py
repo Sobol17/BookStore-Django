@@ -8,6 +8,10 @@ class Page(models.Model):
 	slug = models.SlugField(unique=True, blank=True)
 	is_published = models.BooleanField(default=False)
 	content = RichTextField()
+
+	class Meta:
+		verbose_name = 'Страница'
+		verbose_name_plural = 'Страницы'
 	
  
 	def save(self, *args, **kwargs):

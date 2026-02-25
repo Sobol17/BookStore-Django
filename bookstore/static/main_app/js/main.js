@@ -175,18 +175,19 @@ function initProductSliders() {
 	}
 	const thumbsEl = bannerRoot.querySelector('.js-banner-thumbs');
 	let thumbsSwiper = null;
-	if (thumbsEl && thumbsEl.dataset.sliderInitialized !== 'true') {
-		thumbsSwiper = new Swiper(thumbsEl, {
-		slidesPerView: 4,
-		spaceBetween: 12,
+		if (thumbsEl && thumbsEl.dataset.sliderInitialized !== 'true') {
+			thumbsSwiper = new Swiper(thumbsEl, {
+			slidesPerView: 4,
+			spaceBetween: 12,
 		freeMode: true,
 		watchSlidesProgress: true,
 		breakpoints: {
 			1280: { slidesPerView: 7 },
+			}
+			});
+			thumbsEl.dataset.sliderInitialized = 'true';
+			thumbsEl.classList.remove('banner-thumbs--preinit');
 		}
-		});
-		thumbsEl.dataset.sliderInitialized = 'true';
-	}
 	const bannerOptions = {
 		slidesPerView: 1,
 		loop: true,

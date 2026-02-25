@@ -13,6 +13,10 @@ class Category(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        verbose_name = 'Категория'
+        verbose_name_plural = 'Категории'
+
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify_translit(self.name)
@@ -36,6 +40,8 @@ class Genre(models.Model):
     class Meta:
         unique_together = ('category', 'slug')
         ordering = ('position', 'name')
+        verbose_name = 'Жанр'
+        verbose_name_plural = 'Жанры'
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -121,6 +127,10 @@ class Product(models.Model):
     meta_description = models.CharField(max_length=300, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Товар'
+        verbose_name_plural = 'Товары'
 
     def save(self, *args, **kwargs):
         if self.genre:
@@ -243,6 +253,8 @@ class ProductReview(models.Model):
 
     class Meta:
         ordering = ('-created_at',)
+        verbose_name = 'Отзыв'
+        verbose_name_plural = 'Отзывы'
 
     def __str__(self):
         return f'{self.author_name}: {self.rating}'
@@ -257,6 +269,8 @@ class BookPurchaseRequest(models.Model):
 
     class Meta:
         ordering = ('-created_at',)
+        verbose_name = 'Заявка на выкуп'
+        verbose_name_plural = 'Заявки на выкуп'
 
     def __str__(self):
         return f"Заявка {self.email} от {self.created_at:%d.%m.%Y}"
@@ -271,6 +285,10 @@ class BookPurchasePhoto(models.Model):
     image = models.ImageField(upload_to='purchase_requests/photos')
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        verbose_name = 'Фото заявки на выкуп'
+        verbose_name_plural = 'Фото заявок на выкуп'
+
     def __str__(self):
         return f"Фото заявки #{self.request_id}"
 
@@ -283,6 +301,10 @@ class Banner(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        verbose_name = 'Баннер'
+        verbose_name_plural = 'Баннеры'
+
     def __str__(self):
         return self.title
 
@@ -293,10 +315,18 @@ class DeepSeekPrompt(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        verbose_name = 'Промпт DeepSeek'
+        verbose_name_plural = 'Промпты DeepSeek'
+
 
 class ErpProductSyncState(models.Model):
     last_synced_at = models.DateTimeField(null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Состояние синхронизации ERP'
+        verbose_name_plural = 'Состояния синхронизации ERP'
 
     def __str__(self):
         if self.last_synced_at:

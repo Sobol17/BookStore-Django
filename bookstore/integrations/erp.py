@@ -376,6 +376,10 @@ def upsert_product_from_erp(
             product.category = category
         product.genre = _ensure_genre(category, direction_name)
 
+    vinyl_details = _extract_vinyl_details(payload)
+    if vinyl_details is not None:
+        _apply_vinyl_details(product, payload, vinyl_details)
+
     if name and _should_refresh_slug(product.slug, erp_product_id, sku, offer_id):
         product.slug = _generate_unique_slug(name)
 
@@ -485,6 +489,44 @@ def _extract_direction(payload: Dict[str, Any]) -> Optional[str]:
     return _clean_text(details.get('direction'))
 
 
+def _extract_vinyl_details(payload: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    details = payload.get('vinyl_details')
+    if not isinstance(details, dict):
+        return None
+    return details
+
+
+def _apply_vinyl_details(
+    product: Product,
+    payload: Dict[str, Any],
+    details: Dict[str, Any],
+) -> None:
+    vinyl_category = _ensure_category('vinyl')
+    product.category = vinyl_category
+
+    genre_name = _clean_text(details.get('genre'))
+    if genre_name:
+        product.genre = _ensure_genre(vinyl_category, genre_name)
+    elif 'genre' in details:
+        product.genre = None
+
+    artist = _clean_text(details.get('artist'))
+    if artist:
+        product.authors = artist
+
+    label = _clean_text(details.get('label'))
+    if label:
+        product.publisher = label
+
+    release_year = _parse_int(details.get('release_year'))
+    if release_year and release_year > 0:
+        product.year = release_year
+
+    barcode = _clean_text(payload.get('barcode')) or _clean_text(details.get('barcode'))
+    if barcode:
+        product.barcode = barcode
+
+
 def _ensure_category(name: str) -> Category:
     category = Category.objects.filter(name=name).first()
     if category:
@@ -558,6 +600,13 @@ def _clean_text(value: Any) -> Optional[str]:
         return None
     text = str(value).strip()
     return text or None
+
+
+def _parse_int(value: Any) -> Optional[int]:
+    try:
+        return int(str(value).strip())
+    except (TypeError, ValueError, AttributeError):
+        return None
 
 
 def _pick_slug_source(

@@ -10,6 +10,8 @@ class FavoriteList(models.Model):
 
     class Meta:
         ordering = ('-updated_at',)
+        verbose_name = 'Список избранного'
+        verbose_name_plural = 'Списки избранного'
 
     def __str__(self):
         if self.user:
@@ -29,6 +31,8 @@ class FavoriteItem(models.Model):
     class Meta:
         unique_together = ('favorite_list', 'product')
         ordering = ('-added_at',)
+        verbose_name = 'Элемент избранного'
+        verbose_name_plural = 'Элементы избранного'
 
     def __str__(self):
         return f'{self.product} in favorites'

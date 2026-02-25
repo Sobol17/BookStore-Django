@@ -9,6 +9,10 @@ class Cart(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        verbose_name = 'Корзина'
+        verbose_name_plural = 'Корзины'
+
 
     def __str__(self):
         return f'Cart {self.session_key}'
@@ -69,6 +73,8 @@ class CartItem(models.Model):
 
     class Meta:
         unique_together = ('cart', 'product')
+        verbose_name = 'Позиция корзины'
+        verbose_name_plural = 'Позиции корзины'
 
 
     def __str__(self):
