@@ -176,7 +176,7 @@ def build_order_payload(order: Order) -> Dict[str, Any]:
     items_payload: List[Dict[str, Any]] = []
     for item in order.items.select_related('product'):
         product = item.product
-        product_id = _clean_text(product.erp_product_id)
+        product_id = _normalize_product_id(product.erp_product_id)
         sku = _clean_text(product.sku)
         if not product_id and not sku:
             raise ValueError(f'Order {order.pk} item {item.pk} has no sku or ERP product id.')
@@ -192,10 +192,25 @@ def build_order_payload(order: Order) -> Dict[str, Any]:
         items_payload.append(item_payload)
     if not items_payload:
         raise ValueError(f'Order {order.pk} has no items to send.')
-    currency = getattr(settings, 'ERP_DEFAULT_CURRENCY', 'RUB')
+    currency = _clean_text(getattr(settings, 'ERP_DEFAULT_CURRENCY', 'RUB')) or 'RUB'
+    customer_name = ' '.join(filter(None, [order.first_name, order.last_name])).strip()
+    city = _clean_text(order.city) or ''
+    country = _clean_text(getattr(settings, 'ERP_DEFAULT_COUNTRY', 'Россия')) or 'Россия'
     return {
         'external_order_id': str(order.pk),
         'currency': currency,
+        'customer': {
+            'name': customer_name or (_clean_text(order.first_name) or ''),
+            'phone': _clean_text(order.phone) or '',
+            'email': _clean_text(order.email) or '',
+        },
+        'shipping_address': {
+            'address': _clean_text(order.formatted_address) or '',
+            'city': city,
+            'region': city,
+            'postal_code': _clean_text(order.postal_code) or '',
+            'country': country,
+        },
         'items': items_payload,
     }
 
@@ -612,6 +627,15 @@ def _format_decimal(value: Decimal) -> str:
         raise ValueError('Decimal value is required.')
     quantized = value.quantize(Decimal('0.01'))
     return f'{quantized:.2f}'
+
+
+def _normalize_product_id(value: Any) -> Optional[str | int]:
+    cleaned = _clean_text(value)
+    if not cleaned:
+        return None
+    if cleaned.isdigit():
+        return int(cleaned)
+    return cleaned
 
 
 def _parse_updated_at(payload: Dict[str, Any]) -> Optional[datetime]:

@@ -243,6 +243,18 @@ curl -H "X-API-KEY: <KEY>" \
 {
   "external_order_id": "B-100045",
   "currency": "RUB",
+  "customer": {
+    "name": "Иван Петров",
+    "phone": "+79990001122",
+    "email": "user@example.com"
+  },
+  "shipping_address": {
+    "address": "г. Москва, ул. Пример, 1",
+    "city": "Москва",
+    "region": "Москва",
+    "postal_code": "101000",
+    "country": "Россия"
+  },
   "items": [
     {"product_id": 123, "quantity": 2, "price": "100.00"}
   ]
@@ -251,6 +263,14 @@ curl -H "X-API-KEY: <KEY>" \
 
 - `external_order_id` — обязателен, уникален
 - `currency` — 3‑буквенный код
+- `customer.name` — имя/ФИО клиента
+- `customer.phone` — телефон клиента
+- `customer.email` — email клиента
+- `shipping_address.address` — полный адрес доставки
+- `shipping_address.city` — город
+- `shipping_address.region` — регион/область
+- `shipping_address.postal_code` — почтовый индекс
+- `shipping_address.country` — страна
 - `items[].product_id` или `items[].sku` — обязателен
 - `items[].quantity` — > 0
 - `items[].price` — decimal string
