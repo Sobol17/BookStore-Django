@@ -202,7 +202,9 @@ class ProductAdmin(admin.ModelAdmin):
 
 
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ('name', 'slug')
+    list_display = ('name', 'order', 'slug')
+    list_editable = ('order',)
+    ordering = ('order', 'name')
     search_fields = ('name',)
     prepopulated_fields = {'slug': ('name',)}
 

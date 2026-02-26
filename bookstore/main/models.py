@@ -7,6 +7,7 @@ from .enums import ProductConditionChoices, ProductCollections
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
     slug = models.SlugField(max_length=150, unique=True, blank=True)
+    order = models.PositiveIntegerField(default=0, verbose_name='Порядок')
     image = models.ImageField(upload_to='categories/', blank=True)
     meta_title = models.CharField(max_length=255, blank=True)
     meta_description = models.CharField(max_length=300, blank=True)
@@ -14,6 +15,7 @@ class Category(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        ordering = ('order', 'name')
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
 

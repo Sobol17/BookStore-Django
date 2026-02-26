@@ -261,3 +261,39 @@ class CatalogViewGenreTests(TestCase):
         content = response.content.decode('utf-8')
         self.assertIn('Показать все', content)
         self.assertEqual(content.count('data-genre-extra="true"'), 2)
+
+
+class HomeCategoriesOrderTests(TestCase):
+    def test_home_categories_sorted_by_order(self):
+        category_b = Category.objects.create(name='Категория B', order=20)
+        category_a = Category.objects.create(name='Категория A', order=10)
+        category_c = Category.objects.create(name='Категория C', order=30)
+        Category.objects.create(name='Категория X', order=1)
+
+        Product.objects.create(
+            erp_product_id='home-101',
+            name='Товар B',
+            slug='tovar-b',
+            category=category_b,
+            price=100,
+        )
+        Product.objects.create(
+            erp_product_id='home-102',
+            name='Товар A',
+            slug='tovar-a',
+            category=category_a,
+            price=100,
+        )
+        Product.objects.create(
+            erp_product_id='home-103',
+            name='Товар C',
+            slug='tovar-c',
+            category=category_c,
+            price=100,
+        )
+
+        response = self.client.get(reverse('main:index'))
+
+        self.assertEqual(response.status_code, 200)
+        category_names = [category.name for category in response.context['categories']]
+        self.assertEqual(category_names, ['Категория A', 'Категория B', 'Категория C'])

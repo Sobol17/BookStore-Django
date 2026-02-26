@@ -9,7 +9,7 @@ def get_categories_with_products():
             'products',
             filter=Q(products__is_published=True),
         )
-    ).filter(products_count__gt=0)
+    ).filter(products_count__gt=0).order_by('order', 'name')
 
 
 def with_review_stats(queryset):
