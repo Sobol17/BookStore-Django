@@ -80,6 +80,29 @@ def extract_selected_authors(params: QueryDict) -> List[str]:
     return selected
 
 
+def extract_selected_vinyl_directtions(params: QueryDict) -> List[str]:
+    raw_values = params.getlist('directtion')
+    if not raw_values:
+        single_value = params.get('directtion')
+        if single_value:
+            raw_values = [single_value]
+    if not raw_values:
+        raw_values = params.getlist('direction')
+    if not raw_values:
+        single_value = params.get('direction')
+        if single_value:
+            raw_values = [single_value]
+    selected: List[str] = []
+    for raw in raw_values:
+        if not raw:
+            continue
+        for value in raw.split(','):
+            cleaned = value.strip()
+            if cleaned and cleaned not in selected:
+                selected.append(cleaned)
+    return selected
+
+
 def determine_price_step(span: int) -> int:
     """
     Возвращает шаг слайдера цены в зависимости от диапазона значений.
@@ -213,6 +236,7 @@ def apply_catalog_filters(
         'max_year': '',
         'year_range': params.get('year_range', ''),
         'author': '',
+        'directtion': '',
     }
     price_keys = {'min_price', 'max_price'}
     year_keys = {'min_year', 'max_year'}
@@ -240,6 +264,13 @@ def apply_catalog_filters(
         filter_params['author'] = ','.join(selected_authors)
     else:
         filter_params['author'] = ''
+
+    selected_vinyl_directtions = extract_selected_vinyl_directtions(params)
+    if selected_vinyl_directtions:
+        products = products.filter(attributes__vinyl_directtion__in=selected_vinyl_directtions)
+        filter_params['directtion'] = ','.join(selected_vinyl_directtions)
+    else:
+        filter_params['directtion'] = ''
 
     price_bounds = build_price_bounds(products)
     price_bounds['presets'] = PRICE_PRESETS

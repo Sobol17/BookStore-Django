@@ -1,6 +1,6 @@
 <section class="mb-6 space-y-4">
 	<h3 class="text-lg font-semibold text-ink">{{ all_genres_title|default:'Все жанры' }}</h3>
-	<div class="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+	<div class="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5" data-genre-cards-list data-collapsed="true">
 	{% for genre in all_genres %}
 		{% url 'main:catalog' genre.category.slug as genre_category_url %}
 		{% with genre_href=genre_category_url|add:'?genre='|add:genre.slug %}
@@ -11,7 +11,8 @@
 			hx-swap="outerHTML"
 			hx-push-url="true"
 			hx-indicator="#catalog-loading"
-			class="flex flex-col gap-3 rounded-2xl border border-accent-soft/70 bg-white/80 p-4 text-left transition hover:-translate-y-1 hover:border-accent hover:shadow-xl"
+			class="flex flex-col gap-3 rounded-2xl border border-accent-soft/70 bg-white/80 p-4 text-left transition hover:-translate-y-1 hover:border-accent hover:shadow-xl {% if forloop.counter > 10 %}hidden{% endif %}"
+			{% if forloop.counter > 10 %}data-genre-card-extra="true"{% endif %}
 		>
 			<div class="aspect-[4/3] w-full overflow-hidden rounded-xl bg-accent-soft/60">
 			{% if genre.image %}
@@ -35,4 +36,52 @@
 		{% endwith %}
 	{% endfor %}
 	</div>
+	{% if all_genres|length > 10 %}
+		<button
+			type="button"
+			class="text-sm font-semibold text-accent transition hover:text-graphite"
+			data-genre-cards-toggle
+		>
+			Показать все
+		</button>
+	{% endif %}
 </section>
+
+<script>
+(() => {
+  if (window.initGenreCardsToggle) {
+    window.initGenreCardsToggle();
+    return;
+  }
+
+  function initGenreCardsToggle() {
+    document.querySelectorAll('[data-genre-cards-list]').forEach((list) => {
+      if (list.dataset.genreCardsBound === 'true') {
+        return;
+      }
+      const wrapper = list.parentElement;
+      const toggle = wrapper ? wrapper.querySelector('[data-genre-cards-toggle]') : null;
+      const extraCards = Array.from(list.querySelectorAll('[data-genre-card-extra]'));
+
+      if (!toggle || !extraCards.length) {
+        list.dataset.genreCardsBound = 'true';
+        return;
+      }
+
+      const setState = (collapsed) => {
+        list.dataset.collapsed = collapsed ? 'true' : 'false';
+        extraCards.forEach((card) => card.classList.toggle('hidden', collapsed));
+        toggle.textContent = collapsed ? 'Показать все' : 'Скрыть';
+      };
+
+      setState(true);
+      toggle.addEventListener('click', () => setState(list.dataset.collapsed === 'false'));
+      list.dataset.genreCardsBound = 'true';
+    });
+  }
+
+  window.initGenreCardsToggle = initGenreCardsToggle;
+  document.addEventListener('DOMContentLoaded', initGenreCardsToggle);
+  document.body.addEventListener('htmx:afterSwap', initGenreCardsToggle);
+})();
+</script>

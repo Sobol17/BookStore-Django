@@ -30,6 +30,7 @@ class ErpVinylMappingTests(TestCase):
                 'label': 'Harvest',
                 'release_year': '1973',
                 'barcode': '5099902987613',
+                'directtion': 'Progressive Rock',
             },
         }
 
@@ -44,6 +45,7 @@ class ErpVinylMappingTests(TestCase):
         self.assertEqual(product.publisher, 'Harvest')
         self.assertEqual(product.year, 1973)
         self.assertEqual(product.barcode, '5099902987613')
+        self.assertEqual(product.attributes.get('vinyl_directtion'), 'Progressive Rock')
 
     def test_empty_vinyl_details_still_set_vinyl_category(self):
         payload = {
@@ -198,7 +200,7 @@ class ErpBookMappingTests(TestCase):
 
 
 class CatalogViewGenreTests(TestCase):
-    def test_category_pages_hide_genres_cards_block(self):
+    def test_category_pages_show_genres_cards_block(self):
         books = Category.objects.create(name='Книги')
         vinyl = Category.objects.create(name='Винил')
         books_genre = Genre.objects.create(category=books, name='Роман', slug='roman')
@@ -224,24 +226,24 @@ class CatalogViewGenreTests(TestCase):
         response = self.client.get(reverse('main:catalog', kwargs={'category_slug': books.slug}))
 
         self.assertEqual(response.status_code, 200)
-        self.assertFalse(response.context['show_all_genres_cards'])
+        self.assertTrue(response.context['show_all_genres_cards'])
         self.assertTrue(response.context['all_genres'])
         self.assertTrue(all(genre.category_id == books.id for genre in response.context['all_genres']))
 
         content = response.content.decode('utf-8')
-        self.assertNotIn('Жанры категории', content)
-        self.assertEqual(content.count('Все жанры'), 1)
+        self.assertIn('Жанры категории', content)
+        self.assertNotIn('data-genre-filter', content)
 
         response = self.client.get(reverse('main:catalog', kwargs={'category_slug': vinyl.slug}))
         self.assertEqual(response.status_code, 200)
-        self.assertFalse(response.context['show_all_genres_cards'])
+        self.assertTrue(response.context['show_all_genres_cards'])
         self.assertTrue(response.context['all_genres'])
 
         content = response.content.decode('utf-8')
-        self.assertNotIn('Жанры категории', content)
-        self.assertEqual(content.count('Все жанры'), 1)
+        self.assertIn('Жанры категории', content)
+        self.assertNotIn('data-genre-filter', content)
 
-    def test_category_genre_buttons_collapsed_to_eight(self):
+    def test_category_pages_hide_genre_buttons_block(self):
         books = Category.objects.create(name='Книги')
         for index in range(1, 11):
             Genre.objects.create(category=books, name=f'Жанр {index}', slug=f'zhanr-{index}')
@@ -259,8 +261,87 @@ class CatalogViewGenreTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         content = response.content.decode('utf-8')
+        self.assertNotIn('data-genre-filter', content)
+        self.assertNotIn('data-genre-card-extra="true"', content)
+
+    def test_category_genres_cards_collapsed_to_ten(self):
+        books = Category.objects.create(name='Книги')
+        for index in range(1, 13):
+            Genre.objects.create(category=books, name=f'Жанр {index}', slug=f'zhanr-{index}')
+
+        Product.objects.create(
+            erp_product_id='cat-301',
+            name='Книга 3',
+            slug='kniga-3',
+            category=books,
+            genre=Genre.objects.filter(category=books).first(),
+            price=390,
+        )
+
+        response = self.client.get(reverse('main:catalog', kwargs={'category_slug': books.slug}))
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode('utf-8')
         self.assertIn('Показать все', content)
-        self.assertEqual(content.count('data-genre-extra="true"'), 2)
+        self.assertEqual(content.count('data-genre-card-extra="true"'), 2)
+
+
+class CatalogViewVinylDirecttionFilterTests(TestCase):
+    def test_vinyl_category_shows_directtion_filter_and_filters_products(self):
+        vinyl = Category.objects.create(name='Винил')
+        genre = Genre.objects.create(category=vinyl, name='Rock', slug='rock')
+
+        Product.objects.create(
+            erp_product_id='vinyl-101',
+            name='Miles Davis - Kind of Blue',
+            slug='miles-davis-kind-of-blue',
+            category=vinyl,
+            genre=genre,
+            price=1200,
+            attributes={'vinyl_directtion': 'Jazz'},
+        )
+        Product.objects.create(
+            erp_product_id='vinyl-102',
+            name='Pink Floyd - Wish You Were Here',
+            slug='pink-floyd-wish-you-were-here',
+            category=vinyl,
+            genre=genre,
+            price=1400,
+            attributes={'vinyl_directtion': 'Rock'},
+        )
+
+        response = self.client.get(
+            reverse('main:catalog', kwargs={'category_slug': vinyl.slug}),
+            {'directtion': 'Jazz'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['show_vinyl_directtion_filter'])
+        self.assertEqual(response.context['selected_vinyl_directtions'], ['Jazz'])
+        self.assertIn('Jazz', response.context['vinyl_directtions'])
+        self.assertIn('Rock', response.context['vinyl_directtions'])
+        products = list(response.context['products'].object_list)
+        self.assertEqual(len(products), 1)
+        self.assertEqual(products[0].erp_product_id, 'vinyl-101')
+        self.assertIn('Направление', response.content.decode('utf-8'))
+
+    def test_non_vinyl_category_hides_directtion_filter(self):
+        books = Category.objects.create(name='Книги')
+
+        Product.objects.create(
+            erp_product_id='book-101',
+            name='Книга',
+            slug='book-101',
+            category=books,
+            price=500,
+            attributes={'vinyl_directtion': 'Jazz'},
+        )
+
+        response = self.client.get(reverse('main:catalog', kwargs={'category_slug': books.slug}))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context['show_vinyl_directtion_filter'])
+        self.assertNotIn('Направление', response.content.decode('utf-8'))
 
 
 class HomeCategoriesOrderTests(TestCase):
@@ -297,3 +378,36 @@ class HomeCategoriesOrderTests(TestCase):
         self.assertEqual(response.status_code, 200)
         category_names = [category.name for category in response.context['categories']]
         self.assertEqual(category_names, ['Категория A', 'Категория B', 'Категория C'])
+
+
+class CatalogAllPageTests(TestCase):
+    def test_catalog_all_shows_categories_cards_and_bottom_text(self):
+        books = Category.objects.create(name='Книги')
+        vinyl = Category.objects.create(name='Винил')
+
+        Product.objects.create(
+            erp_product_id='all-101',
+            name='Книга для каталога',
+            slug='kniga-dlya-kataloga',
+            category=books,
+            price=100,
+        )
+        Product.objects.create(
+            erp_product_id='all-102',
+            name='Пластинка для каталога',
+            slug='plastinka-dlya-kataloga',
+            category=vinyl,
+            price=100,
+        )
+
+        response = self.client.get(reverse('main:catalog_all'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['show_categories_cards'])
+        content = response.content.decode('utf-8')
+        self.assertIn('Все категории', content)
+        self.assertIn('Книги', content)
+        self.assertIn('Винил', content)
+        self.assertIn(response.context['catalog_categories_bottom_text'], content)
+        self.assertNotIn('Фильтры', content)
+        self.assertNotIn('data-product-card', content)

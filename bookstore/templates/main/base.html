@@ -22,106 +22,115 @@
               </h1>
             </header>
             
-            {% if all_genres and show_all_genres_cards %}
+            {% if not show_categories_cards and all_genres and show_all_genres_cards %}
               {% include 'main/partials/_all_genres.html' with all_genres=all_genres all_genres_title=all_genres_title %}
             {% endif %}
 
-            <div class="grid gap-6 lg:grid-cols-[minmax(0,275px)_1fr]">
-              {% include 'main/partials/_catalog_filters.html' %}
+            {% if show_categories_cards %}
+              {% include 'main/partials/_all_categories.html' with categories=categories %}
+              <section class="rounded-3xl border border-accent-soft/60 bg-white p-6 text-sm text-ink-muted">
+                <p>{{ catalog_categories_bottom_text }}</p>
+              </section>
+            {% else %}
+              <div class="grid gap-6 lg:grid-cols-[minmax(0,275px)_1fr]">
+                {% include 'main/partials/_catalog_filters.html' %}
 
-              <div class="space-y-8">
-                {% if search_query %}
-                  <p class="text-sm text-ink-muted">
-                    Найдено по запросу
-                    <span class="font-semibold text-accent">«{{ search_query }}»</span>
-                  </p>
-                {% endif %}
-                
-                <div class="relative">
-                {% include 'main/partials/_catalog_sort.html' %}
-                  {% include 'main/partials/_catalog_genre_buttons.html' %}
-                    <div class="grid gap-4 grid-cols-2 sm:grid-cols-3 xl:grid-cols-4">
-                    {% for product in products %}
-                      {% include 'main/partials/_product-card.html' with product=product %}
-                    {% empty %}
-                      <div class="col-span-full rounded-3xl border border-accent-soft/60 bg-white p-12 text-center text-ink-muted">
-                        К сожалению, по выбранным параметрам ничего не найдено. Попробуйте изменить условия поиска.
-                      </div>
-                    {% endfor %}
-                  </div>
-                  {% if is_paginated and pagination.links %}
-                    <nav class="mt-6 flex flex-wrap items-center justify-center gap-2 text-sm" aria-label="Пагинация каталога">
-                      {% if pagination.has_previous %}
-                        <button
-                          type="button"
-                          class="rounded-lg border border-accent px-3 py-1 font-semibold text-ink transition hover:bg-accent-soft"
-                          hx-get="{{ pagination.previous_url }}"
-                          hx-target="#catalog-content"
-                          hx-swap="outerHTML"
-                          hx-push-url="true"
-                          hx-indicator="#catalog-loading"
-                        >
-                          Назад
-                        </button>
-                      {% endif %}
-                      {% for link in pagination.links %}
-                        {% if link.is_gap %}
-                          <span class="px-2 text-ink-muted">…</span>
-                        {% else %}
+                <div class="space-y-8">
+                  {% if search_query %}
+                    <p class="text-sm text-ink-muted">
+                      Найдено по запросу
+                      <span class="font-semibold text-accent">«{{ search_query }}»</span>
+                    </p>
+                  {% endif %}
+                  
+                  <div class="relative">
+                  {% include 'main/partials/_catalog_sort.html' %}
+                    {% if not current_category %}
+                      {% include 'main/partials/_catalog_genre_buttons.html' %}
+                    {% endif %}
+                      <div class="grid gap-4 grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 mt-2">
+                      {% for product in products %}
+                        {% include 'main/partials/_product-card.html' with product=product %}
+                      {% empty %}
+                        <div class="col-span-full rounded-3xl border border-accent-soft/60 bg-white p-12 text-center text-ink-muted">
+                          К сожалению, по выбранным параметрам ничего не найдено. Попробуйте изменить условия поиска.
+                        </div>
+                      {% endfor %}
+                    </div>
+                    {% if is_paginated and pagination.links %}
+                      <nav class="mt-6 flex flex-wrap items-center justify-center gap-2 text-sm" aria-label="Пагинация каталога">
+                        {% if pagination.has_previous %}
                           <button
                             type="button"
-                            class="rounded-lg border border-accent px-3 py-1 font-semibold transition hover:bg-accent-soft {% if link.is_current %}bg-accent text-graphite{% else %}bg-white text-ink{% endif %}"
-                            hx-get="{{ link.url }}"
+                            class="rounded-lg border border-accent px-3 py-1 font-semibold text-ink transition hover:bg-accent-soft"
+                            hx-get="{{ pagination.previous_url }}"
                             hx-target="#catalog-content"
                             hx-swap="outerHTML"
                             hx-push-url="true"
                             hx-indicator="#catalog-loading"
-                            aria-current="{% if link.is_current %}page{% else %}false{% endif %}"
                           >
-                            {{ link.label }}
+                            Назад
                           </button>
                         {% endif %}
-                      {% endfor %}
-                      {% if pagination.has_next %}
-                        <button
-                          type="button"
-                          class="rounded-lg border border-accent px-3 py-1 font-semibold text-ink transition hover:bg-accent-soft"
-                          hx-get="{{ pagination.next_url }}"
-                          hx-target="#catalog-content"
-                          hx-swap="outerHTML"
-                          hx-push-url="true"
-                          hx-indicator="#catalog-loading"
+                        {% for link in pagination.links %}
+                          {% if link.is_gap %}
+                            <span class="px-2 text-ink-muted">…</span>
+                          {% else %}
+                            <button
+                              type="button"
+                              class="rounded-lg border border-accent px-3 py-1 font-semibold transition hover:bg-accent-soft {% if link.is_current %}bg-accent text-graphite{% else %}bg-white text-ink{% endif %}"
+                              hx-get="{{ link.url }}"
+                              hx-target="#catalog-content"
+                              hx-swap="outerHTML"
+                              hx-push-url="true"
+                              hx-indicator="#catalog-loading"
+                              aria-current="{% if link.is_current %}page{% else %}false{% endif %}"
+                            >
+                              {{ link.label }}
+                            </button>
+                          {% endif %}
+                        {% endfor %}
+                        {% if pagination.has_next %}
+                          <button
+                            type="button"
+                            class="rounded-lg border border-accent px-3 py-1 font-semibold text-ink transition hover:bg-accent-soft"
+                            hx-get="{{ pagination.next_url }}"
+                            hx-target="#catalog-content"
+                            hx-swap="outerHTML"
+                            hx-push-url="true"
+                            hx-indicator="#catalog-loading"
+                          >
+                            Вперёд
+                          </button>
+                        {% endif %}
+                      </nav>
+                    {% endif %}
+                    <div
+                      id="catalog-loading"
+                      class="htmx-indicator absolute inset-0 z-20 flex items-center justify-center bg-paper/70 backdrop-blur-sm"
+                      style="display: none;"
+                      role="status"
+                      aria-live="polite"
+                      aria-atomic="true"
+                    >
+                      <div class="flex flex-col items-center gap-3 text-ink-muted">
+                        <svg
+                          class="h-10 w-10 animate-spin text-accent"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
                         >
-                          Вперёд
-                        </button>
-                      {% endif %}
-                    </nav>
-                  {% endif %}
-                  <div
-                    id="catalog-loading"
-                    class="htmx-indicator absolute inset-0 z-20 flex items-center justify-center bg-paper/70 backdrop-blur-sm"
-                    style="display: none;"
-                    role="status"
-                    aria-live="polite"
-                    aria-atomic="true"
-                  >
-                    <div class="flex flex-col items-center gap-3 text-ink-muted">
-                      <svg
-                        class="h-10 w-10 animate-spin text-accent"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0113.657-5.657l-2.829 2.829A4 4 0 008 12H4z"></path>
-                      </svg>
-                      <span class="text-sm">Ищем книги…</span>
-                      <span class="sr-only">Идёт загрузка каталога</span>
+                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0113.657-5.657l-2.829 2.829A4 4 0 008 12H4z"></path>
+                        </svg>
+                        <span class="text-sm">Ищем книги…</span>
+                        <span class="sr-only">Идёт загрузка каталога</span>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
+            {% endif %}
           </div>
         {% else %}
           <div data-name="home_page" class="space-y-16">

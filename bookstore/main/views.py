@@ -34,6 +34,7 @@ from .services import (
     build_sorting_options,
     extract_hx_flags,
     extract_selected_authors,
+    extract_selected_vinyl_directtions,
     CATALOG_SORT_OPTIONS,
 )
 
@@ -174,6 +175,7 @@ class CatalogView(TemplateView):
             current_category = get_object_or_404(categories, slug=category_slug)
             products = products.filter(category=current_category)
             base_products = base_products.filter(category=current_category)
+        show_categories_cards = current_category is None
         products, filter_params, search_query, price_bounds, year_bounds = apply_catalog_filters(
             products,
             self.request.GET,
@@ -190,7 +192,7 @@ class CatalogView(TemplateView):
         if current_category:
             all_genres = genres
             all_genres_title = 'Жанры категории'
-            show_all_genres_cards = False
+            show_all_genres_cards = True
         else:
             all_genres = list(Genre.objects.select_related('category').all()[:10])
             all_genres_title = 'Все жанры'
@@ -208,6 +210,33 @@ class CatalogView(TemplateView):
             .order_by('authors')
         )
         selected_authors = extract_selected_authors(self.request.GET)
+        is_vinyl_category = bool(
+            current_category
+            and (
+                (current_category.slug or '').casefold() == 'vinyl'
+                or (current_category.name or '').casefold() in {'vinyl', 'винил'}
+            )
+        )
+        params_without_directtion = self.request.GET.copy()
+        params_without_directtion.setlist('directtion', [])
+        params_without_directtion['directtion'] = ''
+        params_without_directtion.setlist('direction', [])
+        params_without_directtion['direction'] = ''
+        vinyl_directtions = []
+        if is_vinyl_category:
+            vinyl_directtions_filtered, _, _, _, _ = apply_catalog_filters(
+                base_products,
+                params_without_directtion,
+            )
+            vinyl_directtions = list(
+                vinyl_directtions_filtered
+                .exclude(attributes__vinyl_directtion__isnull=True)
+                .exclude(attributes__vinyl_directtion='')
+                .values_list('attributes__vinyl_directtion', flat=True)
+                .distinct()
+                .order_by('attributes__vinyl_directtion')
+            )
+        selected_vinyl_directtions = extract_selected_vinyl_directtions(self.request.GET)
         paginator = Paginator(products, 15)
         page_obj = paginator.get_page(self.request.GET.get('page'))
         pagination = build_pagination(self.request, page_obj)
@@ -222,6 +251,10 @@ class CatalogView(TemplateView):
             'products': page_obj,
             'current_category': current_category.slug if current_category else None,
             'current_category_label': current_category.name if current_category else None,
+            'show_categories_cards': show_categories_cards,
+            'catalog_categories_bottom_text': (
+                'Выберите категорию, чтобы перейти в подборки и товары этого раздела.'
+            ),
             'filter_params': filter_params,
             'price_bounds': price_bounds,
             'year_bounds': year_bounds,
@@ -236,6 +269,9 @@ class CatalogView(TemplateView):
             'search_query': search_query,
             'authors': authors_list,
             'selected_authors': selected_authors,
+            'show_vinyl_directtion_filter': bool(is_vinyl_category and vinyl_directtions),
+            'vinyl_directtions': vinyl_directtions,
+            'selected_vinyl_directtions': selected_vinyl_directtions,
             'is_catalog_page': True,
             'is_paginated': paginator.num_pages > 1,
             'page_obj': page_obj,

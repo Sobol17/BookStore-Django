@@ -613,6 +613,12 @@ def _apply_vinyl_details(
     if barcode:
         product.barcode = barcode
 
+    vinyl_directtion = _clean_text(details.get('directtion')) or _clean_text(details.get('direction'))
+    if vinyl_directtion:
+        _set_product_attribute(product, 'vinyl_directtion', vinyl_directtion)
+    elif 'directtion' in details or 'direction' in details:
+        _set_product_attribute(product, 'vinyl_directtion', None)
+
 
 def _apply_postcard_details(
     product: Product,
@@ -715,6 +721,15 @@ def _clean_text(value: Any) -> Optional[str]:
         return None
     text = str(value).strip()
     return text or None
+
+
+def _set_product_attribute(product: Product, key: str, value: Optional[str]) -> None:
+    attributes = product.attributes if isinstance(product.attributes, dict) else {}
+    if value is None:
+        attributes.pop(key, None)
+    else:
+        attributes[key] = value
+    product.attributes = attributes
 
 
 def _parse_int(value: Any) -> Optional[int]:

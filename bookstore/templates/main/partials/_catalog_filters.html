@@ -63,7 +63,7 @@
         </div>
       </div>
 
-      <div class="space-y-3">
+      <div class="space-y-3" data-year-filter>
         <div class="flex items-center gap-2">
           <span class="text-sm font-semibold text-ink">Год издания</span>
           <i data-lucide="info" class="h-4 w-4 text-ink-muted"></i>
@@ -86,7 +86,7 @@
             class="input"
           >
         </div>
-        <div class="space-y-2">
+        <div class="max-h-48 overflow-hidden space-y-2 transition-[max-height]" data-year-list data-collapsed="true">
           {% for preset in year_bounds.presets %}
             <label class="flex items-center gap-2 rounded-xl border border-accent-soft/60 px-3 py-2 text-sm font-medium text-ink transition hover:border-accent hover:bg-accent-soft/40">
               <input
@@ -110,7 +110,36 @@
             <span>Неважно</span>
           </label>
         </div>
+        {% if year_bounds.presets|length > 5 %}
+          <button type="button" class="text-sm font-semibold text-accent transition hover:text-graphite" data-year-toggle>
+            Посмотреть все
+          </button>
+        {% endif %}
       </div>
+      {% if show_vinyl_directtion_filter %}
+      <div class="space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-sm font-semibold text-ink">Направление</span>
+          {% if selected_vinyl_directtions %}
+            <span class="rounded-full bg-accent-soft px-2 py-0.5 text-xs font-semibold text-ink">{{ selected_vinyl_directtions|length }}</span>
+          {% endif %}
+        </div>
+        <div class="max-h-48 overflow-y-auto space-y-2">
+          {% for directtion in vinyl_directtions %}
+            <label class="flex items-start gap-2 text-sm text-ink">
+              <input
+                type="checkbox"
+                name="directtion"
+                value="{{ directtion }}"
+                class="mt-1 h-4 w-4 rounded border-accent-soft text-accent focus:ring-accent"
+                {% if directtion in selected_vinyl_directtions %}checked{% endif %}
+              >
+              <span class="leading-tight">{{ directtion }}</span>
+            </label>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
       <div class="space-y-3" data-author-filter>
         <div class="flex items-center justify-between">
           <span class="text-sm font-semibold text-ink">Автор</span>
@@ -183,6 +212,29 @@
   }
 
   function initAuthorFilters() {
+    document.querySelectorAll('[data-year-filter]').forEach((root) => {
+      if (root.dataset.yearFilterBound === 'true') {
+        return;
+      }
+      const list = root.querySelector('[data-year-list]');
+      const toggle = root.querySelector('[data-year-toggle]');
+      if (toggle && list) {
+        const collapsedClass = 'max-h-48';
+        const expandedClass = 'max-h-96';
+        const setState = (collapsed) => {
+          list.dataset.collapsed = collapsed ? 'true' : 'false';
+          list.classList.toggle(collapsedClass, collapsed);
+          list.classList.toggle(expandedClass, !collapsed);
+          list.classList.toggle('overflow-hidden', collapsed);
+          list.classList.toggle('overflow-y-auto', !collapsed);
+          toggle.textContent = collapsed ? 'Посмотреть все' : 'Свернуть';
+        };
+        setState(true);
+        toggle.addEventListener('click', () => setState(list.dataset.collapsed === 'false'));
+      }
+      root.dataset.yearFilterBound = 'true';
+    });
+
     document.querySelectorAll('[data-author-filter]').forEach((root) => {
       const searchInput = root.querySelector('[data-author-search]');
       const list = root.querySelector('[data-author-list]');
