@@ -13,6 +13,7 @@ CATALOG_FILTERS = {
 }
 
 PRICE_PRESETS = [
+    {'key': 'lt_300', 'label': 'до 300 ₽', 'min': None, 'max': 300},
     {'key': 'lt_1500', 'label': 'до 1500 ₽', 'min': None, 'max': 1500},
     {'key': '1500_3000', 'label': '1500–3000 ₽', 'min': 1500, 'max': 3000},
     {'key': 'gt_3000', 'label': '3000 ₽ и дороже', 'min': 3000, 'max': None},

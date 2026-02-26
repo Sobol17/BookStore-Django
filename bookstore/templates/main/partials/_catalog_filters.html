@@ -211,6 +211,8 @@
           list.dataset.collapsed = collapsed ? 'true' : 'false';
           list.classList.toggle(collapsedClass, collapsed);
           list.classList.toggle(expandedClass, !collapsed);
+          list.classList.toggle('overflow-hidden', collapsed);
+          list.classList.toggle('overflow-y-auto', !collapsed);
           toggle.textContent = collapsed ? 'Посмотреть все' : 'Свернуть';
         };
         setState(true);

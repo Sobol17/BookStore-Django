@@ -303,23 +303,45 @@ function initStickyHeader() {
     window.__stickyHeaderBound = true;
     const header = document.querySelector('[data-sticky-header]');
     if (!header) return;
-    const topRow = header.querySelector('[data-header-top]');
     const container = header.querySelector('.my-container');
+    const ENTER_STICKY_AT = 36;
+    const EXIT_STICKY_AT = 8;
+    let isSticky = false;
+    let ticking = false;
 
-    const apply = () => {
-        const isSticky = window.scrollY > 10;
+    const render = () => {
         header.classList.toggle('is-sticky', isSticky);
         if (container) {
             container.classList.toggle('shadow-md', isSticky);
             container.classList.toggle('ring-accent-soft/90', isSticky);
         }
-        if (topRow) {
-            topRow.classList.toggle('hidden', isSticky);
+    };
+
+    const onScroll = () => {
+        const scrollTop = window.scrollY || window.pageYOffset || 0;
+        if (!isSticky && scrollTop >= ENTER_STICKY_AT) {
+            isSticky = true;
+            render();
+            return;
+        }
+        if (isSticky && scrollTop <= EXIT_STICKY_AT) {
+            isSticky = false;
+            render();
         }
     };
 
-    apply();
-    window.addEventListener('scroll', apply, { passive: true });
+    const onScrollRaf = () => {
+        if (ticking) return;
+        ticking = true;
+        window.requestAnimationFrame(() => {
+            onScroll();
+            ticking = false;
+        });
+    };
+
+    onScroll();
+    render();
+    window.addEventListener('scroll', onScrollRaf, { passive: true });
 }
 
 document.addEventListener('DOMContentLoaded', initStickyHeader);

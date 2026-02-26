@@ -9,8 +9,8 @@
     </h1>
   </header>
 
-  {% if all_genres %}
-    {% include 'main/partials/_all_genres.html' with all_genres=all_genres %}
+  {% if all_genres and show_all_genres_cards %}
+    {% include 'main/partials/_all_genres.html' with all_genres=all_genres all_genres_title=all_genres_title %}
   {% endif %}
 
   <div class="grid gap-8 lg:grid-cols-[minmax(0,290px)_1fr]">
@@ -25,60 +25,7 @@
       {% endif %}
       {% include 'main/partials/_catalog_sort.html' %}
       <div class="relative">
-        {% if genre_filters and current_category %}
-          <div class="mb-3 flex flex-wrap gap-2">
-            <button
-              type="button"
-              class="rounded-xl border border-accent px-4 py-2 text-sm font-semibold transition hover:bg-accent-soft {% if not active_genres %}bg-accent text-graphite{% else %}bg-white text-ink{% endif %}"
-              hx-get="{{ genre_reset_url }}"
-              hx-target="#catalog-content"
-              hx-swap="outerHTML"
-              hx-push-url="true"
-              hx-indicator="#catalog-loading"
-            >
-              <span class="flex items-center gap-2">
-                {% if not active_genres %}
-                  <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/90 text-xs font-bold text-graphite">✓</span>
-                {% endif %}
-                <span>Все жанры</span>
-              </span>
-            </button>
-            {% for genre in genre_filters %}
-              <button
-                type="button"
-                class="rounded-xl border border-accent px-4 py-2 text-sm font-semibold transition hover:bg-accent-soft {% if genre.is_active %}bg-accent text-graphite{% else %}bg-white text-ink{% endif %}"
-                hx-get="{{ genre.url }}"
-                hx-target="#catalog-content"
-                hx-swap="outerHTML"
-                hx-push-url="true"
-                hx-indicator="#catalog-loading"
-              >
-                <span class="flex items-center gap-2">
-                  {% if genre.is_active %}
-                    <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/90 text-xs font-bold text-graphite">✓</span>
-                  {% endif %}
-                  <span>{{ genre.label }}</span>
-                </span>
-              </button>
-            {% endfor %}
-          </div>
-        {% elif categories %}
-          <div class="mb-3 flex flex-wrap gap-2">
-            {% for category in categories %}
-              <a
-                href="{% url 'main:catalog' category.slug %}"
-                hx-get="{% url 'main:catalog' category.slug %}"
-                hx-target="#catalog-content"
-                hx-swap="outerHTML"
-                hx-push-url="true"
-                hx-indicator="#catalog-loading"
-                class="rounded-xl border border-accent px-4 py-2 text-sm font-semibold transition hover:bg-accent-soft {% if current_category == category.slug %}bg-accent text-graphite{% else %}bg-white text-ink{% endif %}"
-              >
-                {{ category.name }}
-              </a>
-            {% endfor %}
-          </div>
-        {% endif %}
+        {% include 'main/partials/_catalog_genre_buttons.html' %}
         
         <div class="grid gap-4 grid-cols-2 sm:grid-cols-3 xl:grid-cols-4">
           {% for product in products %}

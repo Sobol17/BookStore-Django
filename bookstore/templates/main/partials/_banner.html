@@ -18,6 +18,27 @@
         {% endfor %}
       </div>
     </div>
+
+    {% if banners|length > 1 %}
+      <button
+        type="button"
+        class="absolute left-3 top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-accent bg-white text-graphite transition hover:bg-accent md:flex js-banner-prev"
+        aria-label="Предыдущий баннер"
+      >
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+      <button
+        type="button"
+        class="absolute right-3 top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-accent bg-white text-graphite transition hover:bg-accent md:flex js-banner-next"
+        aria-label="Следующий баннер"
+      >
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+    {% endif %}
   </div>
 
   <div class="">

@@ -184,9 +184,16 @@ class CatalogView(TemplateView):
         )
         sort_options = build_sorting_options(self.request, current_sort)
 
-        genres = Genre.objects.filter(category=current_category) if current_category else Genre.objects.all()
-        genres = list(genres)
-        all_genres = list(Genre.objects.select_related('category').all()[:10])
+        genres_queryset = Genre.objects.filter(category=current_category) if current_category else Genre.objects.all()
+        genres = list(genres_queryset.select_related('category'))
+        show_all_genres_cards = True
+        if current_category:
+            all_genres = genres
+            all_genres_title = 'Жанры категории'
+            show_all_genres_cards = False
+        else:
+            all_genres = list(Genre.objects.select_related('category').all()[:10])
+            all_genres_title = 'Все жанры'
         params_without_author = self.request.GET.copy()
         params_without_author.setlist('author', [])
         params_without_author['author'] = ''
@@ -224,6 +231,8 @@ class CatalogView(TemplateView):
             'active_genre': active_genre_value,
             'active_genres': active_genres,
             'all_genres': all_genres,
+            'all_genres_title': all_genres_title,
+            'show_all_genres_cards': show_all_genres_cards,
             'search_query': search_query,
             'authors': authors_list,
             'selected_authors': selected_authors,

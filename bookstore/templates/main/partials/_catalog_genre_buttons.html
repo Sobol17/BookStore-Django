@@ -1,0 +1,109 @@
+{% if genre_filters and current_category %}
+  <div class="mb-3 space-y-2" data-genre-filter>
+    <div class="flex flex-wrap gap-2" data-genre-list data-collapsed="true">
+      <button
+        type="button"
+        class="rounded-xl border border-accent px-4 py-2 text-sm font-semibold transition hover:bg-accent-soft {% if not active_genres %}bg-accent text-graphite{% else %}bg-white text-ink{% endif %}"
+        hx-get="{{ genre_reset_url }}"
+        hx-target="#catalog-content"
+        hx-swap="outerHTML"
+        hx-push-url="true"
+        hx-indicator="#catalog-loading"
+      >
+        <span class="flex items-center gap-2">
+          {% if not active_genres %}
+            <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/90 text-xs font-bold text-graphite">✓</span>
+          {% endif %}
+          <span>Все жанры</span>
+        </span>
+      </button>
+      {% for genre in genre_filters %}
+        <button
+          type="button"
+          class="rounded-xl border border-accent px-4 py-2 text-sm font-semibold transition hover:bg-accent-soft {% if genre.is_active %}bg-accent text-graphite{% else %}bg-white text-ink{% endif %} {% if forloop.counter > 8 and not genre.is_active %}hidden{% endif %}"
+          hx-get="{{ genre.url }}"
+          hx-target="#catalog-content"
+          hx-swap="outerHTML"
+          hx-push-url="true"
+          hx-indicator="#catalog-loading"
+          {% if forloop.counter > 8 and not genre.is_active %}data-genre-extra="true"{% endif %}
+        >
+          <span class="flex items-center gap-2">
+            {% if genre.is_active %}
+              <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/90 text-xs font-bold text-graphite">✓</span>
+            {% endif %}
+            <span class="lowercase">{{ genre.label }}</span>
+          </span>
+        </button>
+      {% endfor %}
+    </div>
+    {% if genre_filters|length > 8 %}
+      <button
+        type="button"
+        class="text-sm font-semibold transition hover:text-black"
+        data-genre-toggle
+      >
+        Показать все
+      </button>
+    {% endif %}
+  </div>
+{% elif categories %}
+  <div class="mb-3 flex flex-wrap gap-2">
+    {% for category in categories %}
+      <a
+        href="{% url 'main:catalog' category.slug %}"
+        hx-get="{% url 'main:catalog' category.slug %}"
+        hx-target="#catalog-content"
+        hx-swap="outerHTML"
+        hx-push-url="true"
+        hx-indicator="#catalog-loading"
+        class="rounded-xl border border-accent px-4 py-2 text-sm font-semibold transition hover:bg-accent-soft {% if current_category == category.slug %}bg-accent text-graphite{% else %}bg-white text-ink{% endif %}"
+      >
+        {{ category.name }}
+      </a>
+    {% endfor %}
+  </div>
+{% endif %}
+
+<script>
+(() => {
+  if (window.initGenreFilters) {
+    window.initGenreFilters();
+    return;
+  }
+
+  function initGenreFilters() {
+    document.querySelectorAll('[data-genre-filter]').forEach((root) => {
+      if (root.dataset.genreFilterBound === 'true') {
+        return;
+      }
+      const list = root.querySelector('[data-genre-list]');
+      const toggle = root.querySelector('[data-genre-toggle]');
+      if (!list || !toggle) {
+        root.dataset.genreFilterBound = 'true';
+        return;
+      }
+      const extraButtons = Array.from(list.querySelectorAll('[data-genre-extra]'));
+      if (!extraButtons.length) {
+        toggle.classList.add('hidden');
+        root.dataset.genreFilterBound = 'true';
+        return;
+      }
+
+      const setState = (collapsed) => {
+        list.dataset.collapsed = collapsed ? 'true' : 'false';
+        extraButtons.forEach((button) => button.classList.toggle('hidden', collapsed));
+        toggle.textContent = collapsed ? 'Показать все' : 'Скрыть';
+      };
+
+      setState(true);
+      toggle.addEventListener('click', () => setState(list.dataset.collapsed === 'false'));
+      root.dataset.genreFilterBound = 'true';
+    });
+  }
+
+  window.initGenreFilters = initGenreFilters;
+  document.addEventListener('DOMContentLoaded', initGenreFilters);
+  document.body.addEventListener('htmx:afterSwap', initGenreFilters);
+})();
+</script>

@@ -368,17 +368,25 @@ def upsert_product_from_erp(
             else:
                 product.genre = None
 
-    direction_name = _extract_direction(payload)
-    if direction_name:
+    book_author = _extract_book_author(payload)
+    if book_author:
+        product.authors = book_author
+
+    book_genre_name = _extract_book_genre(payload)
+    if book_genre_name:
         category = product.category
         if not category:
             category = _ensure_category('Книги')
             product.category = category
-        product.genre = _ensure_genre(category, direction_name)
+        product.genre = _ensure_genre(category, book_genre_name)
 
     vinyl_details = _extract_vinyl_details(payload)
     if vinyl_details is not None:
         _apply_vinyl_details(product, payload, vinyl_details)
+
+    postcard_details = _extract_postcard_details(payload)
+    if postcard_details is not None:
+        _apply_postcard_details(product, payload, postcard_details)
 
     if name and _should_refresh_slug(product.slug, erp_product_id, sku, offer_id):
         product.slug = _generate_unique_slug(name)
@@ -482,15 +490,94 @@ def _resolve_category_genre(categories: Any) -> Tuple[Optional[str], Optional[st
     return _clean_text(chosen.get('name')), None
 
 
-def _extract_direction(payload: Dict[str, Any]) -> Optional[str]:
+def _extract_book_author(payload: Dict[str, Any]) -> Optional[str]:
     details = payload.get('book_details')
-    if not isinstance(details, dict):
+    if isinstance(details, dict):
+        author = _clean_text(details.get('author')) or _clean_text(details.get('authors'))
+        if author:
+            return author
+
+    return _extract_additional_parameter(
+        payload.get('additional_parameters'),
+        {'автор', 'авторы'},
+    )
+
+
+def _extract_book_genre(payload: Dict[str, Any]) -> Optional[str]:
+    return _extract_additional_parameter(
+        payload.get('additional_parameters'),
+        {'жанры товара'},
+    )
+
+
+def _extract_additional_parameter(
+    parameters: Any,
+    names: set[str],
+) -> Optional[str]:
+    if not isinstance(parameters, list):
         return None
-    return _clean_text(details.get('direction'))
+    normalized_names = {item.casefold() for item in names}
+
+    for parameter in parameters:
+        if not isinstance(parameter, dict):
+            continue
+        parameter_name = _clean_text(
+            parameter.get('name')
+            or parameter.get('title')
+            or parameter.get('parameter')
+            or parameter.get('label')
+        )
+        if not parameter_name or parameter_name.casefold() not in normalized_names:
+            continue
+
+        value = _extract_additional_parameter_value(parameter)
+        if value:
+            return value
+    return None
+
+
+def _extract_additional_parameter_value(parameter: Dict[str, Any]) -> Optional[str]:
+    direct_value = _clean_text(
+        parameter.get('genre')
+        or parameter.get('value')
+        or parameter.get('display_value')
+        or parameter.get('text')
+    )
+    if direct_value:
+        return direct_value
+
+    values = parameter.get('values')
+    if not isinstance(values, list):
+        return None
+
+    normalized_values: List[str] = []
+    for raw_value in values:
+        if isinstance(raw_value, dict):
+            cleaned_value = _clean_text(
+                raw_value.get('value')
+                or raw_value.get('name')
+                or raw_value.get('title')
+                or raw_value.get('text')
+            )
+        else:
+            cleaned_value = _clean_text(raw_value)
+        if cleaned_value:
+            normalized_values.append(cleaned_value)
+
+    if not normalized_values:
+        return None
+    return ', '.join(normalized_values)
 
 
 def _extract_vinyl_details(payload: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     details = payload.get('vinyl_details')
+    if not isinstance(details, dict):
+        return None
+    return details
+
+
+def _extract_postcard_details(payload: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    details = payload.get('postcard_details')
     if not isinstance(details, dict):
         return None
     return details
@@ -525,6 +612,34 @@ def _apply_vinyl_details(
     barcode = _clean_text(payload.get('barcode')) or _clean_text(details.get('barcode'))
     if barcode:
         product.barcode = barcode
+
+
+def _apply_postcard_details(
+    product: Product,
+    payload: Dict[str, Any],
+    details: Dict[str, Any],
+) -> None:
+    postcards_category = _ensure_category('Открытки, марки, значки')
+    product.category = postcards_category
+
+    genre_name = _clean_text(details.get('theme')) or _clean_text(details.get('collection_type'))
+    if genre_name:
+        product.genre = _ensure_genre(postcards_category, genre_name)
+    elif 'theme' in details or 'collection_type' in details:
+        product.genre = None
+
+    release_year = _parse_int(details.get('release_year'))
+    if release_year and release_year > 0:
+        product.year = release_year
+
+    publisher = _clean_text(details.get('publisher'))
+    if publisher:
+        product.publisher = publisher
+
+    if not _clean_text(payload.get('description')):
+        postcard_description = _clean_text(details.get('description'))
+        if postcard_description:
+            product.description = postcard_description
 
 
 def _ensure_category(name: str) -> Category:
