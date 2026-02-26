@@ -12,3 +12,5 @@ venv/
 # Logs
 bookstore/logs/
 *.log
+
+.idea
