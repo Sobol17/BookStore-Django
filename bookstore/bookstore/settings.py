@@ -205,6 +205,10 @@ INTERNET_SHOP_API_KEY = os.getenv('INTERNET_SHOP_API_KEY', '')
 INTERNET_SHOP_DEFAULT_WAREHOUSE = os.getenv('INTERNET_SHOP_WAREHOUSE_CODE', 'main')
 INTERNET_SHOP_PAGE_SIZE = int(os.getenv('INTERNET_SHOP_PAGE_SIZE', '50'))
 
+# YooKassa payment integration
+YOUKASSA_SHOP_ID = os.getenv('YOUKASSA_SHOP_ID', '')
+YOUKASSA_SECRET_KEY = os.getenv('YOUKASSA_SECRET_KEY', '')
+
 # ERP outbound integration
 ERP_API_BASE_URL = os.getenv('ERP_API_BASE_URL', 'https://erp.dombb.ru/api/v1/')
 ERP_API_KEY = os.getenv('ERP_API_KEY', '') or INTERNET_SHOP_API_KEY

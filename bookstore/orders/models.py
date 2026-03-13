@@ -30,6 +30,8 @@ class Order(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     payment_provider = models.CharField(max_length=20, choices=PAYMENT_PROVIDER_CHOICES, null=True, blank=True)
     youkassa_payment_intent_id = models.CharField(max_length=255, blank=True, null=True)
+    youkassa_payment_url = models.URLField(max_length=2048, blank=True, null=True)
+    paid_at = models.DateTimeField(null=True, blank=True)
     erp_acknowledged_at = models.DateTimeField(null=True, blank=True)
     erp_external_id = models.CharField(max_length=64, blank=True)
     erp_status = models.CharField(max_length=64, blank=True)

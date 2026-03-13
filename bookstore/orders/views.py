@@ -1,16 +1,27 @@
-from decimal import Decimal
+import json
 import logging
+from decimal import Decimal
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 from django.views.generic import View
 
 from cart.views import CartMixin
 from integrations.erp import push_order_to_erp
+from integrations.youkassa import (
+    YoukassaAPIError,
+    YoukassaConfigurationError,
+    create_sbp_payment,
+    fetch_payment,
+)
 from .forms import OrderForm
 from .models import Order, OrderItem
 
@@ -100,9 +111,26 @@ class CheckoutView(CartMixin, View):
 
                 cart.clear_cart_items()
 
-                transaction.on_commit(lambda order_id=order.id: push_order_to_erp(order_id))
+            # Create YooKassa payment after the DB transaction is committed
+            if payment_provider == 'youkassa':
+                return_url = request.build_absolute_uri(
+                    reverse('users:order_detail', args=[order.id])
+                )
+                try:
+                    payment_id, payment_url = create_sbp_payment(order, return_url)
+                    order.youkassa_payment_intent_id = payment_id
+                    order.youkassa_payment_url = payment_url
+                    order.save(update_fields=['youkassa_payment_intent_id', 'youkassa_payment_url'])
+                    logger.info('YooKassa payment created for order %s', order.id)
+                except (YoukassaConfigurationError, YoukassaAPIError) as exc:
+                    logger.error('Failed to create YooKassa payment for order %s: %s', order.id, exc)
+                    messages.warning(
+                        request,
+                        f'Заказ №{order.id} оформлен, но не удалось создать ссылку для оплаты. '
+                        'Обратитесь в поддержку.'
+                    )
 
-            messages.success(request, f'Заказ №{order.id} оформлен. Мы свяжемся с вами для подтверждения.')
+            messages.success(request, f'Заказ №{order.id} оформлен. Перейдите к оплате.')
             logger.info('Checkout completed successfully for order %s', order.id)
             detail_url = reverse('users:order_detail', args=[order.id])
             return redirect(detail_url)
@@ -136,3 +164,64 @@ class CheckoutView(CartMixin, View):
         if extra_context:
             context.update(extra_context)
         return context
+
+
+@csrf_exempt
+@require_POST
+def youkassa_webhook(request):
+    """Handle YooKassa webhook notifications."""
+    try:
+        body = json.loads(request.body)
+    except (json.JSONDecodeError, ValueError):
+        logger.warning('YooKassa webhook: invalid JSON body')
+        return HttpResponse(status=400)
+
+    event = body.get('event')
+    if event != 'payment.succeeded':
+        # Acknowledge other events without action
+        return HttpResponse(status=200)
+
+    payment_object = body.get('object') or {}
+    payment_id = payment_object.get('id')
+    if not payment_id:
+        logger.warning('YooKassa webhook: missing payment id in payload')
+        return HttpResponse(status=400)
+
+    # Verify payment status by fetching from YooKassa API
+    payment = fetch_payment(payment_id)
+    if payment is None:
+        logger.error('YooKassa webhook: could not verify payment %s', payment_id)
+        return HttpResponse(status=200)
+
+    if payment.status != 'succeeded':
+        logger.info('YooKassa webhook: payment %s status is %s, skipping', payment_id, payment.status)
+        return HttpResponse(status=200)
+
+    metadata = payment.metadata or {}
+    order_id = metadata.get('order_id')
+    if not order_id:
+        logger.warning('YooKassa webhook: payment %s has no order_id in metadata', payment_id)
+        return HttpResponse(status=200)
+
+    try:
+        order = (
+            Order.objects.select_related('user')
+            .prefetch_related('items__product')
+            .get(pk=order_id)
+        )
+    except Order.DoesNotExist:
+        logger.warning('YooKassa webhook: order %s not found for payment %s', order_id, payment_id)
+        return HttpResponse(status=200)
+
+    if order.paid_at:
+        logger.info('YooKassa webhook: order %s already marked as paid, skipping', order_id)
+        return HttpResponse(status=200)
+
+    order.paid_at = timezone.now()
+    order.status = 'processing'
+    order.save(update_fields=['paid_at', 'status', 'updated_at'])
+    logger.info('Order %s marked as paid via YooKassa payment %s', order_id, payment_id)
+
+    push_order_to_erp(order.id)
+
+    return HttpResponse(status=200)
